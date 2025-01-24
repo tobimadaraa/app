@@ -1,7 +1,12 @@
+// ignore_for_file: avoid_print
+
 import 'package:flutter/material.dart';
 import 'package:flutter_application_2/models/leaderboard_model.dart';
+import 'package:flutter_application_2/models/user_model.dart';
 import 'package:flutter_application_2/pages/buttons/lead_card.dart';
 import 'package:flutter_application_2/pages/buttons/ranking_data_card.dart';
+import 'package:flutter_application_2/repository/user_repository.dart';
+import 'package:get/get.dart';
 
 class LeaderBoard extends StatefulWidget {
   const LeaderBoard({super.key});
@@ -9,6 +14,9 @@ class LeaderBoard extends StatefulWidget {
   @override
   State<LeaderBoard> createState() => _LeaderBoardState();
 }
+
+String newUserId = '';
+String newTagLine = '';
 
 class _LeaderBoardState extends State<LeaderBoard> {
   int myIndex = 0;
@@ -43,9 +51,8 @@ class _LeaderBoardState extends State<LeaderBoard> {
         text: 'RATING',
         numberofgameswon: '',
         gameswontext: 'days remaining',
-        // ignore: avoid_print
+
         onPressed: () {
-          // ignore: avoid_print
           print('boop');
         },
         // height: 30,
@@ -61,7 +68,6 @@ class _LeaderBoardState extends State<LeaderBoard> {
           numberofgameswon: model.numberOfGamesWon.toString(),
           // gameswontext: ' games won',
           onPressed: () {
-            // ignore: avoid_print
             print('Leaderboard entry pressed');
           },
           //  height: 70,
@@ -83,9 +89,8 @@ class _LeaderBoardState extends State<LeaderBoard> {
       text: 'RATING',
       numberofgameswon: '',
       gameswontext: 'days remaining',
-      // ignore: avoid_print
+
       onPressed: () {
-        // ignore: avoid_print
         print('boop');
       },
       // height: 30,
@@ -99,8 +104,60 @@ class _LeaderBoardState extends State<LeaderBoard> {
         child: Column(
           //mainAxisAlignment: MainAxisAlignment.center, // Center vertically
           //crossAxisAlignment: CrossAxisAlignment.center, // Center horizontally
-          children:
-              getLeaderboardWidgets(), // Display all widgets from the list
+          children: [
+            // ...getLeaderboardWidgets(),
+            TextField(
+              decoration: InputDecoration(
+                border: OutlineInputBorder(),
+                labelText: 'Enter Riot ID',
+                hintText: 'e.g. your username',
+                errorText: newUserId.isEmpty ? 'UserId is required' : null,
+              ),
+              onChanged: (value) {
+                setState(() {
+                  newUserId = value;
+                });
+                print(newUserId);
+              },
+            ),
+            TextField(
+              decoration: InputDecoration(
+                border: OutlineInputBorder(),
+                labelText: 'Enter Tagline',
+                hintText: 'e.g. your ingame Tag',
+                errorText: newTagLine.isEmpty ? 'Tag line is required' : null,
+              ),
+              onChanged: (value) {
+                setState(() {
+                  newTagLine = value;
+                });
+                print(newTagLine);
+              },
+            ),
+            TextButton(
+              onPressed: () {
+                if (newUserId.isNotEmpty && newTagLine.isNotEmpty) {
+                  final user = UserModel(
+                    userId: newUserId,
+                    tagLine: newTagLine,
+                  );
+                  Get.find<UserRepository>().createUser(user);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('User data submitted successfully!'),
+                    ),
+                  );
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Please enter both Riot ID and Tagline'),
+                    ),
+                  );
+                }
+              },
+              child: Text("Submit data"),
+            ),
+          ], // Display all widgets from the list
         ),
       ),
       appBar: AppBar(
@@ -201,3 +258,5 @@ class MySearchDelegate extends SearchDelegate {
     );
   }
 }
+
+// final user = UserModel(userId: newUserId, tagLine: newTagLine);
