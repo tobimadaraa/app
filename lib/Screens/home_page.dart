@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_application_2/pages/discord_screen.dart';
-import 'package:flutter_application_2/pages/leaderboard_screen.dart';
+import 'package:flutter_application_2/Screens/discord_screen.dart';
+import 'package:flutter_application_2/Screens/leaderboard_screen.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
