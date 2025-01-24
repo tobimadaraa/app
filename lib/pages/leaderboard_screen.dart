@@ -1,0 +1,203 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_application_2/models/leaderboard_model.dart';
+import 'package:flutter_application_2/pages/buttons/lead_card.dart';
+import 'package:flutter_application_2/pages/buttons/ranking_data_card.dart';
+
+class LeaderBoard extends StatefulWidget {
+  const LeaderBoard({super.key});
+  static const Color myCustomColor = Color(0xFF808080);
+  @override
+  State<LeaderBoard> createState() => _LeaderBoardState();
+}
+
+class _LeaderBoardState extends State<LeaderBoard> {
+  int myIndex = 0;
+
+  List<LeaderboardModel> leaderboard = [
+    LeaderboardModel(
+      leaderboardNumber: 1,
+      rating: 1,
+      username: 'eung',
+      numberOfGamesWon: 12,
+    ),
+    LeaderboardModel(
+      leaderboardNumber: 2,
+      rating: 5,
+      username: 'un',
+      numberOfGamesWon: 52,
+    ),
+    LeaderboardModel(
+      leaderboardNumber: 3,
+      rating: 6,
+      username: 'roma',
+      numberOfGamesWon: 94,
+    ),
+  ];
+  List<String> usernames = [];
+  List<Widget> getLeaderboardWidgets() {
+    List<Widget> list = [];
+    usernames.clear();
+    list.add(
+      RankingDataCard(
+        leaderboardnumber: 'RANK',
+        text: 'RATING',
+        numberofgameswon: '',
+        gameswontext: 'days remaining',
+        // ignore: avoid_print
+        onPressed: () {
+          // ignore: avoid_print
+          print('boop');
+        },
+        // height: 30,
+        // width: 40,
+      ),
+    );
+    for (var model in leaderboard) {
+      list.add(
+        LeadCard(
+          leaderboardnumber: model.leaderboardNumber.toString(),
+          text: model.rating.toString(),
+          leaderboardname: model.username,
+          numberofgameswon: model.numberOfGamesWon.toString(),
+          // gameswontext: ' games won',
+          onPressed: () {
+            // ignore: avoid_print
+            print('Leaderboard entry pressed');
+          },
+          //  height: 70,
+          //  width: 40,
+        ),
+      );
+      if (model.username.isNotEmpty) {
+        usernames.add(model.username);
+      }
+    }
+    return list;
+  }
+
+  List<Widget> widgetList = [
+    RankingDataCard(
+      // textColor: Colors.white,
+      //backgroundColor: Colors.grey,
+      leaderboardnumber: 'RANK',
+      text: 'RATING',
+      numberofgameswon: '',
+      gameswontext: 'days remaining',
+      // ignore: avoid_print
+      onPressed: () {
+        // ignore: avoid_print
+        print('boop');
+      },
+      // height: 30,
+      // width: 40,
+    ),
+  ];
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Center(
+        child: Column(
+          //mainAxisAlignment: MainAxisAlignment.center, // Center vertically
+          //crossAxisAlignment: CrossAxisAlignment.center, // Center horizontally
+          children:
+              getLeaderboardWidgets(), // Display all widgets from the list
+        ),
+      ),
+      appBar: AppBar(
+        // toolbarHeight: 120,
+        leading: BackButton(
+          onPressed: () {
+            Navigator.pushReplacementNamed(context, '/homepage');
+          },
+        ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.search),
+            onPressed: () {
+              showSearch(
+                context: context,
+                delegate: MySearchDelegate(usernames),
+              );
+            },
+          ),
+        ],
+        backgroundColor: Colors.white,
+        centerTitle: true,
+        titleTextStyle: TextStyle(
+          color: Colors.grey,
+          fontSize: 20,
+          fontWeight: FontWeight.bold,
+        ),
+        title: Column(
+          children: [
+            const Text("Leaderboard", style: TextStyle(fontSize: 15)),
+            SizedBox(height: 8),
+            Text(
+              'Radiant',
+              style: TextStyle(color: Colors.black, fontSize: 30),
+            ),
+          ],
+        ),
+      ),
+      backgroundColor: Colors.blue[200],
+    );
+    // );
+  }
+}
+
+class MySearchDelegate extends SearchDelegate {
+  final List<String> searchTerms;
+  MySearchDelegate(this.searchTerms);
+
+  @override
+  Widget? buildLeading(BuildContext context) => IconButton(
+    icon: const Icon(Icons.arrow_back),
+    onPressed: () => close(context, null),
+  );
+  @override
+  List<Widget>? buildActions(BuildContext context) => [
+    IconButton(
+      icon: const Icon(Icons.clear),
+      onPressed: () {
+        if (query.isEmpty) {
+          close(context, null);
+        } else {
+          query = '';
+        }
+      },
+    ),
+  ];
+  @override
+  Widget buildResults(BuildContext context) {
+    List<String> matchQuery = [];
+    for (var usernames in searchTerms) {
+      if (usernames.toLowerCase().contains(query.toLowerCase())) {
+        matchQuery.add(usernames);
+      }
+    }
+    return ListView.builder(
+      itemCount: matchQuery.length,
+      itemBuilder: (context, index) {
+        var result = matchQuery[index];
+        return ListTile(title: Text(result));
+      },
+    );
+  }
+
+  @override
+  Widget buildSuggestions(BuildContext context) {
+    List<String> matchQuery = [];
+    for (var usernames in searchTerms) {
+      if (usernames.toLowerCase().startsWith(query.toLowerCase())) {
+        matchQuery.add(usernames);
+      }
+    }
+    return ListView.builder(
+      itemCount: matchQuery.length,
+      itemBuilder: (context, index) {
+        var result = matchQuery[index];
+        return ListTile(title: Text(result));
+      },
+    );
+  }
+}
