@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_application_2/pages/classm.dart';
+import 'package:flutter_application_2/classes/classm.dart';
 
 //const Color myCustomColor = Color(0xFF808080);
 
