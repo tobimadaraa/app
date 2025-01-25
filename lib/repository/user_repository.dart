@@ -36,6 +36,7 @@ class UserRepository extends GetxController {
         backgroundColor: Colors.red,
         colorText: Colors.white,
       );
+      // ignore: avoid_print
       print(error.toString());
     }
   }
@@ -53,6 +54,7 @@ class UserRepository extends GetxController {
         );
       }).toList();
     } catch (error) {
+      // ignore: avoid_print
       print(error.toString());
       return [];
     }
