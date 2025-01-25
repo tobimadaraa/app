@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_application_2/pages/buttons/activity_button.dart';
 import 'package:flutter_application_2/pages/buttons/logout_button.dart';
-import 'package:flutter_application_2/classes/classm.dart';
+import 'package:flutter_application_2/classes/colour_classes.dart';
 import 'package:flutter_application_2/pages/buttons/double_button.dart';
 import 'package:flutter_application_2/pages/buttons/my_button.dart';
 import 'package:flutter_application_2/pages/buttons/single_button.dart';
