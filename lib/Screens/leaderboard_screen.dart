@@ -2,8 +2,9 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_application_2/components/input_field.dart';
+import 'package:flutter_application_2/components/leaderboard_list.dart';
+import 'package:flutter_application_2/components/report_button.dart';
 import 'package:flutter_application_2/models/leaderboard_model.dart';
-import 'package:flutter_application_2/models/user_model.dart';
 import 'package:flutter_application_2/components/lead_card.dart';
 import 'package:flutter_application_2/components/ranking_data_card.dart';
 import 'package:flutter_application_2/repository/user_repository.dart';
@@ -29,7 +30,6 @@ class _LeaderBoardState extends State<LeaderBoard> {
     leaderboardFuture = Get.find<UserRepository>().getLeaderboard();
   }
 
-  int myIndex = 0;
   int reportedValue = 0;
   List<LeaderboardModel> leaderboard = [
     LeaderboardModel(
@@ -79,12 +79,9 @@ class _LeaderBoardState extends State<LeaderBoard> {
           text: model.rating.toString(),
           leaderboardname: model.username,
           timesReported: model.timesReported.toString(),
-          // gameswontext: ' games won',
           onPressed: () {
             print('Leaderboard entry pressed');
           },
-          //  height: 70,
-          //  width: 40,
         ),
       );
       if (model.username.isNotEmpty) {
@@ -94,22 +91,6 @@ class _LeaderBoardState extends State<LeaderBoard> {
     return list;
   }
 
-  List<Widget> widgetList = [
-    RankingDataCard(
-      // textColor: Colors.white,
-      //backgroundColor: Colors.grey,
-      leaderboardnumber: 'RANK',
-      text: 'RATING',
-      numberofgameswon: '',
-      timesReported: 'timesReported',
-
-      onPressed: () {
-        print('boop');
-      },
-      // height: 30,
-      // width: 40,
-    ),
-  ];
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -134,73 +115,23 @@ class _LeaderBoardState extends State<LeaderBoard> {
                 onChanged: (value) => setState(() => newTagLine = value),
               ),
             ),
-            TextButton(
-              onPressed: () {
-                if (newUserId.isNotEmpty && newTagLine.isNotEmpty) {
-                  final user = UserModel(
-                    userId: newUserId,
-                    tagLine: newTagLine,
-                    timesReported: reportedValue,
-                    lastReported: DateTime.now(),
-                  );
-                  Get.find<UserRepository>().createUser(user).then((_) {
-                    setState(() {
-                      leaderboardFuture =
-                          Get.find<UserRepository>().getLeaderboard();
-                    });
-                  });
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('User data submitted successfully!'),
-                    ),
-                  );
-                } else {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('Please enter both Riot ID and Tagline'),
-                    ),
-                  );
-                }
+            ReportButton(
+              newUserId: newUserId,
+              newTagLine: newTagLine,
+              onSuccess: () async {
+                setState(() {
+                  leaderboardFuture =
+                      Get.find<UserRepository>().getLeaderboard();
+                });
               },
-              child: Text("Report"),
             ),
             Expanded(
-              child: FutureBuilder<List<LeaderboardModel>>(
-                future: leaderboardFuture,
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return CircularProgressIndicator();
-                  } else if (snapshot.hasError) {
-                    return Text("Error: ${snapshot.error}");
-                  } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                    return Text("No data available");
-                  } else {
-                    final leaderboard = snapshot.data!;
-                    return ListView(
-                      children:
-                          leaderboard.map((model) {
-                            return LeadCard(
-                              leaderboardnumber:
-                                  model.leaderboardNumber.toString(),
-                              text: model.rating.toString(),
-                              leaderboardname: model.username,
-                              timesReported: model.timesReported.toString(),
-                              onPressed: () {
-                                print('${model.username} pressed');
-                              },
-                            );
-                          }).toList(),
-                    );
-                  }
-                },
-              ),
+              child: LeaderboardList(leaderboardFuture: leaderboardFuture),
             ),
-            //...getLeaderboardWidgets()
           ], // Display all widgets from the list
         ),
       ),
       appBar: AppBar(
-        // toolbarHeight: 120,
         leading: BackButton(
           onPressed: () {
             Navigator.pushReplacementNamed(context, '/homepage');
