@@ -15,7 +15,7 @@ class UserRepository extends GetxController {
 
       if (docSnapshot.exists) {
         // Increment lastReported if the user already exists
-        await userDoc.update({'Times Reported': FieldValue.increment(1)});
+        await userDoc.update({'times_reported': FieldValue.increment(1)});
       } else {
         // Create a new user with default lastReported
         await userDoc.set(user.toJson());
@@ -48,13 +48,13 @@ class UserRepository extends GetxController {
         final data = doc.data();
         return LeaderboardModel(
           leaderboardNumber: 0, // You can calculate rank separately
-          rating: data['Rating'] ?? 0,
-          username: data['User Id'] ?? '',
-          timesReported: data['Times Reported'] ?? 0,
-          reportedTime:
-              data['Reported Time'] != null
+          rating: data['rating'] ?? 0,
+          username: data['user_id'] ?? '',
+          timesReported: data['times_reported'] ?? 0,
+          lastReported:
+              data['last_reported'] != null
                   ? DateTime.parse(
-                    data['Reported Time'],
+                    data['last_reported'],
                   ) // Parse ISO 8601 string
                   : DateTime.now(), // Default to now if null
         );
