@@ -3,11 +3,12 @@ class LeaderboardModel {
   final int rating;
   final String username;
   final int timesReported;
-
+  final DateTime reportedTime;
   LeaderboardModel({
     required this.leaderboardNumber,
     required this.rating,
     required this.username,
+    required this.reportedTime,
     required this.timesReported,
   });
 }
