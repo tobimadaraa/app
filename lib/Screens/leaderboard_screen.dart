@@ -35,21 +35,21 @@ class _LeaderBoardState extends State<LeaderBoard> {
       rating: 1,
       username: 'eung',
       timesReported: 12,
-      reportedTime: DateTime.now(),
+      lastReported: DateTime.now(),
     ),
     LeaderboardModel(
       leaderboardNumber: 2,
       rating: 5,
       username: 'un',
       timesReported: 52,
-      reportedTime: DateTime.now(),
+      lastReported: DateTime.now(),
     ),
     LeaderboardModel(
       leaderboardNumber: 3,
       rating: 6,
       username: 'roma',
       timesReported: 94,
-      reportedTime: DateTime.now(),
+      lastReported: DateTime.now(),
     ),
   ];
   List<String> usernames = [];
@@ -147,7 +147,7 @@ class _LeaderBoardState extends State<LeaderBoard> {
                     userId: newUserId,
                     tagLine: newTagLine,
                     timesReported: reportedValue,
-                    reportedTime: DateTime.now(),
+                    lastReported: DateTime.now(),
                   );
                   Get.find<UserRepository>().createUser(user).then((_) {
                     setState(() {
