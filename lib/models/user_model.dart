@@ -7,7 +7,7 @@ class UserModel {
   const UserModel({
     required this.userId,
     required this.tagLine,
-    this.timesReported = 1,
+    this.timesReported = 0,
     required this.reportedTime,
   });
 

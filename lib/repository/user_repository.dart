@@ -14,10 +14,10 @@ class UserRepository extends GetxController {
       final docSnapshot = await userDoc.get();
 
       if (docSnapshot.exists) {
-        // Increment timesReported if the user already exists
+        // Increment lastReported if the user already exists
         await userDoc.update({'Times Reported': FieldValue.increment(1)});
       } else {
-        // Create a new user with default timesReported
+        // Create a new user with default lastReported
         await userDoc.set(user.toJson());
       }
 
@@ -51,6 +51,12 @@ class UserRepository extends GetxController {
           rating: data['Rating'] ?? 0,
           username: data['User Id'] ?? '',
           timesReported: data['Times Reported'] ?? 0,
+          reportedTime:
+              data['Reported Time'] != null
+                  ? DateTime.parse(
+                    data['Reported Time'],
+                  ) // Parse ISO 8601 string
+                  : DateTime.now(), // Default to now if null
         );
       }).toList();
     } catch (error) {
