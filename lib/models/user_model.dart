@@ -2,31 +2,31 @@ class UserModel {
   final String userId;
   final String tagLine;
   final int timesReported;
-  final DateTime reportedTime;
+  final DateTime lastReported;
 
   const UserModel({
     required this.userId,
     required this.tagLine,
     this.timesReported = 0,
-    required this.reportedTime,
+    required this.lastReported,
   });
 
   Map<String, dynamic> toJson() {
     return {
-      'User Id': userId,
-      'Tag Line': tagLine,
-      'Times Reported': timesReported,
-      'Reported Time': reportedTime.toIso8601String(),
+      'user_id': userId,
+      'tag_line': tagLine,
+      'times_reported': timesReported,
+      'last_reported ': lastReported.toIso8601String(),
     };
   }
 
   factory UserModel.fromJson(Map<String, dynamic> json) {
     return UserModel(
-      userId: json['User Id'],
-      tagLine: json['Tag Line'],
-      reportedTime:
-          json['Reported Time'] != null
-              ? DateTime.parse(json['Reported Time']) // Parse if exists
+      userId: json['user_id'],
+      tagLine: json['tag_line'],
+      lastReported:
+          json['last_reported'] != null
+              ? DateTime.parse(json['last_reported']) // Parse if exists
               : DateTime.now(), // Default to now if null
     );
   }
