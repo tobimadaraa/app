@@ -7,13 +7,13 @@ class RankingDataCard extends StatelessWidget {
   final String text;
   final String leaderboardnumber;
   final String numberofgameswon;
-  final String gameswontext;
+  final String timesReported;
   final void Function() onPressed;
   const RankingDataCard({
     super.key,
     required this.text,
     required this.leaderboardnumber,
-    required this.gameswontext,
+    required this.timesReported,
     required this.numberofgameswon,
     required this.onPressed,
   });
@@ -83,7 +83,7 @@ class RankingDataCard extends StatelessWidget {
                     ),
                     SizedBox(width: 16),
                     Text(
-                      gameswontext,
+                      timesReported,
                       style: TextStyle(
                         color: CustomColours.whiteDiscordText,
                         fontSize: 12,
