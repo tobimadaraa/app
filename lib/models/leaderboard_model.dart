@@ -2,13 +2,13 @@ class LeaderboardModel {
   final int leaderboardNumber;
   final int rating;
   final String username;
-  final int numberOfGamesWon;
+  final int timesReported;
 
   LeaderboardModel({
     required this.leaderboardNumber,
     required this.rating,
     required this.username,
-    required this.numberOfGamesWon,
+    required this.timesReported,
   });
 }
 //  Align(

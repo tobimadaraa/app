@@ -17,6 +17,8 @@ void main() async {
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   await dotenv.load(fileName: "apikey.env");
   Get.put(UserRepository());
+  //final userRepo = UserRepository.instance;
+  // final user = UserModel(userId: "001", tagLine: "Flutter Developer");
   runApp(const MyApp());
 }
 
