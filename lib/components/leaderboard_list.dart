@@ -5,8 +5,7 @@ import 'package:flutter_application_2/models/leaderboard_model.dart';
 class LeaderboardList extends StatelessWidget {
   final Future<List<LeaderboardModel>> leaderboardFuture;
 
-  const LeaderboardList({Key? key, required this.leaderboardFuture})
-    : super(key: key);
+  const LeaderboardList({super.key, required this.leaderboardFuture});
 
   @override
   Widget build(BuildContext context) {
@@ -30,6 +29,7 @@ class LeaderboardList extends StatelessWidget {
                     leaderboardname: model.username,
                     timesReported: model.timesReported.toString(),
                     onPressed: () {
+                      // ignore: avoid_print
                       print('${model.username} pressed');
                     },
                   );

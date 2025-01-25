@@ -5,8 +5,6 @@ import 'package:flutter_application_2/components/input_field.dart';
 import 'package:flutter_application_2/components/leaderboard_list.dart';
 import 'package:flutter_application_2/components/report_button.dart';
 import 'package:flutter_application_2/models/leaderboard_model.dart';
-import 'package:flutter_application_2/components/lead_card.dart';
-import 'package:flutter_application_2/components/ranking_data_card.dart';
 import 'package:flutter_application_2/repository/user_repository.dart';
 import 'package:flutter_application_2/utils/search_delegate.dart';
 import 'package:get/get.dart';
@@ -23,74 +21,22 @@ String newUserId = '';
 String newTagLine = '';
 
 class _LeaderBoardState extends State<LeaderBoard> {
+  List<String> usernames = [];
   late Future<List<LeaderboardModel>> leaderboardFuture;
   @override
   void initState() {
     super.initState();
-    leaderboardFuture = Get.find<UserRepository>().getLeaderboard();
+    leaderboardFuture = Get.find<UserRepository>().getLeaderboard().then((
+      data,
+    ) {
+      setState(() {
+        usernames = data.map((e) => e.username).toList();
+      });
+      return data;
+    });
   }
 
   int reportedValue = 0;
-  List<LeaderboardModel> leaderboard = [
-    LeaderboardModel(
-      leaderboardNumber: 1,
-      rating: 1,
-      username: 'eung',
-      timesReported: 12,
-      lastReported: DateTime.now(),
-    ),
-    LeaderboardModel(
-      leaderboardNumber: 2,
-      rating: 5,
-      username: 'un',
-      timesReported: 52,
-      lastReported: DateTime.now(),
-    ),
-    LeaderboardModel(
-      leaderboardNumber: 3,
-      rating: 6,
-      username: 'roma',
-      timesReported: 94,
-      lastReported: DateTime.now(),
-    ),
-  ];
-  List<String> usernames = [];
-  List<Widget> getLeaderboardWidgets() {
-    List<Widget> list = [];
-    usernames.clear();
-    list.add(
-      RankingDataCard(
-        leaderboardnumber: 'RANK',
-        text: 'RATING',
-        numberofgameswon: '',
-        timesReported: 'reported ',
-
-        onPressed: () {
-          print('boop');
-        },
-        // height: 30,
-        // width: 40,
-      ),
-    );
-    for (var model in leaderboard) {
-      list.add(
-        LeadCard(
-          leaderboardnumber: model.leaderboardNumber.toString(),
-          text: model.rating.toString(),
-          leaderboardname: model.username,
-          timesReported: model.timesReported.toString(),
-          onPressed: () {
-            print('Leaderboard entry pressed');
-          },
-        ),
-      );
-      if (model.username.isNotEmpty) {
-        usernames.add(model.username);
-      }
-    }
-    return list;
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
