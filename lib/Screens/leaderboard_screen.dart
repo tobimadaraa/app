@@ -1,11 +1,13 @@
 // ignore_for_file: avoid_print
 
 import 'package:flutter/material.dart';
+import 'package:flutter_application_2/components/input_field.dart';
 import 'package:flutter_application_2/models/leaderboard_model.dart';
 import 'package:flutter_application_2/models/user_model.dart';
-import 'package:flutter_application_2/pages/buttons/lead_card.dart';
-import 'package:flutter_application_2/pages/buttons/ranking_data_card.dart';
+import 'package:flutter_application_2/components/lead_card.dart';
+import 'package:flutter_application_2/components/ranking_data_card.dart';
 import 'package:flutter_application_2/repository/user_repository.dart';
+import 'package:flutter_application_2/utils/search_delegate.dart';
 import 'package:get/get.dart';
 
 class LeaderBoard extends StatefulWidget {
@@ -114,31 +116,23 @@ class _LeaderBoardState extends State<LeaderBoard> {
       body: Center(
         child: Column(
           children: [
-            TextField(
-              decoration: InputDecoration(
-                border: OutlineInputBorder(),
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: InputField(
                 labelText: 'Enter Riot ID',
                 hintText: 'e.g. your username',
                 errorText: newUserId.isEmpty ? 'UserId is required' : null,
+                onChanged: (value) => setState(() => newUserId = value),
               ),
-              onChanged: (value) {
-                setState(() {
-                  newUserId = value;
-                });
-              },
             ),
-            TextField(
-              decoration: InputDecoration(
-                border: OutlineInputBorder(),
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: InputField(
                 labelText: 'Enter Tagline',
                 hintText: 'e.g. your in-game Tag',
                 errorText: newTagLine.isEmpty ? 'Tag line is required' : null,
+                onChanged: (value) => setState(() => newTagLine = value),
               ),
-              onChanged: (value) {
-                setState(() {
-                  newTagLine = value;
-                });
-              },
             ),
             TextButton(
               onPressed: () {
@@ -244,62 +238,5 @@ class _LeaderBoardState extends State<LeaderBoard> {
       backgroundColor: Colors.blue[200],
     );
     // );
-  }
-}
-
-class MySearchDelegate extends SearchDelegate {
-  final List<String> searchTerms;
-  MySearchDelegate(this.searchTerms);
-
-  @override
-  Widget? buildLeading(BuildContext context) => IconButton(
-    icon: const Icon(Icons.arrow_back),
-    onPressed: () => close(context, null),
-  );
-  @override
-  List<Widget>? buildActions(BuildContext context) => [
-    IconButton(
-      icon: const Icon(Icons.clear),
-      onPressed: () {
-        if (query.isEmpty) {
-          close(context, null);
-        } else {
-          query = '';
-        }
-      },
-    ),
-  ];
-  @override
-  Widget buildResults(BuildContext context) {
-    List<String> matchQuery = [];
-    for (var usernames in searchTerms) {
-      if (usernames.toLowerCase().contains(query.toLowerCase())) {
-        matchQuery.add(usernames);
-      }
-    }
-    return ListView.builder(
-      itemCount: matchQuery.length,
-      itemBuilder: (context, index) {
-        var result = matchQuery[index];
-        return ListTile(title: Text(result));
-      },
-    );
-  }
-
-  @override
-  Widget buildSuggestions(BuildContext context) {
-    List<String> matchQuery = [];
-    for (var usernames in searchTerms) {
-      if (usernames.toLowerCase().startsWith(query.toLowerCase())) {
-        matchQuery.add(usernames);
-      }
-    }
-    return ListView.builder(
-      itemCount: matchQuery.length,
-      itemBuilder: (context, index) {
-        var result = matchQuery[index];
-        return ListTile(title: Text(result));
-      },
-    );
   }
 }
