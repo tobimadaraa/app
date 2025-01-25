@@ -42,7 +42,6 @@ class _MyAppState extends State<MyApp> {
         '/login': (context) => LoginPage(),
         '/leaderboard': (context) => LeaderBoard(),
       },
-      //home: LoginPage());
     );
   }
 }
