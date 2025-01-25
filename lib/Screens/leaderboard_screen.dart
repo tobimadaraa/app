@@ -35,18 +35,21 @@ class _LeaderBoardState extends State<LeaderBoard> {
       rating: 1,
       username: 'eung',
       timesReported: 12,
+      reportedTime: DateTime.now(),
     ),
     LeaderboardModel(
       leaderboardNumber: 2,
       rating: 5,
       username: 'un',
       timesReported: 52,
+      reportedTime: DateTime.now(),
     ),
     LeaderboardModel(
       leaderboardNumber: 3,
       rating: 6,
       username: 'roma',
       timesReported: 94,
+      reportedTime: DateTime.now(),
     ),
   ];
   List<String> usernames = [];
