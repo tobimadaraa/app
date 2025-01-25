@@ -11,6 +11,7 @@ import 'package:get/get.dart';
 class LeaderBoard extends StatefulWidget {
   const LeaderBoard({super.key});
   static const Color myCustomColor = Color(0xFF808080);
+
   @override
   State<LeaderBoard> createState() => _LeaderBoardState();
 }
@@ -19,26 +20,33 @@ String newUserId = '';
 String newTagLine = '';
 
 class _LeaderBoardState extends State<LeaderBoard> {
-  int myIndex = 0;
+  late Future<List<LeaderboardModel>> leaderboardFuture;
+  @override
+  void initState() {
+    super.initState();
+    leaderboardFuture = Get.find<UserRepository>().getLeaderboard();
+  }
 
+  int myIndex = 0;
+  int reportedValue = 0;
   List<LeaderboardModel> leaderboard = [
     LeaderboardModel(
       leaderboardNumber: 1,
       rating: 1,
       username: 'eung',
-      numberOfGamesWon: 12,
+      timesReported: 12,
     ),
     LeaderboardModel(
       leaderboardNumber: 2,
       rating: 5,
       username: 'un',
-      numberOfGamesWon: 52,
+      timesReported: 52,
     ),
     LeaderboardModel(
       leaderboardNumber: 3,
       rating: 6,
       username: 'roma',
-      numberOfGamesWon: 94,
+      timesReported: 94,
     ),
   ];
   List<String> usernames = [];
@@ -50,7 +58,7 @@ class _LeaderBoardState extends State<LeaderBoard> {
         leaderboardnumber: 'RANK',
         text: 'RATING',
         numberofgameswon: '',
-        gameswontext: 'days remaining',
+        timesReported: 'reported ',
 
         onPressed: () {
           print('boop');
@@ -65,7 +73,7 @@ class _LeaderBoardState extends State<LeaderBoard> {
           leaderboardnumber: model.leaderboardNumber.toString(),
           text: model.rating.toString(),
           leaderboardname: model.username,
-          numberofgameswon: model.numberOfGamesWon.toString(),
+          timesReported: model.timesReported.toString(),
           // gameswontext: ' games won',
           onPressed: () {
             print('Leaderboard entry pressed');
@@ -88,7 +96,7 @@ class _LeaderBoardState extends State<LeaderBoard> {
       leaderboardnumber: 'RANK',
       text: 'RATING',
       numberofgameswon: '',
-      gameswontext: 'days remaining',
+      timesReported: 'timesReported',
 
       onPressed: () {
         print('boop');
@@ -102,10 +110,7 @@ class _LeaderBoardState extends State<LeaderBoard> {
     return Scaffold(
       body: Center(
         child: Column(
-          //mainAxisAlignment: MainAxisAlignment.center, // Center vertically
-          //crossAxisAlignment: CrossAxisAlignment.center, // Center horizontally
           children: [
-            // ...getLeaderboardWidgets(),
             TextField(
               decoration: InputDecoration(
                 border: OutlineInputBorder(),
@@ -117,21 +122,19 @@ class _LeaderBoardState extends State<LeaderBoard> {
                 setState(() {
                   newUserId = value;
                 });
-                print(newUserId);
               },
             ),
             TextField(
               decoration: InputDecoration(
                 border: OutlineInputBorder(),
                 labelText: 'Enter Tagline',
-                hintText: 'e.g. your ingame Tag',
+                hintText: 'e.g. your in-game Tag',
                 errorText: newTagLine.isEmpty ? 'Tag line is required' : null,
               ),
               onChanged: (value) {
                 setState(() {
                   newTagLine = value;
                 });
-                print(newTagLine);
               },
             ),
             TextButton(
@@ -140,8 +143,15 @@ class _LeaderBoardState extends State<LeaderBoard> {
                   final user = UserModel(
                     userId: newUserId,
                     tagLine: newTagLine,
+                    timesReported: reportedValue,
+                    reportedTime: DateTime.now(),
                   );
-                  Get.find<UserRepository>().createUser(user);
+                  Get.find<UserRepository>().createUser(user).then((_) {
+                    setState(() {
+                      leaderboardFuture =
+                          Get.find<UserRepository>().getLeaderboard();
+                    });
+                  });
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                       content: Text('User data submitted successfully!'),
@@ -155,8 +165,40 @@ class _LeaderBoardState extends State<LeaderBoard> {
                   );
                 }
               },
-              child: Text("Submit data"),
+              child: Text("Report"),
             ),
+            Expanded(
+              child: FutureBuilder<List<LeaderboardModel>>(
+                future: leaderboardFuture,
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return CircularProgressIndicator();
+                  } else if (snapshot.hasError) {
+                    return Text("Error: ${snapshot.error}");
+                  } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                    return Text("No data available");
+                  } else {
+                    final leaderboard = snapshot.data!;
+                    return ListView(
+                      children:
+                          leaderboard.map((model) {
+                            return LeadCard(
+                              leaderboardnumber:
+                                  model.leaderboardNumber.toString(),
+                              text: model.rating.toString(),
+                              leaderboardname: model.username,
+                              timesReported: model.timesReported.toString(),
+                              onPressed: () {
+                                print('${model.username} pressed');
+                              },
+                            );
+                          }).toList(),
+                    );
+                  }
+                },
+              ),
+            ),
+            //...getLeaderboardWidgets()
           ], // Display all widgets from the list
         ),
       ),
@@ -258,5 +300,3 @@ class MySearchDelegate extends SearchDelegate {
     );
   }
 }
-
-// final user = UserModel(userId: newUserId, tagLine: newTagLine);

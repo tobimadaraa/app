@@ -7,15 +7,14 @@ class LeadCard extends StatelessWidget {
   final String text;
   final String leaderboardnumber;
   final String leaderboardname;
-  final String numberofgameswon;
-  // this will always be the same text dont need to pass it
+  final String timesReported;
   final void Function() onPressed;
   const LeadCard({
     super.key,
     required this.text,
     required this.leaderboardname,
     required this.leaderboardnumber,
-    required this.numberofgameswon,
+    required this.timesReported,
     required this.onPressed,
   });
 
@@ -74,21 +73,21 @@ class LeadCard extends StatelessWidget {
               ),
             ),
             Expanded(
-              flex: 3, // 4 out of 5 (80%)
+              flex: 4, // 4 out of 5 (80%)
               child: Container(
                 color: Colors.transparent, // Original background color
                 alignment: Alignment.centerRight,
                 child: Row(
                   children: [
                     Text(
-                      numberofgameswon,
+                      timesReported,
                       style: TextStyle(
                         color: CustomColours.whiteDiscordText,
                         fontSize: 16,
                       ),
                     ),
                     Text(
-                      ' games won', // games text string here
+                      ' times reported', // games text string here
                       style: TextStyle(
                         color: CustomColours.whiteDiscordText,
                         fontSize: 16,
