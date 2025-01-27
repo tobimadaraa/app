@@ -26,7 +26,7 @@ class LeaderboardList extends StatelessWidget {
                   return LeadCard(
                     leaderboardnumber: model.leaderboardNumber.toString(),
                     text: model.rating.toString(),
-                    leaderboardname: model.username,
+                    leaderboardname: '${model.username}#${model.tagline}',
                     timesReported: model.timesReported.toString(),
                     onPressed: () {
                       // ignore: avoid_print
