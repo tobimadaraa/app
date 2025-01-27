@@ -22,6 +22,7 @@ String newTagLine = '';
 
 class _LeaderBoardState extends State<LeaderBoard> {
   List<String> usernames = [];
+  List<String> taglines = [];
   late Future<List<LeaderboardModel>> leaderboardFuture;
   @override
   void initState() {
@@ -31,6 +32,7 @@ class _LeaderBoardState extends State<LeaderBoard> {
     ) {
       setState(() {
         usernames = data.map((e) => e.username).toList();
+        taglines = data.map((e) => e.tagline).toList();
       });
       return data;
     });

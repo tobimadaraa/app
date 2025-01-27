@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_application_2/classes/colour_classes.dart';
 
-// seperate onto its own class
-
 class LeadCard extends StatelessWidget {
   final String text;
   final String leaderboardnumber;
@@ -21,83 +19,88 @@ class LeadCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
-      elevation: 0,
+      margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
       color: CustomColours.backGroundColor,
       child: SizedBox(
-        child: Row(
-          children: [
-            Expanded(
-              flex: 2,
-              child: Container(
-                color: Colors.grey[700],
-                alignment: Alignment.center,
-                padding: const EdgeInsets.all(8.0),
-                child: Text(
-                  leaderboardnumber,
-                  style: TextStyle(
-                    color: CustomColours.whiteDiscordText,
-                    fontSize: 16, // Adjust font size as needed
-                    //),
+        child: InkWell(
+          onTap: onPressed,
+          child: Row(
+            children: [
+              // Leaderboard Number (Grey Box)
+              Expanded(
+                flex: 2,
+                child: Container(
+                  color: Colors.grey[700],
+                  alignment: Alignment.center,
+                  padding: const EdgeInsets.all(8.0),
+                  child: Text(
+                    leaderboardnumber,
+                    style: TextStyle(
+                      color: CustomColours.whiteDiscordText,
+                      fontSize: 16,
+                    ),
                   ),
                 ),
               ),
-            ),
-            Expanded(
-              flex: 2,
-              child: Container(
-                color: CustomColours.backGroundColor,
-                alignment: Alignment.center,
-                padding: const EdgeInsets.all(8.0),
-                child: Text(
-                  text,
-                  style: TextStyle(
-                    color: CustomColours.whiteDiscordText,
-                    fontSize: 16,
+
+              // Rating (Text)
+              Expanded(
+                flex: 2,
+                child: Container(
+                  color: CustomColours.backGroundColor,
+                  alignment: Alignment.center,
+                  padding: const EdgeInsets.all(8.0),
+                  child: Text(
+                    text,
+                    style: TextStyle(
+                      color: CustomColours.whiteDiscordText,
+                      fontSize: 16,
+                    ),
                   ),
                 ),
               ),
-            ),
-            Expanded(
-              flex: 3, // 4 out of 5 (80%)
-              child: Container(
-                color: Colors.transparent, // Original background color
-                alignment: Alignment.centerLeft,
-                padding: const EdgeInsets.all(8.0),
-                child: Text(
-                  leaderboardname,
-                  style: TextStyle(
-                    color: CustomColours.whiteDiscordText,
-                    fontSize: 16,
-                  ),
-                ),
-              ),
-            ),
-            Expanded(
-              flex: 4, // 4 out of 5 (80%)
-              child: Container(
-                color: Colors.transparent, // Original background color
-                alignment: Alignment.centerRight,
-                child: Row(
-                  children: [
-                    Text(
-                      timesReported,
+
+              // Riot ID + Tagline (Combined)
+              Expanded(
+                flex: 5,
+                child: Container(
+                  alignment: Alignment.centerLeft,
+                  padding: const EdgeInsets.all(8.0),
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text(
+                      leaderboardname, // Should already include "#Tagline" from LeaderboardList
                       style: TextStyle(
                         color: CustomColours.whiteDiscordText,
+                        fontWeight: FontWeight.bold,
                         fontSize: 16,
                       ),
+                      overflow: TextOverflow.ellipsis, // Fix text overflow
                     ),
-                    Text(
-                      ' times reported', // games text string here
-                      style: TextStyle(
-                        color: CustomColours.whiteDiscordText,
-                        fontSize: 16,
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
               ),
-            ),
-          ],
+
+              // Times Reported (Fixed Layout)
+              Expanded(
+                flex: 3,
+                child: Container(
+                  padding: const EdgeInsets.only(right: 8),
+                  alignment: Alignment.centerRight,
+                  child: Text(
+                    '$timesReported times reported', // Single text widget
+                    style: TextStyle(
+                      color: CustomColours.whiteDiscordText,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 12,
+                    ),
+                    textAlign: TextAlign.right,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
