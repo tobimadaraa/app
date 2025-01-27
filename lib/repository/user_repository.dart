@@ -10,15 +10,16 @@ class UserRepository extends GetxController {
   Future<void> createUser(UserModel user) async {
     try {
       // Use `doc` to update or create user by userId
-      final userDoc = _db.collection("Users").doc(user.userId);
-      final docSnapshot = await userDoc.get();
+      final username = _db.collection("Users").doc(user.userId);
+      final usertagline = _db.collection("Users").doc(user.tagline);
+      final docSnapshot = await username.get();
 
       if (docSnapshot.exists) {
         // Increment lastReported if the user already exists
-        await userDoc.update({'times_reported': FieldValue.increment(1)});
+        await username.update({'times_reported': FieldValue.increment(1)});
       } else {
         // Create a new user with default lastReported
-        await userDoc.set(user.toJson());
+        await username.set(user.toJson());
       }
 
       Get.snackbar(
@@ -50,6 +51,7 @@ class UserRepository extends GetxController {
           leaderboardNumber: 0, // You can calculate rank separately
           rating: data['rating'] ?? 0,
           username: data['user_id'] ?? '',
+          tagline: data['tag_line'] ?? '',
           timesReported: data['times_reported'] ?? 0,
           lastReported:
               data['last_reported'] != null

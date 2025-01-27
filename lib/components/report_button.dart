@@ -24,7 +24,7 @@ class ReportButtonState extends State<ReportButton> {
     if (widget.newUserId.isNotEmpty && widget.newTagLine.isNotEmpty) {
       final user = UserModel(
         userId: widget.newUserId,
-        tagLine: widget.newTagLine,
+        tagline: widget.newTagLine,
         timesReported: 0,
         lastReported: DateTime.now(),
       );
