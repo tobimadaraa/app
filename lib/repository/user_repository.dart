@@ -9,16 +9,42 @@ class UserRepository extends GetxController {
 
   Future<void> createUser(UserModel user) async {
     try {
-      // Use `doc` to update or create user by userId
-      final username = _db.collection("Users").doc(user.userId);
-      final docSnapshot = await username.get();
+      // Query for matching Riot ID and tagline
+      final query =
+          await _db
+              .collection("Users")
+              .where('user_id', isEqualTo: user.userId)
+              .where('tag_line', isEqualTo: user.tagline)
+              .get();
 
-      if (docSnapshot.exists) {
-        // Increment lastReported if the user already exists
-        await username.update({'times_reported': FieldValue.increment(1)});
+      if (query.docs.isNotEmpty) {
+        // Update the existing user's report count
+        final doc = query.docs.first.reference;
+        await doc.update({
+          'times_reported': FieldValue.increment(1),
+          'last_reported': user.lastReported.toIso8601String(),
+        });
       } else {
-        // Create a new user with default lastReported
-        await username.set(user.toJson());
+        // Check if Riot ID exists with a different tagline
+        final idQuery =
+            await _db
+                .collection("Users")
+                .where('user_id', isEqualTo: user.userId)
+                .get();
+
+        if (idQuery.docs.isNotEmpty) {
+          // Riot ID exists with a different tagline, create new user
+          await _db.collection("Users").add({
+            ...user.toJson(), // Include all fields from user
+            'times_reported': 1, // Set to 1 for the first report
+          });
+        } else {
+          // Completely new user
+          await _db.collection("Users").doc(user.userId).set({
+            ...user.toJson(), // Include all fields from user
+            'times_reported': 1, // Set to 1 for the first report
+          });
+        }
       }
 
       Get.snackbar(
@@ -36,7 +62,6 @@ class UserRepository extends GetxController {
         backgroundColor: Colors.red,
         colorText: Colors.white,
       );
-      // ignore: avoid_print
       print(error.toString());
     }
   }
