@@ -7,7 +7,7 @@ import 'package:get/get.dart';
 class ReportButton extends StatefulWidget {
   final String newUserId;
   final String newTagLine;
-  final Future<void> Function() onSuccess;
+  final Future<void> Function() onSuccess; // Callback after successful report
 
   const ReportButton({
     super.key,
@@ -21,8 +21,11 @@ class ReportButton extends StatefulWidget {
 }
 
 class ReportButtonState extends State<ReportButton> {
+  // Get an instance of UserRepository
+  final UserRepository _userRepository = Get.find<UserRepository>();
+
   Future<void> _handleReport() async {
-    // Check for empty fields
+    // Step 1: Validate input fields
     if (widget.newUserId.isEmpty || widget.newTagLine.isEmpty) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -34,13 +37,14 @@ class ReportButtonState extends State<ReportButton> {
       return;
     }
 
-    // Validate tagline format
+    // Step 2: Validate formats using the validators
     final taglineError = Validator.validateTagline(widget.newTagLine);
     final userNameError = Validator.validateUsername(widget.newUserId);
+
     if (taglineError != null) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(taglineError)), // Show specific error
+          SnackBar(content: Text(taglineError)), // Display specific error
         );
       }
       return;
@@ -48,24 +52,27 @@ class ReportButtonState extends State<ReportButton> {
 
     if (userNameError != null) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(userNameError)));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(userNameError)), // Display specific error
+        );
       }
       return;
     }
-    // Proceed if validation passes
+
+    // Step 3: Create a new user object
     final user = UserModel(
       userId: widget.newUserId,
       tagline: widget.newTagLine,
-      timesReported: 0,
-      lastReported: DateTime.now(),
+      timesReported: 0, // Initialize report count
+      lastReported: DateTime.now(), // Record the current time
     );
 
+    // Step 4: Interact with the repository
     try {
-      await Get.find<UserRepository>().createUser(user);
+      await _userRepository.createUser(user); // Pass user to the repository
+
       if (mounted) {
-        await widget.onSuccess();
+        await widget.onSuccess(); // Trigger success callback
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('User data submitted successfully!')),
         );
@@ -73,7 +80,7 @@ class ReportButtonState extends State<ReportButton> {
     } catch (error) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(error.toString())), // Show actual error
+          SnackBar(content: Text(error.toString())), // Show error details
         );
       }
     }
@@ -81,6 +88,10 @@ class ReportButtonState extends State<ReportButton> {
 
   @override
   Widget build(BuildContext context) {
-    return TextButton(onPressed: _handleReport, child: const Text("Report"));
+    // Build a simple button for reporting
+    return TextButton(
+      onPressed: _handleReport, // Handle button press
+      child: const Text("Report"),
+    );
   }
 }
