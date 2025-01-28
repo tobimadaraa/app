@@ -7,6 +7,7 @@ import 'package:flutter_application_2/components/report_button.dart';
 import 'package:flutter_application_2/models/leaderboard_model.dart';
 import 'package:flutter_application_2/repository/user_repository.dart';
 import 'package:flutter_application_2/utils/search_delegate.dart';
+import 'package:flutter_application_2/utils/validators.dart';
 import 'package:get/get.dart';
 
 class LeaderBoard extends StatefulWidget {
@@ -19,6 +20,8 @@ class LeaderBoard extends StatefulWidget {
 
 String newUserId = '';
 String newTagLine = '';
+String? _tagLineError;
+String? _usernameError;
 
 class _LeaderBoardState extends State<LeaderBoard> {
   List<String> usernames = [];
@@ -50,17 +53,30 @@ class _LeaderBoardState extends State<LeaderBoard> {
               child: InputField(
                 labelText: 'Enter Riot ID',
                 hintText: 'e.g. your username',
-                errorText: newUserId.isEmpty ? 'UserId is required' : null,
-                onChanged: (value) => setState(() => newUserId = value),
+                errorText: _usernameError,
+                //errorText: newUserId.isEmpty ? 'UserId is required' : null,
+                onChanged: (value) {
+                  setState(() {
+                    newUserId = value;
+                    _usernameError = Validator.validateUsername(value);
+                  });
+                },
               ),
             ),
             Padding(
               padding: const EdgeInsets.all(8.0),
               child: InputField(
                 labelText: 'Enter Tagline',
-                hintText: 'e.g. your in-game Tag',
-                errorText: newTagLine.isEmpty ? 'Tag line is required' : null,
-                onChanged: (value) => setState(() => newTagLine = value),
+                hintText: 'e.g. NA1 (max 6 letters/numbers)',
+                errorText: _tagLineError, // ? 'Tag line is required' : null,
+                onChanged: (value) {
+                  setState(() {
+                    newTagLine = value;
+                    _tagLineError = Validator.validateTagline(
+                      value,
+                    ); // Update error on typing
+                  });
+                },
               ),
             ),
             ReportButton(
