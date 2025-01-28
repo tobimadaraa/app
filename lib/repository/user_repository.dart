@@ -11,7 +11,6 @@ class UserRepository extends GetxController {
     try {
       // Use `doc` to update or create user by userId
       final username = _db.collection("Users").doc(user.userId);
-      final usertagline = _db.collection("Users").doc(user.tagline);
       final docSnapshot = await username.get();
 
       if (docSnapshot.exists) {
