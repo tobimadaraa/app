@@ -5,7 +5,7 @@ class Validator {
 
   static String? validateTagline(String value) {
     if (value.isEmpty) return 'Tagline is required';
-    if (value.length > 5) return 'Max 5 characters';
+    if (value.length < 3 || value.length > 5) return 'Enter 3-5 Characters';
     //  if (RegExp(_pureNumbersRegex).hasMatch(value)) return 'No pure numbers';
     if (!RegExp(_taglineRegex).hasMatch(value)) return 'Invalid characters';
     return null;
@@ -13,7 +13,7 @@ class Validator {
 
   static String? validateUsername(String value) {
     if (value.isEmpty) return 'Riot ID is required';
-    if (value.length < 3 || value.length > 16) return '3-16 Characters';
+    if (value.length < 3 || value.length > 16) return 'Enter 3-16 Characters';
     //   if (RegExp(_pureNumbersRegex).hasMatch(value)) return 'No pure numbers';
     if (!RegExp(_usernameRegex).hasMatch(value)) return 'Invalid characters';
     return null;
