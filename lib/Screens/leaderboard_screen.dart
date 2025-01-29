@@ -26,6 +26,7 @@ String? _usernameError;
 class _LeaderBoardState extends State<LeaderBoard> {
   List<String> usernames = [];
   List<String> taglines = [];
+  List<String> leaderboardNames = [];
   late Future<List<LeaderboardModel>> leaderboardFuture;
   @override
   void initState() {
@@ -36,6 +37,8 @@ class _LeaderBoardState extends State<LeaderBoard> {
       setState(() {
         usernames = data.map((e) => e.username).toList();
         taglines = data.map((e) => e.tagline).toList();
+        leaderboardNames =
+            data.map((e) => '${e.username}#${e.tagline}').toList();
       });
       return data;
     });
@@ -103,11 +106,11 @@ class _LeaderBoardState extends State<LeaderBoard> {
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.search),
+            icon: const Icon(Icons.search, color: Colors.black),
             onPressed: () {
               showSearch(
                 context: context,
-                delegate: MySearchDelegate(usernames),
+                delegate: MySearchDelegate(leaderboardNames),
               );
             },
           ),
