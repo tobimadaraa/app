@@ -1,7 +1,7 @@
 class Validator {
   static const _taglineRegex = r'^[a-zA-Z0-9]{1,6}$';
   static const _usernameRegex = r'^[a-zA-Z0-9]{1,16}$';
-  static const _pureNumbersRegex = r'^[0-9]+$';
+  // static const _pureNumbersRegex = r'^[0-9]+$';
 
   static String? validateTagline(String value) {
     if (value.isEmpty) return 'Tagline is required';
