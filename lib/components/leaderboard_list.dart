@@ -11,6 +11,7 @@ class LeaderboardList extends StatelessWidget {
   Widget build(BuildContext context) {
     return FutureBuilder<List<LeaderboardModel>>(
       future: leaderboardFuture,
+
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator());
@@ -20,11 +21,14 @@ class LeaderboardList extends StatelessWidget {
           return const Center(child: Text("No data available"));
         } else {
           final leaderboard = snapshot.data!;
+          leaderboard.sort(
+            (a, b) => b.timesReported.compareTo(a.timesReported),
+          );
           return ListView(
             children:
                 leaderboard.map((model) {
                   return LeadCard(
-                    leaderboardnumber: model.leaderboardNumber.toString(),
+                    //leaderboardnumber: model.leaderboardNumber.toString(),
                     text: model.rating.toString(),
                     leaderboardname: '${model.username}#${model.tagline}',
                     timesReported: model.timesReported.toString(),
