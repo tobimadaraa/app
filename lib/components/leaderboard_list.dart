@@ -24,17 +24,19 @@ class LeaderboardList extends StatelessWidget {
           leaderboard.sort(
             (a, b) => b.timesReported.compareTo(a.timesReported),
           );
-          return ListView(
-            children:
-                leaderboard.map((model) {
-                  return LeadCard(
-                    //leaderboardnumber: model.leaderboardNumber.toString(),
-                    text: model.rating.toString(),
-                    leaderboardname: '${model.username}#${model.tagline}',
-                    timesReported: model.timesReported.toString(),
-                    lastReported: model.lastReported,
-                  );
-                }).toList(),
+          return ListView.builder(
+            itemCount: leaderboard.length,
+            itemBuilder: (context, index) {
+              final model = leaderboard[index];
+              final rank = index + 1; // Assign rank number starting from 1
+
+              return LeadCard(
+                text: rank.toString(), // Pass rank number
+                leaderboardname: '${model.username}#${model.tagline}',
+                timesReported: model.timesReported.toString(),
+                lastReported: model.lastReported,
+              );
+            },
           );
         }
       },

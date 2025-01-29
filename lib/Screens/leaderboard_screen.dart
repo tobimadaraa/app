@@ -121,10 +121,10 @@ class _LeaderBoardState extends State<LeaderBoard> {
         ),
         title: Column(
           children: [
-            const Text("Leaderboard", style: TextStyle(fontSize: 15)),
+            const Text("Valorant Cheater", style: TextStyle(fontSize: 15)),
             SizedBox(height: 8),
             Text(
-              'Cheater',
+              'Leaderboard',
               style: TextStyle(color: Colors.black, fontSize: 30),
             ),
           ],

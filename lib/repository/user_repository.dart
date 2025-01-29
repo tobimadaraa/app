@@ -84,7 +84,7 @@ class UserRepository extends GetxController {
 
         return LeaderboardModel(
           leaderboardNumber: 0, // You can calculate rank separately
-          rating: data['rating'] ?? 0,
+          // rating: data['rating'] ?? 0,
           username: data['user_id'] ?? '',
           tagline: data['tag_line'] ?? '',
           timesReported: data['times_reported'] ?? 0,

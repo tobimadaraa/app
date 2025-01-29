@@ -1,13 +1,11 @@
 class LeaderboardModel {
   final int leaderboardNumber;
-  final int rating;
   final String username;
   final String tagline;
   final int timesReported;
   final List<String> lastReported;
   LeaderboardModel({
     required this.leaderboardNumber,
-    required this.rating,
     required this.username,
     required this.tagline,
     required this.timesReported,
@@ -17,7 +15,7 @@ class LeaderboardModel {
   factory LeaderboardModel.fromJson(Map<String, dynamic> json) {
     return LeaderboardModel(
       leaderboardNumber: json['leaderboardNumber'] ?? 0,
-      rating: json['rating'] ?? 0,
+      // rating: json['rating'] ?? 0,
       username: json['username'] ?? '',
       tagline: json['tagline'] ?? '',
       timesReported: json['times_reported'] ?? 0,
