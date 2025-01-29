@@ -32,10 +32,7 @@ class LeaderboardList extends StatelessWidget {
                     text: model.rating.toString(),
                     leaderboardname: '${model.username}#${model.tagline}',
                     timesReported: model.timesReported.toString(),
-                    onPressed: () {
-                      // ignore: avoid_print
-                      print('${model.username} pressed');
-                    },
+                    lastReported: model.lastReported,
                   );
                 }).toList(),
           );
