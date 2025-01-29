@@ -3,7 +3,7 @@ import 'package:flutter_application_2/classes/colour_classes.dart';
 
 class LeadCard extends StatelessWidget {
   final String text;
-  final String leaderboardnumber;
+  // final String leaderboardnumber;
   final String leaderboardname;
   final String timesReported;
   final void Function() onPressed;
@@ -11,7 +11,7 @@ class LeadCard extends StatelessWidget {
     super.key,
     required this.text,
     required this.leaderboardname,
-    required this.leaderboardnumber,
+    //  required this.leaderboardnumber,
     required this.timesReported,
     required this.onPressed,
   });
@@ -27,21 +27,21 @@ class LeadCard extends StatelessWidget {
           child: Row(
             children: [
               // Leaderboard Number (Grey Box)
-              Expanded(
-                flex: 2,
-                child: Container(
-                  color: Colors.grey[700],
-                  alignment: Alignment.center,
-                  padding: const EdgeInsets.all(8.0),
-                  child: Text(
-                    leaderboardnumber,
-                    style: TextStyle(
-                      color: CustomColours.whiteDiscordText,
-                      fontSize: 16,
-                    ),
-                  ),
-                ),
-              ),
+              // Expanded(
+              //   flex: 2,
+              //   child: Container(
+              //     color: Colors.grey[700],
+              //     alignment: Alignment.center,
+              //     padding: const EdgeInsets.all(8.0),
+              //     child: Text(
+              //       leaderboardnumber,
+              //       style: TextStyle(
+              //         color: CustomColours.whiteDiscordText,
+              //         fontSize: 16,
+              //       ),
+              //     ),
+              //   ),
+              // ),
 
               // Rating (Text)
               Expanded(

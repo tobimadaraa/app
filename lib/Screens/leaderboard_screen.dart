@@ -124,7 +124,7 @@ class _LeaderBoardState extends State<LeaderBoard> {
             const Text("Leaderboard", style: TextStyle(fontSize: 15)),
             SizedBox(height: 8),
             Text(
-              'Radiant',
+              'Cheater',
               style: TextStyle(color: Colors.black, fontSize: 30),
             ),
           ],
