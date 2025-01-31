@@ -24,10 +24,12 @@ String? _tagLineError;
 String? _usernameError;
 
 class _LeaderBoardState extends State<LeaderBoard> {
-  List<String> usernames = [];
-  List<String> taglines = [];
-  List<String> leaderboardNames = [];
+  // List<String> usernames = [];
+  // List<String> taglines = [];
+  //List<String> leaderboardNames = [];
+  List<LeaderboardModel> leaderboardList = [];
   late Future<List<LeaderboardModel>> leaderboardFuture;
+
   @override
   void initState() {
     super.initState();
@@ -35,10 +37,11 @@ class _LeaderBoardState extends State<LeaderBoard> {
       data,
     ) {
       setState(() {
-        usernames = data.map((e) => e.username).toList();
-        taglines = data.map((e) => e.tagline).toList();
-        leaderboardNames =
-            data.map((e) => '${e.username}#${e.tagline}').toList();
+        leaderboardList = data; // Store the full list
+        //  usernames = data.map((e) => e.username).toList();
+        //  taglines = data.map((e) => e.tagline).toList();
+        //  leaderboardNames =
+        //  data.map((e) => '${e.username}#${e.tagline}').toList();
       });
       return data;
     });
@@ -110,7 +113,7 @@ class _LeaderBoardState extends State<LeaderBoard> {
             onPressed: () {
               showSearch(
                 context: context,
-                delegate: MySearchDelegate(leaderboardNames),
+                delegate: MySearchDelegate(leaderboardList),
               );
             },
           ),
