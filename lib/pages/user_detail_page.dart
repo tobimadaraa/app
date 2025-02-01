@@ -1,6 +1,7 @@
 // user_detail_page.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_application_2/models/leaderboard_model.dart';
+import 'package:flutter_application_2/utils/date_formatter.dart';
 
 class UserDetailPage extends StatelessWidget {
   final LeaderboardModel user;
@@ -16,20 +17,21 @@ class UserDetailPage extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Text(
+            //   'Username: ${user.username}',
+            //   style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            // ),
+            // SizedBox(height: 8),
+            // Text(
+            //   'Tagline: ${user.tagline}',
+            //   style: TextStyle(fontSize: 18, color: Colors.grey[700]),
+            // ),
+            //SizedBox(height: 16),
             Text(
-              'Username: ${user.username}',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-            ),
-            SizedBox(height: 8),
-            Text(
-              'Tagline: ${user.tagline}',
-              style: TextStyle(fontSize: 18, color: Colors.grey[700]),
-            ),
-            SizedBox(height: 16),
-            Text(
-              'Times Reported: ${user.timesReported}',
+              'Times Reported: ${user.cheaterReports}\nToxicity Reports: ${user.toxicityReported}',
               style: TextStyle(fontSize: 18),
             ),
+
             SizedBox(height: 16),
             Text('Last Reported:', style: TextStyle(fontSize: 18)),
             SizedBox(height: 8),
@@ -39,8 +41,11 @@ class UserDetailPage extends StatelessWidget {
                       ? ListView.builder(
                         itemCount: user.lastReported.length,
                         itemBuilder: (context, index) {
-                          return Text(
+                          String formattedDate = DateFormatter.formatDate(
                             user.lastReported[index],
+                          );
+                          return Text(
+                            formattedDate,
                             style: TextStyle(fontSize: 16),
                           );
                         },
