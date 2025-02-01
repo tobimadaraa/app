@@ -39,12 +39,14 @@ class LeaderboardModel {
   Map<String, dynamic> toJson() {
     return {
       'leaderboardNumber': leaderboardNumber,
-      'username': username,
-      'tagline': tagline,
+      'username': username.toLowerCase(),
+      'tagline': tagline.toLowerCase(),
       'cheater_reported': cheaterReports,
       'toxicity_reported': toxicityReported,
       'page_views': pageViews,
       'last_reported': lastReported,
     };
   }
+
+  //String get fullRiotId => '${username.toLowerCase()}#${tagline.toLowerCase()}';
 }

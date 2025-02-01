@@ -59,8 +59,8 @@ class ReportButtonState extends State<ReportButton> {
     // Step 3: Create a new user object
     // Assume your UserModel has been updated (or you pass along additional parameters) to know which counter to update.
     final user = UserModel(
-      userId: widget.newUserId,
-      tagline: widget.newTagLine,
+      userId: widget.newUserId.toLowerCase(),
+      tagline: widget.newTagLine.toLowerCase(),
       // timesReported: 0, // Default for cheater
       lastReported: DateTime.now(),
       // Optionally, if your UserModel supports toxicity, include that too.
