@@ -76,7 +76,8 @@ class LeaderboardList extends StatelessWidget {
 
               return LeadCard(
                 text: rank.toString(), // Rank number
-                leaderboardname: '${model.username}#${model.tagline}',
+                leaderboardname:
+                    '${model.username.toLowerCase()}#${model.tagline.toLowerCase()}',
                 reportLabel: reportLabel,
                 // For display, use the appropriate report count (for example, if showToxicity is false, show cheaterReports):
                 cheaterReports:

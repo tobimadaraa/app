@@ -9,17 +9,17 @@ class ReportButton extends StatefulWidget {
   final String newUserId;
   final String newTagLine;
   final Future<void> Function() onSuccess;
-  final String buttonText; // New parameter for button text
-  final bool
-  isToxicity; // New parameter to determine which report counter to update
+  final String buttonText;
+  final bool isToxicity;
 
+  // Now buttonText and isToxicity are optional with default values.
   const ReportButton({
     super.key,
     required this.newUserId,
     required this.newTagLine,
     required this.onSuccess,
-    required this.buttonText,
-    required this.isToxicity,
+    this.buttonText = 'Report Cheater', // Default text
+    this.isToxicity = false, // Default report type is for cheater
   });
 
   @override
@@ -57,13 +57,9 @@ class ReportButtonState extends State<ReportButton> {
     }
 
     // Step 3: Create a new user object
-    // Assume your UserModel has been updated (or you pass along additional parameters) to know which counter to update.
     final user = UserModel(
       userId: widget.newUserId.toLowerCase(),
       tagline: widget.newTagLine.toLowerCase(),
-      // timesReported: 0, // Default for cheater
-      lastReported: DateTime.now(),
-      // Optionally, if your UserModel supports toxicity, include that too.
     );
 
     // Step 4: Interact with the repository
@@ -88,7 +84,9 @@ class ReportButtonState extends State<ReportButton> {
   Widget build(BuildContext context) {
     return TextButton(
       onPressed: _handleReport,
-      child: Text(widget.buttonText), // Use the passed in button text
+      child: Text(
+        widget.buttonText,
+      ), // Uses the passed in or default button text
     );
   }
 }
