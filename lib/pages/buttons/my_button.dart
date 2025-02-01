@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_application_2/classes/colour_classes.dart';
+import 'package:flutter_application_2/shared/classes/colour_classes.dart';
 
 class Mybutton extends StatelessWidget {
   final String text;
