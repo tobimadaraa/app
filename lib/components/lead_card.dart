@@ -5,15 +5,24 @@ import 'package:intl/intl.dart'; // Import the intl package
 class LeadCard extends StatefulWidget {
   final String text;
   final String leaderboardname;
-  final String timesReported;
+  final String reportLabel; // This will be used for the dynamic label
+  final String
+  cheaterReports; // Represents the cheater report count (as a String)
+  final String
+  toxicityReports; // Represents the toxicity report count (as a String)
+  final Color
+  backgroundColor; // New: The background color based on the report counts
   final List<String> lastReported; // List of timestamps
 
   const LeadCard({
     super.key,
     required this.text,
     required this.leaderboardname,
-    required this.timesReported,
-    required this.lastReported, // Pass last_reported list
+    required this.reportLabel,
+    required this.cheaterReports,
+    required this.toxicityReports,
+    required this.backgroundColor,
+    required this.lastReported,
   });
 
   @override
@@ -26,14 +35,9 @@ class LeadCardState extends State<LeadCard> {
   // Helper function to format the timestamp
   String _formatTimestamp(String timestamp) {
     try {
-      // Parse the timestamp (assuming it's in ISO 8601 format)
       DateTime dateTime = DateTime.parse(timestamp);
-      // Format the DateTime object into a user-friendly format
-      return DateFormat(
-        'MMM d, y h:mm a',
-      ).format(dateTime); // Example: Oct 5, 2023 2:30 PM
+      return DateFormat('MMM d, y h:mm a').format(dateTime);
     } catch (e) {
-      // If parsing fails, return the original timestamp
       return timestamp;
     }
   }
@@ -42,18 +46,19 @@ class LeadCardState extends State<LeadCard> {
   Widget build(BuildContext context) {
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
-      color: CustomColours.backGroundColor,
+      // Use the passed-in background color
+      color: widget.backgroundColor,
       child: Column(
         children: [
           InkWell(
             onTap: () {
               setState(() {
-                isExpanded = !isExpanded; // Toggle expansion
+                isExpanded = !isExpanded;
               });
             },
             child: Row(
               children: [
-                // Rating (Text)
+                // Rank or rating (Text)
                 Expanded(
                   flex: 2,
                   child: Container(
@@ -69,7 +74,6 @@ class LeadCardState extends State<LeadCard> {
                     ),
                   ),
                 ),
-
                 // Riot ID + Tagline (Combined)
                 Expanded(
                   flex: 5,
@@ -79,7 +83,7 @@ class LeadCardState extends State<LeadCard> {
                     child: FittedBox(
                       fit: BoxFit.scaleDown,
                       child: Text(
-                        widget.leaderboardname, // Should include "#Tagline"
+                        widget.leaderboardname,
                         style: TextStyle(
                           color: CustomColours.whiteDiscordText,
                           fontWeight: FontWeight.bold,
@@ -90,15 +94,14 @@ class LeadCardState extends State<LeadCard> {
                     ),
                   ),
                 ),
-
-                // Times Reported (Fixed Layout)
+                // Report count (Dynamic using reportLabel)
                 Expanded(
                   flex: 3,
                   child: Container(
                     padding: const EdgeInsets.only(right: 8),
                     alignment: Alignment.centerRight,
                     child: Text(
-                      '${widget.timesReported} times reported',
+                      '${widget.cheaterReports} ${widget.reportLabel}',
                       style: TextStyle(
                         color: CustomColours.whiteDiscordText,
                         fontWeight: FontWeight.bold,
@@ -112,8 +115,7 @@ class LeadCardState extends State<LeadCard> {
               ],
             ),
           ),
-
-          // Expanded Section (Only Shows if isExpanded = true)
+          // Expanded Section (Only shows if isExpanded is true)
           if (isExpanded)
             Padding(
               padding: const EdgeInsets.all(8.0),
@@ -131,7 +133,7 @@ class LeadCardState extends State<LeadCard> {
                     (time) => Padding(
                       padding: const EdgeInsets.only(top: 4.0),
                       child: Text(
-                        "• ${_formatTimestamp(time)}", // Format the timestamp
+                        "• ${_formatTimestamp(time)}",
                         style: TextStyle(
                           color: CustomColours.whiteDiscordText,
                           fontSize: 14,

@@ -7,7 +7,10 @@ import 'package:get/get.dart';
 class UserRepository extends GetxController {
   final _db = FirebaseFirestore.instance;
 
-  Future<void> createUser(UserModel user) async {
+  Future<void> createUser(
+    UserModel user, {
+    bool isToxicityReport = false,
+  }) async {
     try {
       // Query for matching Riot ID and tagline
       final query =
@@ -16,14 +19,23 @@ class UserRepository extends GetxController {
               .where('user_id', isEqualTo: user.userId)
               .where('tag_line', isEqualTo: user.tagline)
               .get();
+
       String newReportTime = DateTime.now().toIso8601String();
+
       if (query.docs.isNotEmpty) {
         // Update the existing user's report count
         final doc = query.docs.first.reference;
-        await doc.update({
-          'times_reported': FieldValue.increment(1),
-          'last_reported': FieldValue.arrayUnion([newReportTime]),
-        });
+        if (isToxicityReport) {
+          await doc.update({
+            'toxicity_reported': FieldValue.increment(1),
+            'last_reported': FieldValue.arrayUnion([newReportTime]),
+          });
+        } else {
+          await doc.update({
+            'cheater_reported': FieldValue.increment(1),
+            'last_reported': FieldValue.arrayUnion([newReportTime]),
+          });
+        }
       } else {
         // Check if Riot ID exists with a different tagline
         final idQuery =
@@ -36,15 +48,17 @@ class UserRepository extends GetxController {
           // Riot ID exists with a different tagline, create new user
           await _db.collection("Users").add({
             ...user.toJson(), // Include all fields from user
-            'times_reported': 1,
-            'last_reported': [newReportTime], // Set to 1 for the first report
+            // Set the correct counter for the first report, and initialize the other to 0.
+            'cheater_reported': isToxicityReport ? 0 : 1,
+            'toxicity_reported': isToxicityReport ? 1 : 0,
+            'last_reported': [newReportTime],
           });
         } else {
-          // Completely new user
+          // Completely new user: create both counters with one set to 1 based on the report type.
           await _db.collection("Users").add({
             ...user.toJson(),
-            // Include all fields from user
-            'times_reported': 1, // Set to 1 for the first report
+            'cheater_reported': isToxicityReport ? 0 : 1,
+            'toxicity_reported': isToxicityReport ? 1 : 0,
             'last_reported': [newReportTime],
           });
         }
@@ -81,23 +95,19 @@ class UserRepository extends GetxController {
 
       return snapshot.docs.map((doc) {
         final data = doc.data();
-
         return LeaderboardModel(
           leaderboardNumber: 0, // You can calculate rank separately
-          // rating: data['rating'] ?? 0,
           username: data['user_id'] ?? '',
           tagline: data['tag_line'] ?? '',
-          timesReported: data['times_reported'] ?? 0,
+          cheaterReports: data['cheater_reported'] ?? 0,
+          // Read the new toxicity counter:
+          toxicityReported: data['toxicity_reported'] ?? 0,
           lastReported:
               (data['last_reported'] != null)
                   ? (data['last_reported'] is List)
-                      ? List<String>.from(
-                        data['last_reported'],
-                      ) // ✅ If it's a list, use it
-                      : [
-                        data['last_reported'].toString(),
-                      ] // ✅ If it's a string, wrap it in a list
-                  : [], // Default to an e // Default to empty listt to now if null
+                      ? List<String>.from(data['last_reported'])
+                      : [data['last_reported'].toString()]
+                  : [],
         );
       }).toList();
     } catch (error) {
