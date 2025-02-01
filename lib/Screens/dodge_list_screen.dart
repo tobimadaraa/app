@@ -1,38 +1,35 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_application_2/components/dodge_list_controller.dart';
+import 'package:flutter_application_2/models/leaderboard_model.dart';
 import 'package:flutter_application_2/repository/user_repository.dart';
 import 'package:flutter_application_2/shared/classes/colour_classes.dart';
 import 'package:flutter_application_2/components/input_field.dart';
 import 'package:flutter_application_2/utils/validators.dart';
 import 'package:get/get.dart';
-import 'package:flutter_application_2/models/leaderboard_model.dart';
 
 class DodgeList extends StatefulWidget {
-  const DodgeList({Key? key}) : super(key: key);
+  const DodgeList({super.key});
 
   @override
   State<DodgeList> createState() => _DodgeListState();
 }
 
 class _DodgeListState extends State<DodgeList> {
-  // Use the DodgeListController to persist the dodge list
+  // Use the DodgeListController.
   final DodgeListController dodgeListController = Get.put(
     DodgeListController(),
   );
 
-  // Local fields for input values.
   String newUserId = "";
   String newTagLine = "";
   String? usernameError;
   String? tagLineError;
 
-  /// This method fetches the full leaderboard, then tries to find a matching user
-  /// based on the input values. If found, the user is added to the dodge list.
+  /// This method fetches the leaderboard and attempts to add a matching user.
   Future<void> _addUserToDodgeList() async {
     try {
       List<LeaderboardModel> data =
           await Get.find<UserRepository>().getLeaderboard();
-      // Search for the user matching the inputs (case-insensitive)
       LeaderboardModel? userFound = data.firstWhereOrNull(
         (user) =>
             user.username.toLowerCase() == newUserId.toLowerCase() &&
@@ -65,7 +62,7 @@ class _DodgeListState extends State<DodgeList> {
       ),
       body: Column(
         children: [
-          // Input field for Riot ID
+          // Input for Riot ID
           Padding(
             padding: const EdgeInsets.all(8.0),
             child: InputField(
@@ -81,7 +78,7 @@ class _DodgeListState extends State<DodgeList> {
             ),
           ),
           const SizedBox(height: 16),
-          // Input field for Tagline
+          // Input for Tagline
           Padding(
             padding: const EdgeInsets.all(8.0),
             child: InputField(
@@ -96,17 +93,15 @@ class _DodgeListState extends State<DodgeList> {
               },
             ),
           ),
-          // "Add to dodgelist" button
+          // Add to dodge list button
           Padding(
             padding: const EdgeInsets.all(8.0),
             child: ElevatedButton(
-              onPressed: () async {
-                await _addUserToDodgeList();
-              },
+              onPressed: _addUserToDodgeList,
               child: const Text("Add to dodgelist"),
             ),
           ),
-          // Display the Dodge List using Obx for reactivity.
+          // Display the Dodge List using Obx.
           Expanded(
             child: Obx(() {
               if (dodgeListController.dodgeList.isEmpty) {
@@ -148,8 +143,7 @@ class _DodgeListState extends State<DodgeList> {
                           },
                         );
                         if (confirmDelete == true) {
-                          // Remove the user from the dodge list.
-                          dodgeListController.dodgeList.removeAt(index);
+                          dodgeListController.removeUser(user);
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(
                               content: Text("User removed from dodge list"),
