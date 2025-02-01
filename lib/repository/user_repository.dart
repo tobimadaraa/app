@@ -53,7 +53,7 @@ class UserRepository extends GetxController {
             'cheater_reported': isToxicityReport ? 0 : 1,
             'toxicity_reported': isToxicityReport ? 1 : 0,
             'last_reported': [newReportTime],
-            'page_views': 0, // Initialize page views if needed.
+            'page_views': 1, // Initialize page views if needed.
           });
         } else {
           // Completely new user: create both counters with one set to 1 based on the report type.
@@ -62,7 +62,7 @@ class UserRepository extends GetxController {
             'cheater_reported': isToxicityReport ? 0 : 1,
             'toxicity_reported': isToxicityReport ? 1 : 0,
             'last_reported': [newReportTime],
-            'page_views': 0, // Initialize page views for a new user.
+            'page_views': 1, // Initialize page views for a new user.
           });
         }
       }
