@@ -36,6 +36,7 @@ class UserRepository extends GetxController {
             'last_reported': FieldValue.arrayUnion([newReportTime]),
           });
         }
+        await incrementPageViews(user.userId, user.tagline);
       } else {
         // Check if Riot ID exists with a different tagline
         final idQuery =
@@ -52,6 +53,7 @@ class UserRepository extends GetxController {
             'cheater_reported': isToxicityReport ? 0 : 1,
             'toxicity_reported': isToxicityReport ? 1 : 0,
             'last_reported': [newReportTime],
+            'page_views': 0, // Initialize page views if needed.
           });
         } else {
           // Completely new user: create both counters with one set to 1 based on the report type.
@@ -60,6 +62,7 @@ class UserRepository extends GetxController {
             'cheater_reported': isToxicityReport ? 0 : 1,
             'toxicity_reported': isToxicityReport ? 1 : 0,
             'last_reported': [newReportTime],
+            'page_views': 0, // Initialize page views for a new user.
           });
         }
       }
@@ -79,8 +82,29 @@ class UserRepository extends GetxController {
         backgroundColor: Colors.red,
         colorText: Colors.white,
       );
-      // ignore: avoid_print
       print(error.toString());
+    }
+  }
+
+  Future<void> incrementPageViews(String userId, String tagline) async {
+    try {
+      // Query for the user document by user_id and tag_line.
+      final query =
+          await _db
+              .collection("Users")
+              .where('user_id', isEqualTo: userId)
+              .where('tag_line', isEqualTo: tagline)
+              .get();
+
+      if (query.docs.isNotEmpty) {
+        final docRef = query.docs.first.reference;
+        await docRef.update({'page_views': FieldValue.increment(1)});
+        print("Page views incremented for $userId");
+      } else {
+        print("User not found for incrementing page views");
+      }
+    } catch (error) {
+      print("Error incrementing page views: $error");
     }
   }
 
@@ -88,7 +112,6 @@ class UserRepository extends GetxController {
     try {
       final snapshot = await _db.collection("Users").get();
       if (snapshot.docs.isEmpty) {
-        // ignore: avoid_print
         print("Firestore: No users found.");
         return [];
       }
@@ -100,8 +123,8 @@ class UserRepository extends GetxController {
           username: data['user_id'] ?? '',
           tagline: data['tag_line'] ?? '',
           cheaterReports: data['cheater_reported'] ?? 0,
-          // Read the new toxicity counter:
           toxicityReported: data['toxicity_reported'] ?? 0,
+          pageViews: data['page_views'] ?? 0, // Read page_views from Firestore
           lastReported:
               (data['last_reported'] != null)
                   ? (data['last_reported'] is List)
@@ -111,7 +134,6 @@ class UserRepository extends GetxController {
         );
       }).toList();
     } catch (error) {
-      // ignore: avoid_print
       print("Error fetching leaderboard: $error");
       return [];
     }

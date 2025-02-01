@@ -1,18 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_application_2/classes/colour_classes.dart';
-import 'package:intl/intl.dart'; // Import the intl package
+import 'package:intl/intl.dart';
 
 class LeadCard extends StatefulWidget {
   final String text;
   final String leaderboardname;
-  final String reportLabel; // This will be used for the dynamic label
-  final String
-  cheaterReports; // Represents the cheater report count (as a String)
-  final String
-  toxicityReports; // Represents the toxicity report count (as a String)
-  final Color
-  backgroundColor; // New: The background color based on the report counts
-  final List<String> lastReported; // List of timestamps
+  final String reportLabel;
+  final String cheaterReports;
+  final String toxicityReports;
+  final Color backgroundColor;
+  final bool isFamous; // New flag: indicates whether to display a star icon
+  final List<String> lastReported;
 
   const LeadCard({
     super.key,
@@ -22,6 +20,7 @@ class LeadCard extends StatefulWidget {
     required this.cheaterReports,
     required this.toxicityReports,
     required this.backgroundColor,
+    required this.isFamous,
     required this.lastReported,
   });
 
@@ -30,9 +29,9 @@ class LeadCard extends StatefulWidget {
 }
 
 class LeadCardState extends State<LeadCard> {
-  bool isExpanded = false; // Track expansion state
+  bool isExpanded = false;
 
-  // Helper function to format the timestamp
+  // Helper to format timestamps.
   String _formatTimestamp(String timestamp) {
     try {
       DateTime dateTime = DateTime.parse(timestamp);
@@ -46,7 +45,6 @@ class LeadCardState extends State<LeadCard> {
   Widget build(BuildContext context) {
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
-      // Use the passed-in background color
       color: widget.backgroundColor,
       child: Column(
         children: [
@@ -58,11 +56,10 @@ class LeadCardState extends State<LeadCard> {
             },
             child: Row(
               children: [
-                // Rank or rating (Text)
+                // Rank or rating.
                 Expanded(
                   flex: 2,
                   child: Container(
-                    color: CustomColours.backGroundColor,
                     alignment: Alignment.center,
                     padding: const EdgeInsets.all(8.0),
                     child: Text(
@@ -74,34 +71,39 @@ class LeadCardState extends State<LeadCard> {
                     ),
                   ),
                 ),
-                // Riot ID + Tagline (Combined)
+                // Username + Tagline with optional star for famous users.
                 Expanded(
                   flex: 5,
                   child: Container(
                     alignment: Alignment.centerLeft,
                     padding: const EdgeInsets.all(8.0),
-                    child: FittedBox(
-                      fit: BoxFit.scaleDown,
-                      child: Text(
-                        widget.leaderboardname,
-                        style: TextStyle(
-                          color: CustomColours.whiteDiscordText,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            widget.leaderboardname,
+                            style: TextStyle(
+                              color: CustomColours.whiteDiscordText,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
                         ),
-                        overflow: TextOverflow.ellipsis,
-                      ),
+                        if (widget.isFamous)
+                          const Icon(Icons.star, color: Colors.amber, size: 20),
+                      ],
                     ),
                   ),
                 ),
-                // Report count (Dynamic using reportLabel)
+                // Report count (with label).
                 Expanded(
                   flex: 3,
                   child: Container(
                     padding: const EdgeInsets.only(right: 8),
                     alignment: Alignment.centerRight,
                     child: Text(
-                      '${widget.cheaterReports} ${widget.reportLabel}',
+                      '${widget.cheaterReports}\n${widget.reportLabel}',
                       style: TextStyle(
                         color: CustomColours.whiteDiscordText,
                         fontWeight: FontWeight.bold,
@@ -115,7 +117,7 @@ class LeadCardState extends State<LeadCard> {
               ],
             ),
           ),
-          // Expanded Section (Only shows if isExpanded is true)
+          // Expanded section showing last reported times.
           if (isExpanded)
             Padding(
               padding: const EdgeInsets.all(8.0),
