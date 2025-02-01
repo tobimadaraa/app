@@ -6,7 +6,6 @@ import 'package:get/get.dart';
 
 class UserRepository extends GetxController {
   final _db = FirebaseFirestore.instance;
-
   Future<void> createUser(
     UserModel user, {
     bool isToxicityReport = false,
@@ -28,15 +27,16 @@ class UserRepository extends GetxController {
         if (isToxicityReport) {
           await doc.update({
             'toxicity_reported': FieldValue.increment(1),
-            'last_reported': FieldValue.arrayUnion([newReportTime]),
+            // Update only the toxicity-related last reported times
+            'last_toxicity_reported': FieldValue.arrayUnion([newReportTime]),
           });
         } else {
           await doc.update({
             'cheater_reported': FieldValue.increment(1),
-            'last_reported': FieldValue.arrayUnion([newReportTime]),
+            // Update only the cheater-related last reported times
+            'last_cheater_reported': FieldValue.arrayUnion([newReportTime]),
           });
         }
-        await incrementPageViews(user.userId, user.tagline);
       } else {
         // Check if Riot ID exists with a different tagline
         final idQuery =
@@ -49,11 +49,12 @@ class UserRepository extends GetxController {
           // Riot ID exists with a different tagline, create new user
           await _db.collection("Users").add({
             ...user.toJson(), // Include all fields from user
-            // Set the correct counter for the first report, and initialize the other to 0.
             'cheater_reported': isToxicityReport ? 0 : 1,
             'toxicity_reported': isToxicityReport ? 1 : 0,
-            'last_reported': [newReportTime],
-            'page_views': 1, // Initialize page views if needed.
+            // Initialize the arrays based on the report type:
+            'last_cheater_reported': isToxicityReport ? [] : [newReportTime],
+            'last_toxicity_reported': isToxicityReport ? [newReportTime] : [],
+            'page_views': 0,
           });
         } else {
           // Completely new user: create both counters with one set to 1 based on the report type.
@@ -61,8 +62,9 @@ class UserRepository extends GetxController {
             ...user.toJson(),
             'cheater_reported': isToxicityReport ? 0 : 1,
             'toxicity_reported': isToxicityReport ? 1 : 0,
-            'last_reported': [newReportTime],
-            'page_views': 1, // Initialize page views for a new user.
+            'last_cheater_reported': isToxicityReport ? [] : [newReportTime],
+            'last_toxicity_reported': isToxicityReport ? [newReportTime] : [],
+            'page_views': 0,
           });
         }
       }
@@ -119,17 +121,26 @@ class UserRepository extends GetxController {
       return snapshot.docs.map((doc) {
         final data = doc.data();
         return LeaderboardModel(
-          leaderboardNumber: 0, // You can calculate rank separately
+          leaderboardNumber: 0, // Calculate rank as needed
           username: data['user_id'] ?? '',
           tagline: data['tag_line'] ?? '',
           cheaterReports: data['cheater_reported'] ?? 0,
           toxicityReported: data['toxicity_reported'] ?? 0,
-          pageViews: data['page_views'] ?? 0, // Read page_views from Firestore
-          lastReported:
-              (data['last_reported'] != null)
-                  ? (data['last_reported'] is List)
-                      ? List<String>.from(data['last_reported'])
-                      : [data['last_reported'].toString()]
+          pageViews: data['page_views'] ?? 0,
+          // Choose one of the following based on your UI design:
+          // If you want to display both arrays, add two fields to LeaderboardModel.
+          // Otherwise, if you only want the latest timestamp, extract the last element:
+          lastCheaterReported:
+              (data['last_cheater_reported'] != null &&
+                      data['last_cheater_reported'] is List &&
+                      (data['last_cheater_reported'] as List).isNotEmpty)
+                  ? List<String>.from(data['last_cheater_reported'])
+                  : [],
+          lastToxicityReported:
+              (data['last_toxicity_reported'] != null &&
+                      data['last_toxicity_reported'] is List &&
+                      (data['last_toxicity_reported'] as List).isNotEmpty)
+                  ? List<String>.from(data['last_toxicity_reported'])
                   : [],
         );
       }).toList();

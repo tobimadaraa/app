@@ -65,25 +65,33 @@ class LeaderboardList extends StatelessWidget {
                             model.cheaterReports,
                           ));
 
-              // Choose the appropriate report count to display.
-              final displayReportCount =
-                  showToxicity
-                      ? model.toxicityReported.toString()
-                      : model.cheaterReports.toString();
+              // // Choose the appropriate report count to display.
+              // final displayReportCount =
+              //     showToxicity
+              //         ? model.toxicityReported.toString()
+              //         : model.cheaterReports.toString();
 
               final reportLabel =
                   showToxicity ? 'Toxicity Reports' : 'Cheater Reports';
 
               return LeadCard(
-                text: rank.toString(),
-                leaderboardname:
-                    '${model.username.toLowerCase()}#${model.tagline.toLowerCase()}',
+                text: rank.toString(), // Rank number
+                leaderboardname: '${model.username}#${model.tagline}',
                 reportLabel: reportLabel,
-                cheaterReports: displayReportCount,
-                toxicityReports: model.toxicityReported.toString(),
+                // For display, use the appropriate report count (for example, if showToxicity is false, show cheaterReports):
+                cheaterReports:
+                    showToxicity
+                        ? model.toxicityReported.toString()
+                        : model.cheaterReports.toString(),
+                toxicityReports:
+                    model.toxicityReported
+                        .toString(), // If you need it for other purposes
                 backgroundColor: backgroundColor,
                 isFamous: isFamous,
-                lastReported: model.lastReported,
+                lastReported:
+                    showToxicity
+                        ? model.lastToxicityReported
+                        : model.lastCheaterReported,
               );
             },
           );
