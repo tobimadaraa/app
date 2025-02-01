@@ -1,42 +1,50 @@
 import 'package:flutter/material.dart';
 
 class ReportLevelHelper {
-  /// Returns a color based on the number of cheater reports.
-  /// * Less than 3 reports → Green
-  /// * 3 to 6 reports → Yellow
-  /// * 7 or more reports → Red
-  static Color getCheaterLevelColor(int timesReported) {
-    if (timesReported < 3) {
+  // Normal cheater color thresholds (green, yellow, red)
+  static Color getCheaterLevelColor(int cheaterReports) {
+    if (cheaterReports < 3) {
       return Colors.green;
-    } else if (timesReported < 7) {
-      return Colors.yellow;
+    } else if (cheaterReports < 7) {
+      return Colors.amber;
     } else {
-      return Colors.red;
+      return Colors.orange;
     }
   }
 
-  /// Returns a color based on the number of toxicity reports.
-  /// * Less than 3 reports → Light Blue
-  /// * 3 to 6 reports → Medium Blue
-  /// * 7 or more reports → Dark Blue
-  static Color getToxicityLevelColor(int toxicityReported) {
-    if (toxicityReported < 3) {
+  // For famous users: calculate a ratio of reports to page views and assign a color.
+  // Adjust these thresholds as needed.
+  static Color getCheaterLevelColorRatio(int cheaterReports, int pageViews) {
+    double ratio = pageViews > 0 ? (cheaterReports / pageViews) : 0.0;
+    if (ratio < 0.001) {
+      return Colors.green;
+    } else if (ratio < 0.005) {
+      return Colors.amber;
+    } else {
+      return Colors.orange;
+    }
+  }
+
+  // Normal toxicity color thresholds (blue shades)
+  static Color getToxicityLevelColor(int toxicityReports) {
+    if (toxicityReports < 3) {
       return const Color(0xFF81D4FA); // Light Blue
-    } else if (toxicityReported < 7) {
+    } else if (toxicityReports < 7) {
       return const Color(0xFF29B6F6); // Medium Blue
     } else {
       return const Color(0xFF0288D1); // Dark Blue
     }
   }
 
-  /// Returns the combined level color based on which report count is higher.
-  /// If toxicityReported is higher than timesReported, it uses the toxicity scale.
-  /// Otherwise, it uses the cheater scale.
-  static Color getCombinedLevelColor(int timesReported, int toxicityReported) {
-    if (toxicityReported > timesReported) {
-      return getToxicityLevelColor(toxicityReported);
+  // For famous users (toxicity): calculate a ratio.
+  static Color getToxicityLevelColorRatio(int toxicityReports, int pageViews) {
+    double ratio = pageViews > 0 ? (toxicityReports / pageViews) : 0.0;
+    if (ratio < 0.001) {
+      return const Color(0xFF81D4FA);
+    } else if (ratio < 0.005) {
+      return const Color(0xFF29B6F6);
     } else {
-      return getCheaterLevelColor(timesReported);
+      return const Color(0xFF0288D1);
     }
   }
 }

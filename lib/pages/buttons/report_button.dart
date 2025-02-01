@@ -61,7 +61,7 @@ class ReportButtonState extends State<ReportButton> {
     final user = UserModel(
       userId: widget.newUserId,
       tagline: widget.newTagLine,
-      timesReported: 0, // Default for cheater
+      // timesReported: 0, // Default for cheater
       lastReported: DateTime.now(),
       // Optionally, if your UserModel supports toxicity, include that too.
     );

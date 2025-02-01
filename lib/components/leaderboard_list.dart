@@ -26,7 +26,7 @@ class LeaderboardList extends StatelessWidget {
           return const Center(child: Text("No data available"));
         } else {
           final leaderboard = snapshot.data!;
-          // Sort the leaderboard based on the selected leaderboard type:
+          // Sort based on the flag:
           leaderboard.sort(
             (a, b) =>
                 showToxicity
@@ -40,26 +40,39 @@ class LeaderboardList extends StatelessWidget {
               final model = leaderboard[index];
               final rank = index + 1; // Rank starts at 1
 
-              // Choose the appropriate report count for display.
-              // For cheater leaderboard, use cheaterReports; for toxicity, use toxicityReported.
+              // Determine if the user is famous (pageViews >= 20000)
+              bool isFamous = model.pageViews >= 20000;
+
+              // Determine the background color:
+              // If showing toxicity leaderboard, use blue shades; if cheater, use green/yellow/red.
+              // If the user is famous, you might adjust the calculation using ratio-based methods.
+              final backgroundColor =
+                  showToxicity
+                      ? (isFamous
+                          ? ReportLevelHelper.getToxicityLevelColorRatio(
+                            model.toxicityReported,
+                            model.pageViews,
+                          )
+                          : ReportLevelHelper.getToxicityLevelColor(
+                            model.toxicityReported,
+                          ))
+                      : (isFamous
+                          ? ReportLevelHelper.getCheaterLevelColorRatio(
+                            model.cheaterReports,
+                            model.pageViews,
+                          )
+                          : ReportLevelHelper.getCheaterLevelColor(
+                            model.cheaterReports,
+                          ));
+
+              // Choose the appropriate report count to display.
               final displayReportCount =
                   showToxicity
                       ? model.toxicityReported.toString()
                       : model.cheaterReports.toString();
 
-              // Determine the label:
               final reportLabel =
                   showToxicity ? 'Toxicity Reports' : 'Cheater Reports';
-
-              // Determine the background color:
-              final backgroundColor =
-                  showToxicity
-                      ? ReportLevelHelper.getToxicityLevelColor(
-                        model.toxicityReported,
-                      )
-                      : ReportLevelHelper.getCheaterLevelColor(
-                        model.cheaterReports,
-                      );
 
               return LeadCard(
                 text: rank.toString(),
@@ -68,6 +81,7 @@ class LeaderboardList extends StatelessWidget {
                 cheaterReports: displayReportCount,
                 toxicityReports: model.toxicityReported.toString(),
                 backgroundColor: backgroundColor,
+                isFamous: isFamous,
                 lastReported: model.lastReported,
               );
             },
