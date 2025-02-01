@@ -5,6 +5,7 @@ import 'package:flutter_application_2/components/leaderboard_list.dart';
 import 'package:flutter_application_2/pages/buttons/report_button.dart';
 import 'package:flutter_application_2/models/leaderboard_model.dart';
 import 'package:flutter_application_2/repository/user_repository.dart';
+import 'package:flutter_application_2/shared/classes/shared_components.dart';
 import 'package:flutter_application_2/utils/search_delegate.dart';
 import 'package:flutter_application_2/utils/validators.dart';
 import 'package:get/get.dart';
@@ -19,10 +20,7 @@ class LeaderBoard extends StatefulWidget {
 
 class _LeaderBoardState extends State<LeaderBoard> {
   List<LeaderboardModel> leaderboardList = []; // Full list
-  late Future<List<LeaderboardModel>> leaderboardFuture;
 
-  String newUserId = '';
-  String newTagLine = '';
   String? _tagLineError;
   String? _usernameError;
 
