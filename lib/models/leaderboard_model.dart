@@ -2,13 +2,15 @@ class LeaderboardModel {
   final int leaderboardNumber;
   final String username;
   final String tagline;
-  final int timesReported;
+  final int cheaterReports;
+  final int toxicityReported;
   final List<String> lastReported;
   LeaderboardModel({
     required this.leaderboardNumber,
     required this.username,
     required this.tagline,
-    required this.timesReported,
+    required this.cheaterReports,
+    required this.toxicityReported,
     required this.lastReported,
   });
 
@@ -18,7 +20,8 @@ class LeaderboardModel {
       // rating: json['rating'] ?? 0,
       username: json['username'] ?? '',
       tagline: json['tagline'] ?? '',
-      timesReported: json['times_reported'] ?? 0,
+      cheaterReports: json['cheater_reported'] ?? 0,
+      toxicityReported: json['toxicity_reported'] ?? 0,
       lastReported:
           (json['last_reported'] != null)
               ? List<String>.from(
