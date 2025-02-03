@@ -66,21 +66,6 @@ class LeaderboardList extends StatelessWidget {
 
             final reportLabel =
                 showToxicity ? 'Toxicity Reports' : 'Cheater Reports';
-
-            // Handle last reported messages
-            // String lastReportedText;
-            // if (showToxicity) {
-            //   lastReportedText =
-            //       model.lastToxicityReported.isNotEmpty
-            //           ? model.lastToxicityReported.last
-            //           : "Hasn't been reported here yet";
-            // } else {
-            //   lastReportedText =
-            //       model.lastCheaterReported.isNotEmpty
-            //           ? model.lastCheaterReported.last
-            //           : "Hasn't been reported here yet";
-            // }
-
             return LeadCard(
               text: rank.toString(), // Rank number
               leaderboardname:

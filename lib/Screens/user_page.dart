@@ -8,14 +8,14 @@ import 'package:flutter_application_2/pages/buttons/single_button.dart';
 import 'package:flutter_application_2/pages/buttons/small_button.dart';
 import 'package:flutter_application_2/pages/buttons/date_joined_button.dart';
 
-class DiscordPage extends StatefulWidget {
-  const DiscordPage({super.key});
+class UserPage extends StatefulWidget {
+  const UserPage({super.key});
 
   @override
-  State<DiscordPage> createState() => _DiscordPageState();
+  State<UserPage> createState() => _UserPageState();
 }
 
-class _DiscordPageState extends State<DiscordPage> {
+class _UserPageState extends State<UserPage> {
   int currentIndex = 0;
 
   @override
