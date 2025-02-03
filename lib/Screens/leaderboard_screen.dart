@@ -24,8 +24,8 @@ class _LeaderBoardState extends State<LeaderBoard> {
   List<LeaderboardModel> leaderboardList = [];
   late Future<List<LeaderboardModel>> leaderboardFuture;
 
-  String? _tagLineError;
-  String? _usernameError;
+  // String? _tagLineError;
+  // String? _usernameError;
   // String newUserId = "";
   // String newTagLine = "";
 
@@ -90,18 +90,18 @@ class _LeaderBoardState extends State<LeaderBoard> {
         children: [
           // Input Fields
           LeaderboardInputFields(
-            usernameError: _usernameError,
-            taglineError: _tagLineError,
+            usernameError: globalUsernameError,
+            taglineError: globalTagLineError,
             onUsernameChanged: (value) {
               setState(() {
                 newUserId = value;
-                _usernameError = Validator.validateUsername(value);
+                globalUsernameError = Validator.validateUsername(value);
               });
             },
             onTaglineChanged: (value) {
               setState(() {
                 newTagLine = value;
-                _tagLineError = Validator.validateTagline(value);
+                globalTagLineError = Validator.validateTagline(value);
               });
             },
           ),

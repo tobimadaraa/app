@@ -5,8 +5,8 @@ import 'package:get/get.dart';
 
 String newUserId = '';
 String newTagLine = '';
-String? usernameError;
-String? tagLineError;
+String? globalUsernameError;
+String? globalTagLineError;
 late Future<List<LeaderboardModel>> leaderboardFuture;
 final UserRepository userRepository = Get.put(
   UserRepository(),
