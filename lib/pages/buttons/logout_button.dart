@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_application_2/pages/classm.dart';
+import 'package:flutter_application_2/shared/classes/colour_classes.dart';
 
 class Logoutbutton extends StatelessWidget {
   final String text;

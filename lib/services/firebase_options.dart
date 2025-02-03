@@ -65,5 +65,4 @@ class DefaultFirebaseOptions {
     storageBucket: 'flutterval-6f687.firebasestorage.app',
     iosBundleId: 'com.example.flutterApplication2',
   );
-
 }
