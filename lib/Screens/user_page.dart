@@ -118,8 +118,6 @@ class _UserPageState extends State<UserPage> {
                             // ignore: avoid_print
                             print('boop');
                           },
-                          //height: 20,
-                          //  width: 80,
                         ),
                       ],
                     ),
@@ -176,8 +174,6 @@ class _UserPageState extends State<UserPage> {
                         // ignore: avoid_print
                         print('boop');
                       },
-                      //   height: 60,
-                      //   width: 80,
                     ),
                     Doublebutton(
                       textColor: Colors.white,
@@ -195,8 +191,6 @@ class _UserPageState extends State<UserPage> {
                         // ignore: avoid_print
                         print('boop');
                       },
-                      // height: 60,
-                      // width: 80,
                     ),
                     SizedBox(height: 12),
                     Singlebutton(
@@ -209,8 +203,6 @@ class _UserPageState extends State<UserPage> {
                         // ignore: avoid_print
                         print('boop');
                       },
-                      //  height: 60,
-                      //  width: 80,
                     ),
                     SizedBox(height: 6),
                     Singlebutton(
@@ -223,8 +215,6 @@ class _UserPageState extends State<UserPage> {
                         // ignore: avoid_print
                         print('boop');
                       },
-                      //  height: 60,
-                      // width: 80,
                     ),
                     SizedBox(height: 3),
                     Logoutbutton(
@@ -233,8 +223,6 @@ class _UserPageState extends State<UserPage> {
                         // ignore: avoid_print
                         Navigator.pushReplacementNamed(context, '/login');
                       },
-
-                      //  width: 40,
                     ),
                   ],
                 ),
