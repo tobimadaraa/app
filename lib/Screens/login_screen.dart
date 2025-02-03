@@ -14,34 +14,15 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
-  // Load your Riot API Key from .env file
   final String apiKey = dotenv.env['RIOT_API_KEY']!;
   String gameName = ''; // Store the Riot ID
   String tagLine = ''; // Store the Riot Tag
-  // Function to fetch account data by Riot ID
-  Future<void> fetchAccountData(
-    String gameName,
-    String tagLine,
-
-    //   String puuid,
-  ) async {
+  Future<void> fetchAccountData(String gameName, String tagLine) async {
     print('Fetching account for: $gameName$tagLine');
-    // Ensure Riot ID and TagLine are URL-encoded
-    // final String riotId = Uri.encodeComponent(gameName);
-    // final String riotTag = Uri.encodeComponent(tagLine);
     final String encodedGameName = Uri.encodeComponent(gameName);
     final String encodedTagLine = Uri.encodeComponent(tagLine);
-    //final String riotId = 'Eung';
-    //final String riotTag = '777';
-    //final String puuid = Uri.encodeComponent(puuid);
-    // Construct the endpoint dynamically
     final String endpoint =
         'https://europe.api.riotgames.com/riot/account/v1/accounts/by-riot-id/$encodedGameName/$encodedTagLine';
-    //'https://europe.api.riotgames.com/riot/account/v1/accounts/by-puuid/WSr2qDThGK0wsdxQj5JxPK5elIMRbHt2-NblXR5FkyOOse_DZyOYN30qWqtBtzyXPfq8PqAZOTbdMw';
-    // const String baseUrl = 'https://eu.api.riotgames.com';
-
-    // Construct the full URL
-    // final String url = baseUrl;
 
     try {
       // Send the GET request
@@ -52,19 +33,15 @@ class _LoginPageState extends State<LoginPage> {
         },
       );
 
-      // Log request details for debugging
-      //print('URL: $url');
       print('Endpoint: $endpoint');
       print('Headers: ${{'X-Riot-Token': apiKey}}');
 
-      // Handle the response
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         final String puuid = data['puuid']; // Extract PUUID
         print("PUUID: $puuid");
         Fluttertoast.showToast(
-          msg:
-              "PUUID fetched :$puuid", //${data['gameName']}#${data['tagLine']}", //'#${data['puuid']}}",
+          msg: "PUUID fetched :$puuid",
           toastLength: Toast.LENGTH_SHORT,
           gravity: ToastGravity.TOP,
           backgroundColor: Colors.black,
@@ -97,11 +74,6 @@ class _LoginPageState extends State<LoginPage> {
 
   @override
   Widget build(BuildContext context) {
-    // Example input for testing
-    // String gameName = newGameName; // Replace with actual Riot ID
-    //String tagLine = newTagline; // Replace with actual TagLine
-    // final String puuid = "";
-    //  'WSr2qDThGK0wsdxQj5JxPK5elIMRbHt2-NblXR5FkyOOse_DZyOYN30qWqtBtzyXPfq8PqAZOTbdMw';
     return Scaffold(
       appBar: AppBar(title: const Text('Login Screen')),
       body: Center(

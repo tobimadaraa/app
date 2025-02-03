@@ -1,20 +1,19 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_application_2/pages/classm.dart';
+import 'package:flutter_application_2/shared/classes/colour_classes.dart';
 
-// seperate onto its own class
+//const Color myCustomColor = Color(0xFF808080);
 
-class LeadCard extends StatelessWidget {
+class RankingDataCard extends StatelessWidget {
   final String text;
   final String leaderboardnumber;
-  final String leaderboardname;
   final String numberofgameswon;
-  // this will always be the same text dont need to pass it
+  final String timesReported;
   final void Function() onPressed;
-  const LeadCard({
+  const RankingDataCard({
     super.key,
     required this.text,
-    required this.leaderboardname,
     required this.leaderboardnumber,
+    required this.timesReported,
     required this.numberofgameswon,
     required this.onPressed,
   });
@@ -23,13 +22,14 @@ class LeadCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Card(
       elevation: 0,
-      color: CustomColours.backGroundColor,
+      color: Colors.grey[700],
       child: SizedBox(
+        height: 30,
         child: Row(
           children: [
             Expanded(
               flex: 2,
-              child: Container(
+              child: (Container(
                 color: Colors.grey[700],
                 alignment: Alignment.center,
                 padding: const EdgeInsets.all(8.0),
@@ -37,23 +37,23 @@ class LeadCard extends StatelessWidget {
                   leaderboardnumber,
                   style: TextStyle(
                     color: CustomColours.whiteDiscordText,
-                    fontSize: 16, // Adjust font size as needed
+                    fontSize: 12, // Adjust font size as needed
                     //),
                   ),
                 ),
-              ),
+              )),
             ),
             Expanded(
               flex: 2,
               child: Container(
-                color: CustomColours.backGroundColor,
+                color: Colors.grey[700],
                 alignment: Alignment.center,
                 padding: const EdgeInsets.all(8.0),
                 child: Text(
                   text,
                   style: TextStyle(
                     color: CustomColours.whiteDiscordText,
-                    fontSize: 16,
+                    fontSize: 12,
                   ),
                 ),
               ),
@@ -61,37 +61,32 @@ class LeadCard extends StatelessWidget {
             Expanded(
               flex: 3, // 4 out of 5 (80%)
               child: Container(
-                color: Colors.transparent, // Original background color
+                color: Colors.grey[700], // Original background color
                 alignment: Alignment.centerLeft,
                 padding: const EdgeInsets.all(8.0),
-                child: Text(
-                  leaderboardname,
-                  style: TextStyle(
-                    color: CustomColours.whiteDiscordText,
-                    fontSize: 16,
-                  ),
-                ),
               ),
             ),
             Expanded(
               flex: 3, // 4 out of 5 (80%)
               child: Container(
-                color: Colors.transparent, // Original background color
+                color: Colors.grey[700], // Original background color
                 alignment: Alignment.centerRight,
+                //padding: const EdgeInsets.all(8.0),
                 child: Row(
                   children: [
                     Text(
                       numberofgameswon,
                       style: TextStyle(
                         color: CustomColours.whiteDiscordText,
-                        fontSize: 16,
+                        fontSize: 12,
                       ),
                     ),
+                    SizedBox(width: 16),
                     Text(
-                      ' games won', // games text string here
+                      timesReported,
                       style: TextStyle(
                         color: CustomColours.whiteDiscordText,
-                        fontSize: 16,
+                        fontSize: 12,
                       ),
                     ),
                   ],

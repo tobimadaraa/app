@@ -1,21 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_application_2/pages/buttons/activity_button.dart';
 import 'package:flutter_application_2/pages/buttons/logout_button.dart';
-import 'package:flutter_application_2/pages/classm.dart';
+import 'package:flutter_application_2/shared/classes/colour_classes.dart';
 import 'package:flutter_application_2/pages/buttons/double_button.dart';
 import 'package:flutter_application_2/pages/buttons/my_button.dart';
 import 'package:flutter_application_2/pages/buttons/single_button.dart';
 import 'package:flutter_application_2/pages/buttons/small_button.dart';
 import 'package:flutter_application_2/pages/buttons/date_joined_button.dart';
 
-class DiscordPage extends StatefulWidget {
-  const DiscordPage({super.key});
+class UserPage extends StatefulWidget {
+  const UserPage({super.key});
 
   @override
-  State<DiscordPage> createState() => _DiscordPageState();
+  State<UserPage> createState() => _UserPageState();
 }
 
-class _DiscordPageState extends State<DiscordPage> {
+class _UserPageState extends State<UserPage> {
   int currentIndex = 0;
 
   @override
@@ -118,8 +118,6 @@ class _DiscordPageState extends State<DiscordPage> {
                             // ignore: avoid_print
                             print('boop');
                           },
-                          //height: 20,
-                          //  width: 80,
                         ),
                       ],
                     ),
@@ -176,8 +174,6 @@ class _DiscordPageState extends State<DiscordPage> {
                         // ignore: avoid_print
                         print('boop');
                       },
-                      //   height: 60,
-                      //   width: 80,
                     ),
                     Doublebutton(
                       textColor: Colors.white,
@@ -195,8 +191,6 @@ class _DiscordPageState extends State<DiscordPage> {
                         // ignore: avoid_print
                         print('boop');
                       },
-                      // height: 60,
-                      // width: 80,
                     ),
                     SizedBox(height: 12),
                     Singlebutton(
@@ -209,8 +203,6 @@ class _DiscordPageState extends State<DiscordPage> {
                         // ignore: avoid_print
                         print('boop');
                       },
-                      //  height: 60,
-                      //  width: 80,
                     ),
                     SizedBox(height: 6),
                     Singlebutton(
@@ -223,8 +215,6 @@ class _DiscordPageState extends State<DiscordPage> {
                         // ignore: avoid_print
                         print('boop');
                       },
-                      //  height: 60,
-                      // width: 80,
                     ),
                     SizedBox(height: 3),
                     Logoutbutton(
@@ -233,8 +223,6 @@ class _DiscordPageState extends State<DiscordPage> {
                         // ignore: avoid_print
                         Navigator.pushReplacementNamed(context, '/login');
                       },
-
-                      //  width: 40,
                     ),
                   ],
                 ),

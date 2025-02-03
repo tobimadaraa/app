@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_application_2/pages/discord_screen.dart';
-import 'package:flutter_application_2/pages/leaderboard_screen.dart';
+import 'package:flutter_application_2/Screens/user_page.dart';
+import 'package:flutter_application_2/Screens/dodge_list_screen.dart';
+import 'package:flutter_application_2/Screens/leaderboard_screen.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -13,9 +14,9 @@ class _HomePageState extends State<HomePage> {
   int _selectedIndex = 0;
 
   static final List<Widget> _widgetOptions = <Widget>[
-    DiscordPage(),
+    UserPage(),
     LeaderBoard(),
-    //LoginPage(),
+    DodgeList(),
   ];
 
   void _onItemTapped(int index) {
@@ -49,6 +50,7 @@ class _HomePageState extends State<HomePage> {
             icon: Icon(Icons.leaderboard),
             label: 'leaderboard',
           ),
+          BottomNavigationBarItem(icon: Icon(Icons.square), label: 'dodgelist'),
         ],
         onTap: _onItemTapped,
       ),
