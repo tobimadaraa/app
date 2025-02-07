@@ -2,8 +2,8 @@ class LeaderboardModel {
   final int leaderboardNumber;
   final String username;
   final String tagline;
-  final int cheaterReports;
-  final int toxicityReported;
+  int cheaterReports;
+  int toxicityReported;
   final int pageViews;
   final List<String> lastCheaterReported;
   final List<String> lastToxicityReported;
@@ -19,24 +19,21 @@ class LeaderboardModel {
     required this.lastToxicityReported,
   });
 
+  // Factory constructor to convert JSON from API response
   factory LeaderboardModel.fromJson(Map<String, dynamic> json) {
     return LeaderboardModel(
-      leaderboardNumber: json['leaderboardNumber'] ?? 0,
-      username: json['username'] ?? '',
-      tagline: json['tagline'] ?? '',
-      cheaterReports: json['cheater_reported'] ?? 0,
-      toxicityReported: json['toxicity_reported'] ?? 0,
-      pageViews: json['page_views'] ?? 0,
-      lastCheaterReported:
-          (json['last_cheater_reported'] != null &&
-                  json['last_cheater_reported'] is List)
-              ? List<String>.from(json['last_cheater_reported'])
-              : [],
-      lastToxicityReported:
-          (json['last_toxicity_reported'] != null &&
-                  json['last_toxicity_reported'] is List)
-              ? List<String>.from(json['last_toxicity_reported'])
-              : [],
+      leaderboardNumber: json['leaderboardRank'] ?? 0, // Matches API response
+      username: json['gameName'] ?? '',
+      tagline: json['tagLine'] ?? '',
+      cheaterReports: json['cheater_reported'] ?? 0, // Optional custom field
+      toxicityReported: json['toxicity_reported'] ?? 0, // Optional custom field
+      pageViews: json['page_views'] ?? 0, // Optional custom field
+      lastCheaterReported: json['last_cheater_reported'] is List
+          ? List<String>.from(json['last_cheater_reported'])
+          : [],
+      lastToxicityReported: json['last_toxicity_reported'] is List
+          ? List<String>.from(json['last_toxicity_reported'])
+          : [],
     );
   }
 
@@ -52,6 +49,4 @@ class LeaderboardModel {
       'last_toxic_reported': lastToxicityReported,
     };
   }
-
-  //String get fullRiotId => '${username.toLowerCase()}#${tagline.toLowerCase()}';
 }
