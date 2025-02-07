@@ -11,4 +11,5 @@ late Future<List<LeaderboardModel>> leaderboardFuture;
 final UserRepository userRepository = Get.put(
   UserRepository(),
 ); // Dependency injection
-bool showToxicityLeaderboard = false;
+
+enum LeaderboardType { ranked, cheater, toxicity }
