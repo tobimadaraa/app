@@ -8,6 +8,7 @@ import 'package:flutter_application_2/components/leaderboard_toggle.dart';
 import 'package:flutter_application_2/pages/buttons/report_button.dart';
 import 'package:flutter_application_2/models/leaderboard_model.dart';
 import 'package:flutter_application_2/repository/user_repository.dart';
+import 'package:flutter_application_2/services/valorant_api.dart';
 import 'package:flutter_application_2/utils/search_delegate.dart';
 import 'package:flutter_application_2/utils/validators.dart';
 
@@ -19,15 +20,17 @@ class LeaderBoard extends StatefulWidget {
 }
 
 class _LeaderBoardState extends State<LeaderBoard> {
-  final UserRepository userRepository = Get.find<UserRepository>();
+  final RiotApiService riotApiService = RiotApiService();
+  final UserRepository userRepository =
+      Get.find<UserRepository>(); // ✅ Firestore Repo
 
-  List<LeaderboardModel> leaderboardList = [];
-  late Future<List<LeaderboardModel>> leaderboardFuture;
+  Future<List<LeaderboardModel>>? leaderboardFuture;
+  LeaderboardType selectedLeaderboard = LeaderboardType.ranked; // Default
 
-  // String? _tagLineError;
-  // String? _usernameError;
-  // String newUserId = "";
-  // String newTagLine = "";
+  String newUserId = "";
+  String newTagLine = "";
+  String? usernameError;
+  String? taglineError;
 
   @override
   void initState() {
@@ -36,19 +39,19 @@ class _LeaderBoardState extends State<LeaderBoard> {
   }
 
   Future<void> _loadLeaderboard() async {
-    leaderboardFuture = userRepository.getLeaderboard().then((data) {
-      setState(() {
-        leaderboardList = data;
-      });
-      return data;
+    setState(() {
+      if (selectedLeaderboard == LeaderboardType.ranked) {
+        leaderboardFuture =
+            riotApiService.getLeaderboard(); // 🔥 Riot API for Ranked
+      } else {
+        leaderboardFuture = userRepository
+            .getLeaderboard(); // 🔥 Firestore for Cheater & Toxicity
+      }
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    final reportButtonText =
-        showToxicityLeaderboard ? 'Report Toxic' : 'Report Cheater';
-
     return Scaffold(
       appBar: AppBar(
         leading: BackButton(
@@ -62,7 +65,7 @@ class _LeaderBoardState extends State<LeaderBoard> {
             onPressed: () {
               showSearch(
                 context: context,
-                delegate: MySearchDelegate(leaderboardList),
+                delegate: MySearchDelegate([]),
               );
             },
           ),
@@ -76,7 +79,7 @@ class _LeaderBoardState extends State<LeaderBoard> {
         ),
         title: const Column(
           children: [
-            Text("Valorant Cheater", style: TextStyle(fontSize: 15)),
+            Text("Valorant Leaderboard", style: TextStyle(fontSize: 15)),
             SizedBox(height: 8),
             Text(
               'Leaderboard',
@@ -88,46 +91,50 @@ class _LeaderBoardState extends State<LeaderBoard> {
       backgroundColor: Colors.blue[200],
       body: Column(
         children: [
-          // Input Fields
-          LeaderboardInputFields(
-            usernameError: globalUsernameError,
-            taglineError: globalTagLineError,
-            onUsernameChanged: (value) {
-              setState(() {
-                newUserId = value;
-                globalUsernameError = Validator.validateUsername(value);
-              });
-            },
-            onTaglineChanged: (value) {
-              setState(() {
-                newTagLine = value;
-                globalTagLineError = Validator.validateTagline(value);
-              });
-            },
-          ),
+          // **✅ Show User Input & Report Button only for Cheater/Toxicity Leaderboard**
+          if (selectedLeaderboard == LeaderboardType.cheater ||
+              selectedLeaderboard == LeaderboardType.toxicity) ...[
+            LeaderboardInputFields(
+              usernameError: usernameError,
+              taglineError: taglineError,
+              onUsernameChanged: (value) {
+                setState(() {
+                  newUserId = value;
+                  usernameError = Validator.validateUsername(value);
+                });
+              },
+              onTaglineChanged: (value) {
+                setState(() {
+                  newTagLine = value;
+                  taglineError = Validator.validateTagline(value);
+                });
+              },
+            ),
+            ReportButton(
+              newUserId: newUserId,
+              newTagLine: newTagLine,
+              onSuccess: _loadLeaderboard,
+              buttonText: selectedLeaderboard == LeaderboardType.toxicity
+                  ? 'Report Toxic'
+                  : 'Report Cheater',
+              isToxicity: selectedLeaderboard == LeaderboardType.toxicity,
+            ),
+          ],
 
-          // Report Button
-          ReportButton(
-            newUserId: newUserId,
-            newTagLine: newTagLine,
-            onSuccess: _loadLeaderboard,
-            buttonText: reportButtonText,
-            isToxicity: showToxicityLeaderboard,
-          ),
-
-          // Toggle Buttons (Separated into LeaderboardToggle)
           LeaderboardToggle(
-            showToxicityLeaderboard: showToxicityLeaderboard,
-            onToggleCheater:
-                () => setState(() => showToxicityLeaderboard = false),
-            onToggleToxic: () => setState(() => showToxicityLeaderboard = true),
+            selectedLeaderboard: selectedLeaderboard,
+            onSelectLeaderboard: (LeaderboardType type) {
+              setState(() {
+                selectedLeaderboard = type;
+                _loadLeaderboard(); // 🔥 Refresh Data When Switching
+              });
+            },
           ),
 
-          // Leaderboard List
           Expanded(
             child: LeaderboardList(
-              leaderboardFuture: leaderboardFuture,
-              showToxicity: showToxicityLeaderboard,
+              leaderboardFuture: leaderboardFuture!,
+              selectedLeaderboard: selectedLeaderboard,
             ),
           ),
         ],

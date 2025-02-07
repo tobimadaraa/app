@@ -14,16 +14,18 @@ class LocalStorageService {
     await prefs.setStringList(dodgeListKey, jsonList);
   }
 
-  /// Loads the dodge list from local storage.
   static Future<List<LeaderboardModel>> loadDodgeList() async {
     final prefs = await SharedPreferences.getInstance();
     List<String>? jsonList = prefs.getStringList(dodgeListKey);
-    if (jsonList != null) {
-      return jsonList.map((jsonStr) {
-        Map<String, dynamic> jsonData = jsonDecode(jsonStr);
-        return LeaderboardModel.fromJson(jsonData);
-      }).toList();
+
+    // If jsonList is null, return an empty list instead
+    if (jsonList == null) {
+      return [];
     }
-    return [];
+
+    return jsonList.map((jsonStr) {
+      Map<String, dynamic> jsonData = jsonDecode(jsonStr);
+      return LeaderboardModel.fromJson(jsonData);
+    }).toList();
   }
 }
