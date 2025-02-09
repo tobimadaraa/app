@@ -21,7 +21,7 @@ class DodgeListController extends GetxController {
 
     // Check Firestore for updated report counts
     List<LeaderboardModel> firestoreData =
-        await _userRepository.getLeaderboard();
+        await _userRepository.firestoreGetLeaderboard();
 
     // ✅ Sync Local Storage with Firestore
     for (var user in storedList) {
@@ -35,7 +35,7 @@ class DodgeListController extends GetxController {
       if (updatedUser != null) {
         // Replace local storage data with updated Firestore data
         user.cheaterReports = updatedUser.cheaterReports;
-        user.toxicityReported = updatedUser.toxicityReported;
+        user.toxicityReports = updatedUser.toxicityReports;
       }
     }
 
@@ -68,7 +68,8 @@ class DodgeListController extends GetxController {
 
   /// **🔥 Refresh Dodge List from Firestore**
   Future<void> refreshDodgeList() async {
-    List<LeaderboardModel> updatedList = await _userRepository.getLeaderboard();
+    List<LeaderboardModel> updatedList =
+        await _userRepository.firestoreGetLeaderboard();
 
     for (var user in dodgeList) {
       var updatedUser = updatedList.firstWhereOrNull(
@@ -81,8 +82,8 @@ class DodgeListController extends GetxController {
       if (updatedUser != null) {
         user.cheaterReports =
             updatedUser.cheaterReports; // ✅ Updates Cheater Reports
-        user.toxicityReported = updatedUser
-            .toxicityReported; // ✅ Now correctly updates Toxicity Reports
+        user.toxicityReports = updatedUser
+            .toxicityReports; // ✅ Now correctly updates Toxicity Reports
       }
     }
 

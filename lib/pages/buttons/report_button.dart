@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-
-import 'package:flutter_application_2/controllers/dodge_list_controller.dart';
 import 'package:flutter_application_2/repository/user_repository.dart';
 import 'package:get/get.dart';
 
@@ -9,15 +7,15 @@ class ReportButton extends StatefulWidget {
   final String newTagLine;
   final Future<void> Function() onSuccess;
   final String buttonText;
-  final bool isToxicity;
+  final bool isToxicity; // ✅ Ensure this is correctly passed
 
   const ReportButton({
     super.key,
     required this.newUserId,
     required this.newTagLine,
     required this.onSuccess,
-    this.buttonText = 'Report Cheater',
-    this.isToxicity = false,
+    required this.isToxicity, // ✅ Now it's always required
+    required this.buttonText,
   });
 
   @override
@@ -25,7 +23,7 @@ class ReportButton extends StatefulWidget {
 }
 
 class ReportButtonState extends State<ReportButton> {
-  final UserRepository _userRepository = Get.find<UserRepository>();
+  final UserRepository _userRepository = UserRepository();
 
   Future<void> _handleReport() async {
     if (widget.newUserId.isEmpty || widget.newTagLine.isEmpty) {
@@ -43,24 +41,22 @@ class ReportButtonState extends State<ReportButton> {
       await _userRepository.reportPlayer(
         username: widget.newUserId.toLowerCase(),
         tagline: widget.newTagLine.toLowerCase(),
-        isToxicityReport: widget.isToxicity,
+        isToxicityReport:
+            widget.isToxicity, // ✅ Ensure this boolean is correctly passed
       );
 
       Get.snackbar(
         "Success",
-        "Player successfully reported!",
+        widget.isToxicity
+            ? "Player successfully reported as toxic!"
+            : "Player successfully reported as a cheater!",
         snackPosition: SnackPosition.BOTTOM,
         backgroundColor: Colors.green,
         colorText: Colors.white,
       );
 
-      // ✅ Refresh Firestore Leaderboard & Dodge List
-      await widget.onSuccess();
-      Get.find<DodgeListController>()
-          .refreshDodgeList(); // 🔥 Refresh Dodge List
-
-      // ✅ Force UI Refresh
-      setState(() {});
+      await widget.onSuccess(); // ✅ Refresh leaderboard
+      setState(() {}); // ✅ Force UI refresh
     } catch (error) {
       Get.snackbar(
         "Error",

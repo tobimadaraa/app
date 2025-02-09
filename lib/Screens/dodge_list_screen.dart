@@ -28,7 +28,8 @@ class _DodgeListState extends State<DodgeList> {
   }
 
   Future<void> _loadDodgeList() async {
-    List<LeaderboardModel> storedList = await userRepository.getLeaderboard();
+    List<LeaderboardModel> storedList =
+        await userRepository.firestoreGetLeaderboard();
     setState(() {
       dodgeList = storedList;
     });
@@ -36,7 +37,8 @@ class _DodgeListState extends State<DodgeList> {
 
   Future<void> _addUserToDodgeList() async {
     try {
-      List<LeaderboardModel> data = await userRepository.getLeaderboard();
+      List<LeaderboardModel> data =
+          await userRepository.firestoreGetLeaderboard();
       LeaderboardModel? userFound = data.firstWhere(
         (user) =>
             user.username.toLowerCase() == newUserId.toLowerCase() &&
@@ -46,7 +48,7 @@ class _DodgeListState extends State<DodgeList> {
             username: "",
             tagline: "",
             cheaterReports: 0,
-            toxicityReported: 0,
+            toxicityReports: 0,
             pageViews: 0,
             lastCheaterReported: [],
             lastToxicityReported: []),

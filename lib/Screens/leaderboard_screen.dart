@@ -40,13 +40,10 @@ class _LeaderBoardState extends State<LeaderBoard> {
 
   Future<void> _loadLeaderboard() async {
     setState(() {
-      if (selectedLeaderboard == LeaderboardType.ranked) {
-        leaderboardFuture =
-            riotApiService.getLeaderboard(); // 🔥 Riot API for Ranked
-      } else {
-        leaderboardFuture = userRepository
-            .getLeaderboard(); // 🔥 Firestore for Cheater & Toxicity
-      }
+      leaderboardFuture = selectedLeaderboard == LeaderboardType.ranked
+          ? riotApiService.getLeaderboard() // Riot API for Ranked
+          : userRepository
+              .firestoreGetLeaderboard(); // Firestore for Cheater/Toxicity
     });
   }
 
@@ -115,7 +112,7 @@ class _LeaderBoardState extends State<LeaderBoard> {
               newTagLine: newTagLine,
               onSuccess: _loadLeaderboard,
               buttonText: selectedLeaderboard == LeaderboardType.toxicity
-                  ? 'Report Toxic'
+                  ? 'Report for Toxicity'
                   : 'Report Cheater',
               isToxicity: selectedLeaderboard == LeaderboardType.toxicity,
             ),
@@ -126,7 +123,7 @@ class _LeaderBoardState extends State<LeaderBoard> {
             onSelectLeaderboard: (LeaderboardType type) {
               setState(() {
                 selectedLeaderboard = type;
-                _loadLeaderboard(); // 🔥 Refresh Data When Switching
+                _loadLeaderboard(); // 🔥 Ensure the correct leaderboard loads
               });
             },
           ),
