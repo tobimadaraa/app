@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_application_2/shared/classes/shared_components.dart';
 import 'package:get/get.dart';
 import 'package:flutter_application_2/components/leaderboard_input_fields.dart';
-import 'package:flutter_application_2/components/leaderboard_list.dart';
+
 import 'package:flutter_application_2/components/leaderboard_toggle.dart';
 import 'package:flutter_application_2/pages/buttons/report_button.dart';
 import 'package:flutter_application_2/models/leaderboard_model.dart';
@@ -20,12 +20,16 @@ class LeaderBoard extends StatefulWidget {
 
 class _LeaderBoardState extends State<LeaderBoard> {
   final RiotApiService riotApiService = RiotApiService();
-  final UserRepository userRepository =
-      Get.find<UserRepository>(); // ✅ Firestore Repo
+  final UserRepository userRepository = Get.find<UserRepository>();
 
-  Future<List<LeaderboardModel>>? leaderboardFuture;
-  LeaderboardType selectedLeaderboard = LeaderboardType.ranked; // Default
+  final ScrollController _scrollController = ScrollController();
+  List<LeaderboardModel> _loadedUsers = []; // List to store fetched users
+  bool _isLoadingMore = false; // Prevent duplicate fetches
+  int _currentStartIndex = 0; // Tracks where pagination starts
+  final int _pageSize = 50; // How many users to fetch per page
+  bool _hasMoreData = true; // Tracks if there are more players to fetch
 
+  LeaderboardType selectedLeaderboard = LeaderboardType.ranked;
   String newUserId = "";
   String newTagLine = "";
   String? usernameError;
@@ -34,16 +38,109 @@ class _LeaderBoardState extends State<LeaderBoard> {
   @override
   void initState() {
     super.initState();
+    _scrollController.addListener(_onScroll);
     _loadLeaderboard();
   }
 
-  Future<void> _loadLeaderboard() async {
-    setState(() {
-      leaderboardFuture = selectedLeaderboard == LeaderboardType.ranked
-          ? riotApiService.getLeaderboard() // Riot API for Ranked
-          : userRepository
-              .firestoreGetLeaderboard(); // Firestore for Cheater/Toxicity
-    });
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  /// **🔥 Load More Users with Pagination**
+  Future<void> _loadLeaderboard({bool loadMore = false}) async {
+    if (_isLoadingMore || !_hasMoreData) return;
+
+    _isLoadingMore = true; // ✅ Set BEFORE API call
+    setState(() {});
+
+    try {
+      List<LeaderboardModel> newUsers = [];
+
+      if (selectedLeaderboard == LeaderboardType.ranked) {
+        print(
+            "DEBUG: Fetching from Riot API start=$_currentStartIndex, size=$_pageSize");
+
+        // ✅ Ensure Riot API gets the correct batch
+        newUsers = await riotApiService.getLeaderboard(
+          startIndex: _currentStartIndex,
+          size: _pageSize,
+        );
+      } else {
+        List<LeaderboardModel> allUsers =
+            await userRepository.firestoreGetLeaderboard();
+
+        allUsers.sort((a, b) {
+          return selectedLeaderboard == LeaderboardType.toxicity
+              ? b.toxicityReports.compareTo(a.toxicityReports)
+              : b.cheaterReports.compareTo(a.cheaterReports);
+        });
+
+        // ✅ Use `_currentStartIndex` for Firestore pagination
+        newUsers = allUsers.skip(_currentStartIndex).take(_pageSize).toList();
+      }
+
+      if (newUsers.isNotEmpty) {
+        setState(() {
+          _loadedUsers.addAll(newUsers);
+          _currentStartIndex +=
+              newUsers.length; // ✅ Increment BEFORE next API call
+          _hasMoreData = newUsers.length ==
+              _pageSize; // ✅ Stop loading if fewer users than requested
+        });
+      } else {
+        setState(() {
+          _hasMoreData = false; // ✅ Stop if API returns empty
+        });
+      }
+
+      print(
+          "DEBUG: Loaded ${newUsers.length} users. Total: ${_loadedUsers.length}");
+    } catch (e) {
+      print("❌ ERROR: Failed to load leaderboard: $e");
+    } finally {
+      _isLoadingMore = false;
+      setState(() {});
+    }
+  }
+
+  /// **🖱 Detect Bottom Scroll & Load More**
+  void _onScroll() {
+    if (_scrollController.position.pixels >=
+        _scrollController.position.maxScrollExtent - 200) {
+      // ✅ Triggers earlier
+      print("DEBUG: Scroll reached bottom. Loading more...");
+      _loadLeaderboard(loadMore: true);
+    }
+  }
+
+  /// **🔥 Report User & Refresh**
+  Future<void> _reportUser(bool isToxicityReport) async {
+    try {
+      await userRepository.reportPlayer(
+        username: newUserId.trim(),
+        tagline: newTagLine.trim(),
+        isToxicityReport: isToxicityReport,
+      );
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(isToxicityReport
+              ? "Player successfully reported for toxicity!"
+              : "Player successfully reported as a cheater!"),
+          backgroundColor: Colors.green,
+        ),
+      );
+
+      _loadLeaderboard();
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+            content: Text("Failed to report player: $e"),
+            backgroundColor: Colors.red),
+      );
+    }
   }
 
   @override
@@ -61,7 +158,7 @@ class _LeaderBoardState extends State<LeaderBoard> {
             onPressed: () {
               showSearch(
                 context: context,
-                delegate: MySearchDelegate([]),
+                delegate: MySearchDelegate(_loadedUsers),
               );
             },
           ),
@@ -87,7 +184,6 @@ class _LeaderBoardState extends State<LeaderBoard> {
       backgroundColor: Colors.blue[200],
       body: Column(
         children: [
-          // **✅ Show User Input & Report Button only for Cheater/Toxicity Leaderboard**
           if (selectedLeaderboard == LeaderboardType.cheater ||
               selectedLeaderboard == LeaderboardType.toxicity) ...[
             LeaderboardInputFields(
@@ -109,29 +205,50 @@ class _LeaderBoardState extends State<LeaderBoard> {
             ReportButton(
               newUserId: newUserId,
               newTagLine: newTagLine,
-              onSuccess: _loadLeaderboard,
+              onSuccess: () => _reportUser(
+                selectedLeaderboard == LeaderboardType.toxicity,
+              ),
               buttonText: selectedLeaderboard == LeaderboardType.toxicity
                   ? 'Report for Toxicity'
                   : 'Report Cheater',
               isToxicity: selectedLeaderboard == LeaderboardType.toxicity,
             ),
           ],
-
           LeaderboardToggle(
             selectedLeaderboard: selectedLeaderboard,
             onSelectLeaderboard: (LeaderboardType type) {
               setState(() {
                 selectedLeaderboard = type;
-                _loadLeaderboard(); // 🔥 Ensure the correct leaderboard loads
+                _currentStartIndex = 0; // Reset pagination
+                _hasMoreData = true; // Allow new fetches
+                _loadLeaderboard();
               });
             },
           ),
           Expanded(
-            child: LeaderboardList(
-              leaderboardFuture: leaderboardFuture!,
-              selectedLeaderboard: selectedLeaderboard,
+            child: ListView.builder(
+              controller: _scrollController,
+              itemCount: _loadedUsers.length + (_isLoadingMore ? 1 : 0),
+              itemBuilder: (context, index) {
+                if (index >= _loadedUsers.length) {
+                  return const Padding(
+                    padding: EdgeInsets.all(16.0),
+                    child: Center(
+                        child:
+                            CircularProgressIndicator()), // ✅ Loading Spinner
+                  );
+                }
+
+                final user = _loadedUsers[index];
+                return ListTile(
+                  title: Text('${user.username}#${user.tagline}'),
+                  subtitle: Text(
+                    'Rank: ${user.leaderboardNumber} | Cheater Reports: ${user.cheaterReports} | Toxicity: ${user.toxicityReports}',
+                  ),
+                );
+              },
             ),
-          ),
+          )
         ],
       ),
     );

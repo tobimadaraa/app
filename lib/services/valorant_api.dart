@@ -3,7 +3,7 @@ import 'package:http/http.dart' as http;
 import 'package:flutter_application_2/models/leaderboard_model.dart';
 
 class RiotApiService {
-  static const String apiKey = "RGAPI-1c4f2600-c7f1-4753-9db5-0be9c788badd";
+  static const String apiKey = "RGAPI-52aecad9-f2aa-4614-afcc-2dc5a01e7e4a";
   static const String baseUrl =
       "https://eu.api.riotgames.com"; // Change region if needed
 
@@ -37,18 +37,21 @@ class RiotApiService {
   }
 
   // Function to fetch leaderboard using the current Act ID
-  Future<List<LeaderboardModel>> getLeaderboard() async {
+  Future<List<LeaderboardModel>> getLeaderboard(
+      {int startIndex = 50, int size = 20}) async {
     String actId = await getCurrentActId(); // Fetch Act ID dynamically
 
-    final url =
-        Uri.parse('$baseUrl/val/ranked/v1/leaderboards/by-act/$actId?size=200');
-
     final response = await http.get(
-      url,
-      headers: {
-        'X-Riot-Token': apiKey,
-      },
-    );
+        Uri.parse(
+            '$baseUrl/val/ranked/v1/leaderboards/by-act/$actId?startIndex=$startIndex&size=$size'),
+        headers: {'X-Riot-Token': apiKey});
+
+    // final response = await http.get(
+    //   url,
+    //   headers: {
+    //     'X-Riot-Token': apiKey,
+    //   },
+    // );
 
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
