@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_application_2/shared/classes/shared_components.dart';
 import 'package:get/get.dart';
-
 import 'package:flutter_application_2/components/leaderboard_input_fields.dart';
 import 'package:flutter_application_2/components/leaderboard_list.dart';
 import 'package:flutter_application_2/components/leaderboard_toggle.dart';
@@ -127,7 +126,6 @@ class _LeaderBoardState extends State<LeaderBoard> {
               });
             },
           ),
-
           Expanded(
             child: LeaderboardList(
               leaderboardFuture: leaderboardFuture!,
