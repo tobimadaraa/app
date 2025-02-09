@@ -1,7 +1,7 @@
 class Validator {
   // This pattern allows Unicode characters in the range U+00C0 to U+D7FF
   // as well as ASCII letters and digits.
-  static const validCharPattern = r'^[\u00C0-\uD7FF0-9A-Za-z]+$';
+  static const validCharPattern = r'^[\u00C0-\uD7FF0-9A-Za-z\s]+$';
 
   static String? validateTagline(String value) {
     if (value.isEmpty) return 'Tagline is required';

@@ -24,7 +24,7 @@ class DodgeListView extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text('Cheater Reports: ${user.cheaterReports}'),
-              Text('Toxicity Reports: ${user.toxicityReported}'),
+              Text('Toxicity Reports: ${user.toxicityReports}'),
             ],
           ),
           trailing: IconButton(
