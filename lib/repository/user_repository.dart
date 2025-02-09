@@ -136,6 +136,75 @@ class UserRepository extends GetxController {
     }
   }
 
+  Future<List<LeaderboardModel>> firestoreGetDodgeList() async {
+    try {
+      final snapshot = await _db.collection("DodgeList").get();
+
+      if (snapshot.docs.isEmpty) {
+        print("DEBUG: Dodge list is empty.");
+        return [];
+      }
+
+      return snapshot.docs.map((doc) {
+        final data = doc.data();
+        print(
+            "DEBUG: Dodge List Data -> ${data['user_id']} | Tag: ${data['tag_line']}");
+
+        return LeaderboardModel(
+          leaderboardNumber: -1, // Dodge List has no rank
+          username: data['user_id'] ?? '',
+          tagline: data['tag_line'] ?? '',
+          cheaterReports: data['cheater_reported'] ?? 0,
+          toxicityReports: data['toxicity_reported'] ?? 0,
+          pageViews: data['page_views'] ?? 0,
+          lastCheaterReported: data['last_cheater_reported'] is List
+              ? List<String>.from(data['last_cheater_reported'])
+              : [],
+          lastToxicityReported: data['last_toxicity_reported'] is List
+              ? List<String>.from(data['last_toxicity_reported'])
+              : [],
+        );
+      }).toList();
+    } catch (error) {
+      print("ERROR: Fetching dodge list failed: $error");
+      return [];
+    }
+  }
+
+  Future<void> addToDodgeList(LeaderboardModel user) async {
+    try {
+      await _db
+          .collection("DodgeList")
+          .doc("${user.username}#${user.tagline}")
+          .set({
+        "user_id": user.username,
+        "tag_line": user.tagline,
+        "cheater_reported": user.cheaterReports,
+        "toxicity_reported": user.toxicityReports,
+        "page_views": user.pageViews,
+        "last_cheater_reported": user.lastCheaterReported,
+        "last_toxicity_reported": user.lastToxicityReported,
+      });
+      print(
+          "DEBUG: User added to Dodge List -> ${user.username}#${user.tagline}");
+    } catch (error) {
+      print("ERROR: Adding user to Dodge List failed: $error");
+    }
+  }
+
+  Future<void> removeFromDodgeList(LeaderboardModel user) async {
+    try {
+      await _db
+          .collection("DodgeList")
+          .doc("${user.username}#${user.tagline}")
+          .delete();
+      print(
+          "DEBUG: User removed from Dodge List -> ${user.username}#${user.tagline}");
+    } catch (error) {
+      print("ERROR: Removing user from Dodge List failed: $error");
+    }
+  }
+
   /// **🔥 Increment Page Views for a Player**
   Future<void> incrementPageViews(String username, String tagline) async {
     try {
