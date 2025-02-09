@@ -103,7 +103,7 @@ class LeadCardState extends State<LeadCard> {
                     padding: const EdgeInsets.only(right: 8),
                     alignment: Alignment.centerRight,
                     child: Text(
-                      '${widget.cheaterReports}\n${widget.reportLabel}',
+                      '${widget.reportLabel == "Toxicity Reports" ? widget.toxicityReports : widget.cheaterReports}\n${widget.reportLabel}',
                       style: TextStyle(
                         color: CustomColours.whiteDiscordText,
                         fontWeight: FontWeight.bold,

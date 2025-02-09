@@ -19,7 +19,7 @@ class UserDetailPage extends StatelessWidget {
           children: [
             // Display the report counts
             Text(
-              'Cheater Reports: ${user.cheaterReports}\nToxicity Reports: ${user.toxicityReported}',
+              'Cheater Reports: ${user.cheaterReports}\nToxicity Reports: ${user.toxicityReports}',
               style: const TextStyle(fontSize: 18),
             ),
             const SizedBox(height: 16),
@@ -31,25 +31,24 @@ class UserDetailPage extends StatelessWidget {
             const SizedBox(height: 8),
             user.lastCheaterReported.isNotEmpty
                 ? Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children:
-                      user.lastCheaterReported.map((timestamp) {
-                        String formattedDate = DateFormatter.formatDate(
-                          timestamp,
-                        );
-                        return Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 2.0),
-                          child: Text(
-                            formattedDate,
-                            style: const TextStyle(fontSize: 16),
-                          ),
-                        );
-                      }).toList(),
-                )
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: user.lastCheaterReported.map((timestamp) {
+                      String formattedDate = DateFormatter.formatDate(
+                        timestamp,
+                      );
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 2.0),
+                        child: Text(
+                          formattedDate,
+                          style: const TextStyle(fontSize: 16),
+                        ),
+                      );
+                    }).toList(),
+                  )
                 : const Text(
-                  'No cheater reports yet.',
-                  style: TextStyle(fontSize: 16),
-                ),
+                    'No cheater reports yet.',
+                    style: TextStyle(fontSize: 16),
+                  ),
             const SizedBox(height: 24),
             // Section for Toxicity Report Timestamps
             const Text(
@@ -59,25 +58,24 @@ class UserDetailPage extends StatelessWidget {
             const SizedBox(height: 8),
             user.lastToxicityReported.isNotEmpty
                 ? Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children:
-                      user.lastToxicityReported.map((timestamp) {
-                        String formattedDate = DateFormatter.formatDate(
-                          timestamp,
-                        );
-                        return Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 2.0),
-                          child: Text(
-                            formattedDate,
-                            style: const TextStyle(fontSize: 16),
-                          ),
-                        );
-                      }).toList(),
-                )
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: user.lastToxicityReported.map((timestamp) {
+                      String formattedDate = DateFormatter.formatDate(
+                        timestamp,
+                      );
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 2.0),
+                        child: Text(
+                          formattedDate,
+                          style: const TextStyle(fontSize: 16),
+                        ),
+                      );
+                    }).toList(),
+                  )
                 : const Text(
-                  'No toxicity reports yet.',
-                  style: TextStyle(fontSize: 16),
-                ),
+                    'No toxicity reports yet.',
+                    style: TextStyle(fontSize: 16),
+                  ),
           ],
         ),
       ),

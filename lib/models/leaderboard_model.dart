@@ -3,7 +3,7 @@ class LeaderboardModel {
   final String username;
   final String tagline;
   int cheaterReports;
-  int toxicityReported;
+  int toxicityReports;
   final int pageViews;
   final List<String> lastCheaterReported;
   final List<String> lastToxicityReported;
@@ -13,7 +13,7 @@ class LeaderboardModel {
     required this.username,
     required this.tagline,
     required this.cheaterReports,
-    required this.toxicityReported,
+    required this.toxicityReports,
     required this.pageViews,
     required this.lastCheaterReported,
     required this.lastToxicityReported,
@@ -26,7 +26,7 @@ class LeaderboardModel {
       username: json['gameName'] ?? '',
       tagline: json['tagLine'] ?? '',
       cheaterReports: json['cheater_reported'] ?? 0, // Optional custom field
-      toxicityReported: json['toxicity_reported'] ?? 0, // Optional custom field
+      toxicityReports: json['toxicity_reported'] ?? 0, // Optional custom field
       pageViews: json['page_views'] ?? 0, // Optional custom field
       lastCheaterReported: json['last_cheater_reported'] is List
           ? List<String>.from(json['last_cheater_reported'])
@@ -43,10 +43,11 @@ class LeaderboardModel {
       'username': username.toLowerCase(),
       'tagline': tagline.toLowerCase(),
       'cheater_reported': cheaterReports,
-      'toxicity_reported': toxicityReported,
+      'toxicity_reported': toxicityReports, // ✅ Corrected this line
       'page_views': pageViews,
       'last_cheater_reported': lastCheaterReported,
-      'last_toxic_reported': lastToxicityReported,
+      'last_toxicity_reported':
+          lastToxicityReported, // ✅ Corrected key name here
     };
   }
 }

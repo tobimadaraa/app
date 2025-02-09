@@ -29,44 +29,47 @@ class LeaderboardList extends StatelessWidget {
         }
 
         final List<LeaderboardModel> leaderboard = List.from(snapshot.data!);
-
-        // 🔥 Fix Sorting: Use `selectedLeaderboard` instead of `showToxicity`
+// 🔥 Fix Sorting: Use `selectedLeaderboard`
         leaderboard.sort((a, b) {
           if (selectedLeaderboard == LeaderboardType.toxicity) {
-            return b.toxicityReported.compareTo(a.toxicityReported);
+            return b.toxicityReports.compareTo(a.toxicityReports);
           } else if (selectedLeaderboard == LeaderboardType.cheater) {
             return b.cheaterReports.compareTo(a.cheaterReports);
           } else {
-            return a.leaderboardNumber
-                .compareTo(b.leaderboardNumber); // ✅ Fix Ranked Sorting
+            return a.leaderboardNumber.compareTo(b.leaderboardNumber);
           }
         });
+
         return ListView.builder(
+          key: ValueKey(
+              selectedLeaderboard), // 🔥 Force UI Refresh when switching
           itemCount: leaderboard.length,
           itemBuilder: (context, index) {
             final model = leaderboard[index];
-            final rank = index + 1; // Rank starts at 1
+            final rank = index + 1;
 
-            // Determine if the user is famous (pageViews >= 20000)
+            // ✅ DEBUG PRINT - Verify if data is correct
+
+            // ✅ Check if the user is "famous" (lots of page views)
             bool isFamous = model.pageViews >= 20000;
 
-            // 🔥 Fix Background Color Logic
+            // ✅ Fix Background Color Logic
             final backgroundColor =
                 selectedLeaderboard == LeaderboardType.toxicity
                     ? (isFamous
                         ? ReportLevelHelper.getToxicityLevelColorRatio(
-                            model.toxicityReported, model.pageViews)
+                            model.toxicityReports, model.pageViews)
                         : ReportLevelHelper.getToxicityLevelColor(
-                            model.toxicityReported))
+                            model.toxicityReports))
                     : selectedLeaderboard == LeaderboardType.cheater
                         ? (isFamous
                             ? ReportLevelHelper.getCheaterLevelColorRatio(
                                 model.cheaterReports, model.pageViews)
                             : ReportLevelHelper.getCheaterLevelColor(
                                 model.cheaterReports))
-                        : Colors.purple; // Example color for Ranked leaderboard
+                        : Colors.green; // Default color for Ranked leaderboard
 
-            // 🔥 Fix Report Label
+            // ✅ Fix Report Label
             final reportLabel = selectedLeaderboard == LeaderboardType.toxicity
                 ? 'Toxicity Reports'
                 : selectedLeaderboard == LeaderboardType.cheater
@@ -74,23 +77,30 @@ class LeaderboardList extends StatelessWidget {
                     : 'Ranked Stats';
 
             return LeadCard(
+              key: ValueKey(model.username), // 🔥 Ensures individual updates
               text: rank.toString(), // Rank number
               leaderboardname:
                   '${model.username.toLowerCase()}#${model.tagline.toLowerCase()}',
               reportLabel: reportLabel,
-              cheaterReports: model.cheaterReports.toString(),
-              toxicityReports: model.toxicityReported.toString(),
+
+              // ✅ Fix: Ensure no null value is passed
+              cheaterReports: selectedLeaderboard == LeaderboardType.cheater
+                  ? (model.cheaterReports).toString() // ✅ If null, default to 0
+                  : "",
+
+              toxicityReports: selectedLeaderboard == LeaderboardType.toxicity
+                  ? model.toxicityReports.toString()
+                  : "",
               backgroundColor: backgroundColor,
               isFamous: isFamous,
+
               lastReported: selectedLeaderboard == LeaderboardType.toxicity
                   ? (model.lastToxicityReported.isNotEmpty
                       ? model.lastToxicityReported
-                      : ["Hasn't been reported here yet"])
-                  : selectedLeaderboard == LeaderboardType.cheater
-                      ? (model.lastCheaterReported.isNotEmpty
-                          ? model.lastCheaterReported
-                          : ["Hasn't been reported here yet"])
-                      : ["No data for this category"],
+                      : ["No reports yet"])
+                  : (model.lastCheaterReported.isNotEmpty
+                      ? model.lastCheaterReported
+                      : ["No reports yet"]),
             );
           },
         );
