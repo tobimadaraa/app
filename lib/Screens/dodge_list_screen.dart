@@ -28,8 +28,8 @@ class _DodgeListState extends State<DodgeList> {
   }
 
   Future<void> _loadDodgeList() async {
-    List<LeaderboardModel> storedList =
-        await userRepository.firestoreGetLeaderboard();
+    List<LeaderboardModel> storedList = await userRepository
+        .firestoreGetDodgeList(); // ✅ Use Dodge List function
     setState(() {
       dodgeList = storedList;
     });
@@ -55,6 +55,8 @@ class _DodgeListState extends State<DodgeList> {
       );
 
       if (userFound.username.isNotEmpty) {
+        await userRepository.addToDodgeList(userFound); // ✅ Save in Firestore
+
         setState(() {
           dodgeList.add(userFound);
         });
@@ -74,14 +76,59 @@ class _DodgeListState extends State<DodgeList> {
     }
   }
 
+  Future<bool> _showDeleteConfirmationDialog(LeaderboardModel user) async {
+    return await showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              title: const Text("Confirm Deletion"),
+              content: Text(
+                  "Are you sure you want to remove ${user.username}#${user.tagline} from your Dodge List?"),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(true), // ✅ Confirm
+                  child:
+                      const Text("Delete", style: TextStyle(color: Colors.red)),
+                ),
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(false), // ❌ Cancel
+                  child: const Text("Cancel"),
+                ),
+              ],
+            );
+          },
+        ) ??
+        false; // Return false if the dialog is dismissed
+  }
+
   Future<void> _removeUserFromDodgeList(LeaderboardModel user) async {
-    setState(() {
-      dodgeList.removeWhere(
-        (existing) =>
-            existing.username.toLowerCase() == user.username.toLowerCase() &&
-            existing.tagline.toLowerCase() == user.tagline.toLowerCase(),
-      );
-    });
+    bool confirmDelete = await _showDeleteConfirmationDialog(user);
+
+    if (confirmDelete) {
+      try {
+        await userRepository
+            .removeFromDodgeList(user); // ✅ Remove from Firestore
+
+        setState(() {
+          dodgeList.removeWhere(
+            (existing) =>
+                existing.username.toLowerCase() ==
+                    user.username.toLowerCase() &&
+                existing.tagline.toLowerCase() == user.tagline.toLowerCase(),
+          );
+        });
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+              content: Text(
+                  "${user.username}#${user.tagline} removed from Dodge List")),
+        );
+      } catch (error) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Error removing user")),
+        );
+      }
+    }
   }
 
   @override
@@ -113,7 +160,7 @@ class _DodgeListState extends State<DodgeList> {
           Expanded(
             child: DodgeListView(
               dodgeList: dodgeList,
-              onRemoveUser: _removeUserFromDodgeList,
+              onRemoveUser: _removeUserFromDodgeList, // ✅ Pass delete function
             ),
           ),
         ],
