@@ -33,24 +33,37 @@ class UserRepository extends GetxController {
     required String tagline,
     required bool isToxicityReport,
   }) async {
+    print(
+        "DEBUG: reportPlayer() called for $username#$tagline at ${DateTime.now().toIso8601String()}");
+
     try {
-      String normalizedUsername = username.toLowerCase().trim();
-      String normalizedTagline = tagline.toLowerCase().trim();
-      print("DEBUG: Validating input $normalizedUsername#$normalizedTagline");
+      String newReportTime = DateTime.now().toIso8601String();
+      print("DEBUG: Searching Firestore for player: $username#$tagline");
       final query = await _db
           .collection("Users")
-          .where('user_id', isEqualTo: normalizedUsername)
-          .where('tag_line', isEqualTo: normalizedTagline)
+          .where('user_id', isEqualTo: username.toLowerCase().trim())
+          .where('tag_line', isEqualTo: tagline.toLowerCase().trim())
           .get();
 
       print(
           "DEBUG: Firestore query result: Found ${query.docs.length} documents.");
 
-      String newReportTime = DateTime.now().toIso8601String();
-
       if (query.docs.isNotEmpty) {
-        final doc = query.docs.first.reference;
-        await doc.update({
+        // **✅ Handle Duplicates - Keep Only One**
+        if (query.docs.length > 1) {
+          print(
+              "WARNING: Duplicate users found! Keeping the first one and deleting others.");
+          for (int i = 1; i < query.docs.length; i++) {
+            await query.docs[i].reference.delete();
+            print("DEBUG: Deleted duplicate document ${query.docs[i].id}");
+          }
+        }
+
+        // ✅ Now update only the correct Firestore document
+        final docRef = query.docs.first.reference;
+        print("DEBUG: Updating Firestore document: ${docRef.id}");
+
+        await docRef.update({
           if (isToxicityReport) 'toxicity_reported': FieldValue.increment(1),
           if (!isToxicityReport) 'cheater_reported': FieldValue.increment(1),
           if (isToxicityReport)
@@ -58,39 +71,26 @@ class UserRepository extends GetxController {
           if (!isToxicityReport)
             'last_cheater_reported': FieldValue.arrayUnion([newReportTime]),
         });
-        print("DEBUG: Updated existing player report in Firestore.");
-        return;
+
+        print("DEBUG: Successfully updated player reports in Firestore.");
+      } else {
+        // ✅ Player does NOT exist → Add to Firestore
+        print("DEBUG: Player not found in Firestore. Adding new player...");
+
+        await _db.collection("Users").add({
+          'user_id': username.toLowerCase().trim(),
+          'tag_line': tagline.toLowerCase().trim(),
+          'cheater_reported': isToxicityReport ? 0 : 1,
+          'toxicity_reported': isToxicityReport ? 1 : 0,
+          'last_cheater_reported': isToxicityReport ? [] : [newReportTime],
+          'last_toxicity_reported': isToxicityReport ? [newReportTime] : [],
+          'page_views': 0,
+        });
+
+        print("DEBUG: Successfully added new player.");
       }
-
-      print(
-          "DEBUG: Player not found in Firestore, searching full leaderboard...");
-      print("DEBUG: Checking if _fullLeaderboard is loaded...");
-      print(
-          "DEBUG: _fullLeaderboard contains ${_fullLeaderboard.length} players.");
-      LeaderboardModel? rankedUser = _fullLeaderboard.firstWhereOrNull((user) {
-        return user.username.toLowerCase().trim() == normalizedUsername &&
-            user.tagline.toLowerCase().trim() == normalizedTagline;
-      });
-
-      if (rankedUser == null) {
-        throw Exception(
-            "Player $username#$tagline not found in Ranked Leaderboard.");
-      }
-
-      print("DEBUG: Player found in leaderboard, adding to Firestore...");
-      await _db.collection("Users").add({
-        'user_id': normalizedUsername,
-        'tag_line': normalizedTagline,
-        'cheater_reported': isToxicityReport ? 0 : 1,
-        'toxicity_reported': isToxicityReport ? 1 : 0,
-        'last_cheater_reported': isToxicityReport ? [] : [newReportTime],
-        'last_toxicity_reported': isToxicityReport ? [newReportTime] : [],
-        'page_views': 0,
-      });
-
-      print("DEBUG: Successfully added $username#$tagline to Firestore.");
     } catch (error) {
-      print("ERROR: Failed to report player: $error");
+      print("ERROR: Failed to report player - $error");
     }
   }
 
