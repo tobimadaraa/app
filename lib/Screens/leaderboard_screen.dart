@@ -34,7 +34,7 @@ class _LeaderBoardState extends State<LeaderBoard> {
   String newTagLine = "";
   String? usernameError;
   String? taglineError;
-
+  // bool _isReportingUser = false;
   @override
   void initState() {
     super.initState();
@@ -149,40 +149,48 @@ class _LeaderBoardState extends State<LeaderBoard> {
     }
   }
 
-  Future<void> _reportUser(bool isToxicityReport) async {
-    try {
-      await userRepository.reportPlayer(
-        username: newUserId.trim(),
-        tagline: newTagLine.trim(),
-        isToxicityReport: isToxicityReport,
-      );
+  // Future<void> _reportUser(bool isToxicityReport) async {
+  //   if (_isReportingUser) {
+  //     print("DEBUG: _reportUser() BLOCKED because it's already running.");
+  //     return; // ✅ Prevents duplicate execution
+  //   }
+  //   // ✅ Stop duplicate execution
+  //   _isReportingUser = true;
+  //   try {
+  //     await userRepository.reportPlayer(
+  //       username: newUserId.trim(),
+  //       tagline: newTagLine.trim(),
+  //       isToxicityReport: isToxicityReport,
+  //     );
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(isToxicityReport
-              ? "Player successfully reported for toxicity!"
-              : "Player successfully reported as a cheater!"),
-          backgroundColor: Colors.green,
-        ),
-      );
+  //     ScaffoldMessenger.of(context).showSnackBar(
+  //       SnackBar(
+  //         content: Text(isToxicityReport
+  //             ? "Player successfully reported for toxicity!"
+  //             : "Player successfully reported as a cheater!"),
+  //         backgroundColor: Colors.green,
+  //       ),
+  //     );
 
-      // Refresh the leaderboard
-      print("DEBUG: Refreshing leaderboard after report...");
-      setState(() {
-        _currentStartIndex = 0; // Reset pagination
-        _hasMoreData = true;
-        _loadedUsers.clear(); // Clear existing loaded users
-      });
-      await _loadLeaderboard(); // Reload leaderboard
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text("Failed to report player: $e"),
-          backgroundColor: Colors.red,
-        ),
-      );
-    }
-  }
+  //     print("DEBUG: Refreshing leaderboard after report...");
+  //     setState(() {
+  //       _loadedUsers.clear(); // Clear previous leaderboard data
+  //       _currentStartIndex = 0; // Reset pagination
+  //       _hasMoreData = true; // Allow fetching new data
+  //     });
+
+  //     await _loadLeaderboard(); // ✅ Refresh the leaderboard here
+  //   } catch (e) {
+  //     ScaffoldMessenger.of(context).showSnackBar(
+  //       SnackBar(
+  //         content: Text("Failed to report player: $e"),
+  //         backgroundColor: Colors.red,
+  //       ),
+  //     );
+  //   } finally {
+  //     _isReportingUser = false;
+  //   }
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -246,9 +254,19 @@ class _LeaderBoardState extends State<LeaderBoard> {
             ReportButton(
               newUserId: newUserId,
               newTagLine: newTagLine,
-              onSuccess: () => _reportUser(
-                selectedLeaderboard == LeaderboardType.toxicity,
-              ),
+              onSuccess: () async {
+                print("DEBUG: onSuccess triggered for $newUserId#$newTagLine");
+
+                setState(() {
+                  _loadedUsers.clear(); // ✅ Clear old leaderboard data
+                  _currentStartIndex = 0; // Reset pagination
+                  _hasMoreData = true; // Allow new fetch
+                });
+
+                await _loadLeaderboard(); // ✅ Refresh leaderboard, but DON'T report again
+
+                print("DEBUG: onSuccess finished refreshing leaderboard.");
+              },
               buttonText: selectedLeaderboard == LeaderboardType.toxicity
                   ? 'Report for Toxicity'
                   : 'Report Cheater',
