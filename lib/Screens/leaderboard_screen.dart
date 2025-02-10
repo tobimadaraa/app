@@ -7,7 +7,7 @@ import 'package:flutter_application_2/components/leaderboard_toggle.dart';
 import 'package:flutter_application_2/pages/buttons/report_button.dart';
 import 'package:flutter_application_2/models/leaderboard_model.dart';
 import 'package:flutter_application_2/repository/user_repository.dart';
-import 'package:flutter_application_2/services/valorant_api.dart';
+import 'package:flutter_application_2/repository/valorant_api.dart';
 import 'package:flutter_application_2/utils/search_delegate.dart';
 import 'package:flutter_application_2/utils/validators.dart';
 
@@ -38,6 +38,7 @@ class _LeaderBoardState extends State<LeaderBoard> {
   @override
   void initState() {
     super.initState();
+    _initializeLeaderboardScreen();
     _scrollController.addListener(_onScroll);
     _loadLeaderboard();
   }
@@ -48,55 +49,71 @@ class _LeaderBoardState extends State<LeaderBoard> {
     super.dispose();
   }
 
+  Future<void> _initializeLeaderboardScreen() async {
+    print("DEBUG: Initializing leaderboard screen...");
+    setState(() {
+      _loadedUsers.clear(); // Clear any stale data
+      _currentStartIndex = 0;
+      _hasMoreData = true;
+    });
+    await userRepository.loadFullLeaderboard();
+    print("DEBUG: Full leaderboard has finished loading.");
+    _scrollController.addListener(_onScroll);
+    await _loadLeaderboard(); // Load the appropriate leaderboard
+  }
+
   /// **🔥 Load More Users with Pagination**
   Future<void> _loadLeaderboard({bool loadMore = false}) async {
-    if (_isLoadingMore || !_hasMoreData) return;
+    if (_isLoadingMore || (!_hasMoreData && loadMore)) return;
+
     print("DEBUG: Fetching ${selectedLeaderboard.name} leaderboard...");
-    print("DEBUG: Start Index: $_currentStartIndex, Page Size: $_pageSize");
-    _isLoadingMore = true; // ✅ Set BEFORE API call
-    setState(() {});
-    List<LeaderboardModel> testUsers =
-        await userRepository.firestoreGetLeaderboard();
-    print("DEBUG: Total Firestore Users Fetched: ${testUsers.length}");
-    for (var user in testUsers) {
-      print(
-          "DEBUG: ${user.username}#${user.tagline} | Reports: ${user.cheaterReports}");
+    if (!loadMore) {
+      // Reset pagination and clear data for a new leaderboard type
+      setState(() {
+        _loadedUsers.clear();
+        _currentStartIndex = 0;
+        _hasMoreData = true;
+      });
     }
+
+    _isLoadingMore = true; // Prevent duplicate fetches
+    setState(() {}); // Trigger loading state
+
     try {
       List<LeaderboardModel> newUsers = [];
 
       if (selectedLeaderboard == LeaderboardType.ranked) {
         print(
             "DEBUG: Fetching from Riot API start=$_currentStartIndex, size=$_pageSize");
-        // ✅ Ensure Riot API gets the correct batch
         newUsers = await riotApiService.getLeaderboard(
           startIndex: _currentStartIndex,
           size: _pageSize,
         );
       } else {
+        print("DEBUG: Fetching Firestore leaderboard...");
         List<LeaderboardModel> allUsers =
             await userRepository.firestoreGetLeaderboard();
+
+        // Sort users based on the leaderboard type (toxicity or cheater reports)
         allUsers.sort((a, b) {
           return selectedLeaderboard == LeaderboardType.toxicity
               ? b.toxicityReports.compareTo(a.toxicityReports)
               : b.cheaterReports.compareTo(a.cheaterReports);
         });
 
-        // ✅ Use `_currentStartIndex` for Firestore pagination
+        // Paginate sorted users
         newUsers = allUsers.skip(_currentStartIndex).take(_pageSize).toList();
       }
 
       if (newUsers.isNotEmpty) {
         setState(() {
           _loadedUsers.addAll(newUsers);
-          _currentStartIndex +=
-              newUsers.length; // ✅ Increment BEFORE next API call
-          _hasMoreData = newUsers.length ==
-              _pageSize; // ✅ Stop loading if fewer users than requested
+          _currentStartIndex += newUsers.length;
+          _hasMoreData = newUsers.length == _pageSize;
         });
       } else {
         setState(() {
-          _hasMoreData = false; // ✅ Stop if API returns empty
+          _hasMoreData = false;
         });
       }
 
@@ -106,7 +123,7 @@ class _LeaderBoardState extends State<LeaderBoard> {
       print("❌ ERROR: Failed to load leaderboard: $e");
     } finally {
       _isLoadingMore = false;
-      setState(() {});
+      setState(() {}); // Stop loading state
     }
   }
 
@@ -120,7 +137,6 @@ class _LeaderBoardState extends State<LeaderBoard> {
     }
   }
 
-  /// **🔥 Report User & Refresh**
   Future<void> _reportUser(bool isToxicityReport) async {
     try {
       await userRepository.reportPlayer(
@@ -138,12 +154,20 @@ class _LeaderBoardState extends State<LeaderBoard> {
         ),
       );
 
-      _loadLeaderboard();
+      // Refresh the leaderboard
+      print("DEBUG: Refreshing leaderboard after report...");
+      setState(() {
+        _currentStartIndex = 0; // Reset pagination
+        _hasMoreData = true;
+        _loadedUsers.clear(); // Clear existing loaded users
+      });
+      await _loadLeaderboard(); // Reload leaderboard
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-            content: Text("Failed to report player: $e"),
-            backgroundColor: Colors.red),
+          content: Text("Failed to report player: $e"),
+          backgroundColor: Colors.red,
+        ),
       );
     }
   }
@@ -224,10 +248,11 @@ class _LeaderBoardState extends State<LeaderBoard> {
             onSelectLeaderboard: (LeaderboardType type) {
               setState(() {
                 selectedLeaderboard = type;
+                _loadedUsers.clear(); // Clear the current leaderboard data
                 _currentStartIndex = 0; // Reset pagination
-                _hasMoreData = true; // Allow new fetches
-                _loadLeaderboard();
+                _hasMoreData = true; // Allow loading new data
               });
+              _loadLeaderboard(); // Load the selected leaderboard
             },
           ),
           Expanded(
