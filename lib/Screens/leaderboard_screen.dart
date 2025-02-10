@@ -77,12 +77,13 @@ class _LeaderBoardState extends State<LeaderBoard> {
     }
 
     _isLoadingMore = true; // Prevent duplicate fetches
-    setState(() {}); // Trigger loading state
+    setState(() {});
 
     try {
       List<LeaderboardModel> newUsers = [];
 
       if (selectedLeaderboard == LeaderboardType.ranked) {
+        // Fetch ranked leaderboard from Riot API
         print(
             "DEBUG: Fetching from Riot API start=$_currentStartIndex, size=$_pageSize");
         newUsers = await riotApiService.getLeaderboard(
@@ -90,18 +91,29 @@ class _LeaderBoardState extends State<LeaderBoard> {
           size: _pageSize,
         );
       } else {
+        // Fetch Firestore leaderboard
         print("DEBUG: Fetching Firestore leaderboard...");
         List<LeaderboardModel> allUsers =
             await userRepository.firestoreGetLeaderboard();
 
-        // Sort users based on the leaderboard type (toxicity or cheater reports)
-        allUsers.sort((a, b) {
-          return selectedLeaderboard == LeaderboardType.toxicity
-              ? b.toxicityReports.compareTo(a.toxicityReports)
-              : b.cheaterReports.compareTo(a.cheaterReports);
-        });
+        // Filter and sort based on the selected leaderboard type
+        if (selectedLeaderboard == LeaderboardType.cheater) {
+          allUsers = allUsers
+              .where((user) =>
+                  user.cheaterReports > 0) // Filter only cheater reports
+              .toList();
+          allUsers.sort((a, b) => b.cheaterReports
+              .compareTo(a.cheaterReports)); // Sort by cheater reports
+        } else if (selectedLeaderboard == LeaderboardType.toxicity) {
+          allUsers = allUsers
+              .where((user) =>
+                  user.toxicityReports > 0) // Filter only toxicity reports
+              .toList();
+          allUsers.sort((a, b) => b.toxicityReports
+              .compareTo(a.toxicityReports)); // Sort by toxicity reports
+        }
 
-        // Paginate sorted users
+        // Paginate filtered data
         newUsers = allUsers.skip(_currentStartIndex).take(_pageSize).toList();
       }
 
@@ -123,7 +135,7 @@ class _LeaderBoardState extends State<LeaderBoard> {
       print("❌ ERROR: Failed to load leaderboard: $e");
     } finally {
       _isLoadingMore = false;
-      setState(() {}); // Stop loading state
+      setState(() {});
     }
   }
 

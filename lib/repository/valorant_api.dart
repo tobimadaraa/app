@@ -3,7 +3,7 @@ import 'package:http/http.dart' as http;
 import 'package:flutter_application_2/models/leaderboard_model.dart';
 
 class RiotApiService {
-  static const String apiKey = "hidthis";
+  static const String apiKey = "hideen";
   static const String baseUrl =
       "https://eu.api.riotgames.com"; // Change region if needed
 
