@@ -3,7 +3,7 @@ import 'package:http/http.dart' as http;
 import 'package:flutter_application_2/models/leaderboard_model.dart';
 
 class RiotApiService {
-  static const String apiKey = "ihidthisshit";
+  static const String apiKey = "hidthis";
   static const String baseUrl =
       "https://eu.api.riotgames.com"; // Change region if needed
 
@@ -38,7 +38,7 @@ class RiotApiService {
 
   // Function to fetch leaderboard using the current Act ID
   Future<List<LeaderboardModel>> getLeaderboard(
-      {int startIndex = 50, int size = 20}) async {
+      {int startIndex = 0, int size = 200}) async {
     String actId = await getCurrentActId(); // Fetch Act ID dynamically
 
     final response = await http.get(
