@@ -285,7 +285,11 @@ class _LeaderBoardState extends State<LeaderBoard> {
                 return ListTile(
                   title: Text('${user.username}#${user.tagline}'),
                   subtitle: Text(
-                    'Rank: ${user.leaderboardNumber} | Cheater Reports: ${user.cheaterReports} | Toxicity: ${user.toxicityReports}',
+                    selectedLeaderboard == LeaderboardType.ranked
+                        ? 'Rank: ${user.leaderboardNumber}'
+                        : selectedLeaderboard == LeaderboardType.cheater
+                            ? 'Rank: ${user.leaderboardNumber} | Cheater Reports: ${user.cheaterReports}'
+                            : 'Rank: ${user.leaderboardNumber} | Toxicity Reports: ${user.toxicityReports}',
                   ),
                 );
               },
