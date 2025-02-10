@@ -8,6 +8,9 @@ import 'package:get/get.dart';
 class UserRepository extends GetxController {
   final _db = FirebaseFirestore.instance;
   final RiotApiService riotApiService = RiotApiService();
+  String normalize(String input) {
+    return input.trim().toLowerCase();
+  }
 
   /// **🔥 Report a Player (Only If They Exist)**
   Future<void> reportPlayer({
@@ -16,10 +19,13 @@ class UserRepository extends GetxController {
     required bool isToxicityReport,
   }) async {
     try {
+      String normalizedUsername = username.toLowerCase().trim();
+      String normalizedTagline = tagline.toLowerCase().trim();
+
       final query = await _db
           .collection("Users")
-          .where('user_id', isEqualTo: username)
-          .where('tag_line', isEqualTo: tagline)
+          .where('user_id', isEqualTo: normalizedUsername)
+          .where('tag_line', isEqualTo: normalizedTagline)
           .get();
 
       String newReportTime = DateTime.now().toIso8601String();
@@ -73,32 +79,32 @@ class UserRepository extends GetxController {
   /// **🔥 Get Leaderboard from Firestore**
   Future<List<LeaderboardModel>> firestoreGetLeaderboard() async {
     try {
-      // 1️⃣ Fetch Riot's Leaderboard
+      // Fetch Riot's Leaderboard
       List<LeaderboardModel> riotLeaderboard =
           await riotApiService.getLeaderboard();
 
-      // 2️⃣ Fetch Firestore Users
+      // Fetch Firestore Users
       final snapshot = await _db.collection("Users").get();
-      Map<String, Map<String, dynamic>> firestoreUsers =
-          {}; // Store users as {username -> data}
+      Map<String, Map<String, dynamic>> firestoreUsers = {};
 
       for (var doc in snapshot.docs) {
         final data = doc.data();
-        String username = data['user_id'] ?? '';
-        String tagline = data['tag_line'] ?? '';
-
-        // 🔥 Store Firestore user data for quick lookup
+        String username = normalize(data['user_id'] ?? '');
+        String tagline = normalize(data['tag_line'] ?? '');
         firestoreUsers["$username#$tagline"] = data;
+
+        // Debug Firestore Data
+        print("DEBUG: Firestore User -> $username#$tagline");
+        print("DEBUG: Cheater Reports: ${data['cheater_reported']}");
+        print("DEBUG: Toxicity Reports: ${data['toxicity_reported']}");
       }
 
-      // 3️⃣ Merge Riot leaderboard with Firestore Data
+      // Merge Riot leaderboard with Firestore Data
       List<LeaderboardModel> mergedLeaderboard = riotLeaderboard.map((player) {
-        String fullUsername = "${player.username}#${player.tagline}";
+        String fullUsername = normalize("${player.username}#${player.tagline}");
 
         if (firestoreUsers.containsKey(fullUsername)) {
           final firestoreData = firestoreUsers[fullUsername]!;
-
-          // 🔥 If user exists in Firestore, use Firestore data for reports
           return LeaderboardModel(
             leaderboardNumber: player.leaderboardNumber,
             username: player.username,
@@ -115,19 +121,25 @@ class UserRepository extends GetxController {
                     : [],
           );
         } else {
-          // 🔥 If user does NOT exist in Firestore, default reports to 0
-          return LeaderboardModel(
-            leaderboardNumber: player.leaderboardNumber,
-            username: player.username,
-            tagline: player.tagline,
-            cheaterReports: 0,
-            toxicityReports: 0,
-            pageViews: 0,
-            lastCheaterReported: [],
-            lastToxicityReported: [],
-          );
+          return player; // Use Riot API data if no Firestore match
         }
       }).toList();
+
+      // Remove duplicates
+      Map<String, LeaderboardModel> uniquePlayers = {};
+      for (var player in mergedLeaderboard) {
+        String key = normalize("${player.username}#${player.tagline}");
+        uniquePlayers[key] = player;
+      }
+
+      mergedLeaderboard = uniquePlayers.values.toList();
+
+      // Debug Final Merged Leaderboard
+      for (var player in mergedLeaderboard) {
+        print("DEBUG: ${player.username}#${player.tagline}");
+        print("DEBUG: Cheater Reports: ${player.cheaterReports}");
+        print("DEBUG: Toxicity Reports: ${player.toxicityReports}");
+      }
 
       return mergedLeaderboard;
     } catch (error) {

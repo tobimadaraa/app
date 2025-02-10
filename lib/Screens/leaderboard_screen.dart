@@ -51,17 +51,23 @@ class _LeaderBoardState extends State<LeaderBoard> {
   /// **🔥 Load More Users with Pagination**
   Future<void> _loadLeaderboard({bool loadMore = false}) async {
     if (_isLoadingMore || !_hasMoreData) return;
-
+    print("DEBUG: Fetching ${selectedLeaderboard.name} leaderboard...");
+    print("DEBUG: Start Index: $_currentStartIndex, Page Size: $_pageSize");
     _isLoadingMore = true; // ✅ Set BEFORE API call
     setState(() {});
-
+    List<LeaderboardModel> testUsers =
+        await userRepository.firestoreGetLeaderboard();
+    print("DEBUG: Total Firestore Users Fetched: ${testUsers.length}");
+    for (var user in testUsers) {
+      print(
+          "DEBUG: ${user.username}#${user.tagline} | Reports: ${user.cheaterReports}");
+    }
     try {
       List<LeaderboardModel> newUsers = [];
 
       if (selectedLeaderboard == LeaderboardType.ranked) {
         print(
             "DEBUG: Fetching from Riot API start=$_currentStartIndex, size=$_pageSize");
-
         // ✅ Ensure Riot API gets the correct batch
         newUsers = await riotApiService.getLeaderboard(
           startIndex: _currentStartIndex,
@@ -70,7 +76,6 @@ class _LeaderBoardState extends State<LeaderBoard> {
       } else {
         List<LeaderboardModel> allUsers =
             await userRepository.firestoreGetLeaderboard();
-
         allUsers.sort((a, b) {
           return selectedLeaderboard == LeaderboardType.toxicity
               ? b.toxicityReports.compareTo(a.toxicityReports)
