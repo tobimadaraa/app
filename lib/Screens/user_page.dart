@@ -71,7 +71,6 @@ class _UserPageState extends State<UserPage> {
                 ),
               ],
             ),
-
             Container(
               height: 900,
               width: double.infinity,
@@ -115,19 +114,18 @@ class _UserPageState extends State<UserPage> {
                             color: Colors.white,
                           ),
                           onPressed: () {
-                            // ignore: avoid_print
-                            print('boop');
+                            // ignore: avoid_
+                            ('boop');
                           },
                         ),
                       ],
                     ),
-
                     Mybutton(
                       prefixIcon: Icon(Icons.edit, color: Colors.white),
                       text: 'Edit Profile',
                       onPressed: () {
-                        // ignore: avoid_print
-                        print('boop');
+                        // ignore: avoid_
+                        ('boop');
                       },
                       //  height: 40,
                       //  width: 60,
@@ -143,8 +141,8 @@ class _UserPageState extends State<UserPage> {
                       text: 'Code',
                       text2: '45:42:08',
                       onPressed: () {
-                        // ignore: avoid_print
-                        print('boop');
+                        // ignore: avoid_
+                        ('boop');
                       },
                       // height: 80,
                       // width: 120,
@@ -154,8 +152,8 @@ class _UserPageState extends State<UserPage> {
                       toptext: 'Member Since',
                       text: '10 Jul 2018',
                       onPressed: () {
-                        // ignore: avoid_print
-                        print('boop');
+                        // ignore: avoid_
+                        ('boop');
                       },
                     ),
                     Doublebutton(
@@ -171,8 +169,8 @@ class _UserPageState extends State<UserPage> {
                         color: Colors.white,
                       ),
                       onPressed: () {
-                        // ignore: avoid_print
-                        print('boop');
+                        // ignore: avoid_
+                        ('boop');
                       },
                     ),
                     Doublebutton(
@@ -188,8 +186,8 @@ class _UserPageState extends State<UserPage> {
                         color: Colors.white,
                       ),
                       onPressed: () {
-                        // ignore: avoid_print
-                        print('boop');
+                        // ignore: avoid_
+                        ('boop');
                       },
                     ),
                     SizedBox(height: 12),
@@ -200,8 +198,8 @@ class _UserPageState extends State<UserPage> {
                         color: Colors.white,
                       ),
                       onPressed: () {
-                        // ignore: avoid_print
-                        print('boop');
+                        // ignore: avoid_
+                        ('boop');
                       },
                     ),
                     SizedBox(height: 6),
@@ -212,15 +210,15 @@ class _UserPageState extends State<UserPage> {
                         color: Colors.white,
                       ),
                       onPressed: () {
-                        // ignore: avoid_print
-                        print('boop');
+                        // ignore: avoid_
+                        ('boop');
                       },
                     ),
                     SizedBox(height: 3),
                     Logoutbutton(
                       text: 'Log Out',
                       onPressed: () {
-                        // ignore: avoid_print
+                        // ignore: avoid_
                         Navigator.pushReplacementNamed(context, '/login');
                       },
                     ),

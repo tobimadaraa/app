@@ -21,7 +21,7 @@ class LeaderboardModel {
 
   // Factory constructor to convert JSON from API response
   factory LeaderboardModel.fromJson(Map<String, dynamic> json) {
-    print("DEBUG: Decoding JSON - ${json.toString()}");
+    ("DEBUG: Decoding JSON - ${json.toString()}");
 
     // Check if the data comes from the API, Firestore, or Local Storage
     bool isFromApi =
