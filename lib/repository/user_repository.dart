@@ -86,10 +86,11 @@ class UserRepository extends GetxController {
         return; // 🚨 Prevents app crashes
       }
 
-      // **3️⃣ If Riot API also fails, exit early**
+      // **3️⃣ If Riot API also fails, handle it gracefully**
       if (!playerExists) {
-        print("ERROR: Player does NOT exist in Riot API. Cannot report.");
-        return; // ✅ Prevent adding invalid players
+        print(
+            "ERROR: Player does NOT exist in Riot API. Skipping addition to Firestore.");
+        return; // ✅ Instead of breaking, just log the issue and continue
       }
 
       // **4️⃣ Riot API confirms player exists → Add them to Firestore**
