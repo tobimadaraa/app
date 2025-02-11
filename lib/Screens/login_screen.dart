@@ -18,7 +18,7 @@ class _LoginPageState extends State<LoginPage> {
   String gameName = ''; // Store the Riot ID
   String tagLine = ''; // Store the Riot Tag
   Future<void> fetchAccountData(String gameName, String tagLine) async {
-    print('Fetching account for: $gameName$tagLine');
+    ('Fetching account for: $gameName$tagLine');
     final String encodedGameName = Uri.encodeComponent(gameName);
     final String encodedTagLine = Uri.encodeComponent(tagLine);
     final String endpoint =
@@ -33,13 +33,13 @@ class _LoginPageState extends State<LoginPage> {
         },
       );
 
-      print('Endpoint: $endpoint');
-      print('Headers: ${{'X-Riot-Token': apiKey}}');
+      ('Endpoint: $endpoint');
+      ('Headers: ${{'X-Riot-Token': apiKey}}');
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         final String puuid = data['puuid']; // Extract PUUID
-        print("PUUID: $puuid");
+        ("PUUID: $puuid");
         Fluttertoast.showToast(
           msg: "PUUID fetched :$puuid",
           toastLength: Toast.LENGTH_SHORT,
@@ -49,7 +49,7 @@ class _LoginPageState extends State<LoginPage> {
           fontSize: 16.0,
         );
       } else {
-        print("Error: ${response.statusCode}, ${response.body}");
+        ("Error: ${response.statusCode}, ${response.body}");
         Fluttertoast.showToast(
           msg: "Failed to fetch PUUID: ${response.body}",
           toastLength: Toast.LENGTH_SHORT,
@@ -60,7 +60,7 @@ class _LoginPageState extends State<LoginPage> {
         );
       }
     } catch (error) {
-      print("Error: $error");
+      ("Error: $error");
       Fluttertoast.showToast(
         msg: "An error occurred: $error",
         toastLength: Toast.LENGTH_SHORT,
@@ -101,7 +101,7 @@ class _LoginPageState extends State<LoginPage> {
                   setState(() {
                     gameName = value;
                   });
-                  print('Riot ID: $value');
+                  ('Riot ID: $value');
                 },
               ),
             ),
@@ -117,7 +117,7 @@ class _LoginPageState extends State<LoginPage> {
                   setState(() {
                     tagLine = value;
                   });
-                  print('Riot Tag: $value');
+                  ('Riot Tag: $value');
                 },
               ),
             ),
@@ -125,7 +125,7 @@ class _LoginPageState extends State<LoginPage> {
             MaterialButton(
               minWidth: double.infinity,
               onPressed: () {
-                print('Riot ID: $gameName, TagLine: $tagLine');
+                ('Riot ID: $gameName, TagLine: $tagLine');
                 fetchAccountData(
                   gameName,
                   tagLine,

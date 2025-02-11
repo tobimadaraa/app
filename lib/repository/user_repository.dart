@@ -1,4 +1,4 @@
-// ignore_for_file: avoid_print
+// ignore_for_file: avoid_
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_application_2/models/leaderboard_model.dart';
@@ -12,14 +12,13 @@ class UserRepository extends GetxController {
 
   Future<void> loadFullLeaderboard() async {
     try {
-      print("DEBUG: Sending request to Riot API...");
+      ("DEBUG: Sending request to Riot API...");
       List<LeaderboardModel> riotLeaderboard =
           await riotApiService.getLeaderboard();
       _fullLeaderboard = riotLeaderboard;
-      print(
-          "DEBUG: Loaded full leaderboard with ${_fullLeaderboard.length} players.");
+      ("DEBUG: Loaded full leaderboard with ${_fullLeaderboard.length} players.");
     } catch (error) {
-      print("ERROR: Failed to fetch full leaderboard - $error");
+      ("ERROR: Failed to fetch full leaderboard - $error");
     }
   }
 
@@ -33,27 +32,25 @@ class UserRepository extends GetxController {
     required String tagline,
     required bool isToxicityReport,
   }) async {
-    print(
-        "DEBUG: reportPlayer() called for $username#$tagline at ${DateTime.now().toIso8601String()}");
+    ("DEBUG: reportPlayer() called for $username#$tagline at ${DateTime.now().toIso8601String()}");
 
     try {
       String newReportTime = DateTime.now().toIso8601String();
 
       // **1️⃣ Check Firestore First**
-      print("DEBUG: Searching Firestore for player: $username#$tagline");
+      ("DEBUG: Searching Firestore for player: $username#$tagline");
       final query = await _db
           .collection("Users")
           .where('user_id', isEqualTo: username.toLowerCase().trim())
           .where('tag_line', isEqualTo: tagline.toLowerCase().trim())
           .get();
 
-      print(
-          "DEBUG: Firestore query result: Found ${query.docs.length} documents.");
+      ("DEBUG: Firestore query result: Found ${query.docs.length} documents.");
 
       if (query.docs.isNotEmpty) {
         // ✅ Player exists in Firestore → Just update reports
         final docRef = query.docs.first.reference;
-        print("DEBUG: Updating Firestore document: ${docRef.id}");
+        ("DEBUG: Updating Firestore document: ${docRef.id}");
 
         await docRef.update({
           if (isToxicityReport) 'toxicity_reported': FieldValue.increment(1),
@@ -64,38 +61,36 @@ class UserRepository extends GetxController {
             'last_cheater_reported': FieldValue.arrayUnion([newReportTime]),
         });
 
-        print("DEBUG: Successfully updated player reports in Firestore.");
+        ("DEBUG: Successfully updated player reports in Firestore.");
         return;
       }
 
       // **2️⃣ Firestore did NOT find the player → Check Riot API**
-      print("DEBUG: Player not found in Firestore. Checking Riot API...");
+      ("DEBUG: Player not found in Firestore. Checking Riot API...");
 
       bool playerExists;
       try {
         playerExists =
             await riotApiService.checkPlayerExists(username, tagline);
-        print("DEBUG: Riot API checkPlayerExists() returned: $playerExists");
+        ("DEBUG: Riot API checkPlayerExists() returned: $playerExists");
 
         if (!playerExists) {
-          print("ERROR: Player does NOT exist in Riot API. Cannot report.");
+          ("ERROR: Player does NOT exist in Riot API. Cannot report.");
           return; // 🚨 Prevents adding unknown players
         }
       } catch (error) {
-        print("ERROR: Exception in checkPlayerExists(): $error");
+        ("ERROR: Exception in checkPlayerExists(): $error");
         return; // 🚨 Prevents app crashes
       }
 
       // **3️⃣ If Riot API also fails, handle it gracefully**
       if (!playerExists) {
-        print(
-            "ERROR: Player does NOT exist in Riot API. Skipping addition to Firestore.");
+        ("ERROR: Player does NOT exist in Riot API. Skipping addition to Firestore.");
         return; // ✅ Instead of breaking, just log the issue and continue
       }
 
       // **4️⃣ Riot API confirms player exists → Add them to Firestore**
-      print(
-          "DEBUG: Player exists in Riot API. Adding new player to Firestore...");
+      ("DEBUG: Player exists in Riot API. Adding new player to Firestore...");
 
       await _db.collection("Users").add({
         'user_id': username.toLowerCase().trim(),
@@ -107,9 +102,9 @@ class UserRepository extends GetxController {
         'page_views': 0,
       });
 
-      print("DEBUG: Successfully added new player.");
+      ("DEBUG: Successfully added new player.");
     } catch (error) {
-      print("ERROR: Failed to report player - $error");
+      ("ERROR: Failed to report player - $error");
     }
   }
 
@@ -162,7 +157,7 @@ class UserRepository extends GetxController {
 
       return uniquePlayers.values.toList();
     } catch (error) {
-      print("ERROR: Fetching merged leaderboard failed: $error");
+      ("ERROR: Fetching merged leaderboard failed: $error");
       return [];
     }
   }
@@ -194,7 +189,7 @@ class UserRepository extends GetxController {
         );
       }).toList();
     } catch (error) {
-      print("ERROR: Fetching Dodge List failed: $error");
+      ("ERROR: Fetching Dodge List failed: $error");
       return [];
     }
   }
@@ -214,10 +209,9 @@ class UserRepository extends GetxController {
         "last_cheater_reported": user.lastCheaterReported,
         "last_toxicity_reported": user.lastToxicityReported,
       });
-      print(
-          "DEBUG: User added to Dodge List -> ${user.username}#${user.tagline}");
+      ("DEBUG: User added to Dodge List -> ${user.username}#${user.tagline}");
     } catch (error) {
-      print("ERROR: Adding user to Dodge List failed: $error");
+      ("ERROR: Adding user to Dodge List failed: $error");
     }
   }
 
@@ -228,10 +222,9 @@ class UserRepository extends GetxController {
           .collection("DodgeList")
           .doc("${user.username}#${user.tagline}")
           .delete();
-      print(
-          "DEBUG: User removed from Dodge List -> ${user.username}#${user.tagline}");
+      ("DEBUG: User removed from Dodge List -> ${user.username}#${user.tagline}");
     } catch (error) {
-      print("ERROR: Removing user from Dodge List failed: $error");
+      ("ERROR: Removing user from Dodge List failed: $error");
     }
   }
 
@@ -249,7 +242,7 @@ class UserRepository extends GetxController {
         await docRef.update({'page_views': FieldValue.increment(1)});
       }
     } catch (error) {
-      print("ERROR: Failed to increment page views: $error");
+      ("ERROR: Failed to increment page views: $error");
     }
   }
 }

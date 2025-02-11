@@ -48,7 +48,7 @@ class LeaderboardList extends StatelessWidget {
             final model = leaderboard[index];
             final rank = index + 1;
 
-            // ✅ DEBUG PRINT - Verify if data is correct
+            // ✅ DEBUG  - Verify if data is correct
 
             // ✅ Check if the user is "famous" (lots of page views)
             bool isFamous = model.pageViews >= 20000;
