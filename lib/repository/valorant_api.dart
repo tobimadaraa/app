@@ -36,38 +36,55 @@ class RiotApiService {
     }
   }
 
-  Future<bool> checkPlayerExists(String username, String tagline) async {
-    final url = Uri.parse(
-        "$baseUrl/riot/account/v1/accounts/by-riot-id/$username/$tagline");
+  List<LeaderboardModel> _cachedLeaderboard = [];
 
-    print("DEBUG: Sending Riot API request to: $url");
-
-    try {
-      final response = await http.get(
-        url,
-        headers: {
-          "X-Riot-Token": apiKey,
-        },
-      );
-
-      print("DEBUG: Riot API response code: ${response.statusCode}");
-      print("DEBUG: Riot API response body: ${response.body}");
-
-      if (response.statusCode == 200) {
-        print("DEBUG: Player found in Riot API.");
-        return true;
-      } else if (response.statusCode == 404) {
-        print("DEBUG: Player NOT found in Riot API.");
-        return false;
-      } else {
-        print("ERROR: Unexpected API response - ${response.statusCode}");
-        return false;
-      }
-    } catch (error) {
-      print("ERROR: Failed to check Riot API - $error");
-      return false;
-    }
+  Future<void> loadLeaderboardCache() async {
+    _cachedLeaderboard = await getLeaderboard();
   }
+
+  Future<bool> checkPlayerExists(String username, String tagline) async {
+    if (_cachedLeaderboard.isEmpty) {
+      await loadLeaderboardCache(); // Fetch leaderboard only once
+    }
+
+    bool exists = _cachedLeaderboard.any((player) =>
+        player.username.toLowerCase() == username.toLowerCase() &&
+        player.tagline.toLowerCase() == tagline.toLowerCase());
+
+    print("DEBUG: Player exists check result for $username#$tagline: $exists");
+    return exists;
+  }
+  // final url = Uri.parse(
+  //     "$baseUrl/riot/account/v1/accounts/by-riot-id/$username/$tagline");
+
+  // print("DEBUG: Sending Riot API request to: $url");
+
+  // try {
+  //   final response = await http.get(
+  //     url,
+  //     headers: {
+  //       "X-Riot-Token": apiKey,
+  //     },
+  //   );
+
+  //   print("DEBUG: Riot API response code: ${response.statusCode}");
+  //   print("DEBUG: Riot API response body: ${response.body}");
+
+  //   if (response.statusCode == 200) {
+  //     print("DEBUG: Player found in Riot API.");
+  //     return true;
+  //   } else if (response.statusCode == 404) {
+  //     print("DEBUG: Player NOT found in Riot API.");
+  //     return false;
+  //   } else {
+  //     print("ERROR: Unexpected API response - ${response.statusCode}");
+  //     return false;
+  //   }
+  // } catch (error) {
+  //   print("ERROR: Failed to check Riot API - $error");
+  //   return false;
+  // }
+  //}
 
   // Function to fetch leaderboard using the current Act ID
   Future<List<LeaderboardModel>> getLeaderboard(
