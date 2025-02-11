@@ -38,6 +38,8 @@ class UserRepository extends GetxController {
 
     try {
       String newReportTime = DateTime.now().toIso8601String();
+
+      // **1️⃣ Check Firestore First**
       print("DEBUG: Searching Firestore for player: $username#$tagline");
       final query = await _db
           .collection("Users")
@@ -49,17 +51,7 @@ class UserRepository extends GetxController {
           "DEBUG: Firestore query result: Found ${query.docs.length} documents.");
 
       if (query.docs.isNotEmpty) {
-        // **✅ Handle Duplicates - Keep Only One**
-        if (query.docs.length > 1) {
-          print(
-              "WARNING: Duplicate users found! Keeping the first one and deleting others.");
-          for (int i = 1; i < query.docs.length; i++) {
-            await query.docs[i].reference.delete();
-            print("DEBUG: Deleted duplicate document ${query.docs[i].id}");
-          }
-        }
-
-        // ✅ Now update only the correct Firestore document
+        // ✅ Player exists in Firestore → Just update reports
         final docRef = query.docs.first.reference;
         print("DEBUG: Updating Firestore document: ${docRef.id}");
 
@@ -73,22 +65,48 @@ class UserRepository extends GetxController {
         });
 
         print("DEBUG: Successfully updated player reports in Firestore.");
-      } else {
-        // ✅ Player does NOT exist → Add to Firestore
-        print("DEBUG: Player not found in Firestore. Adding new player...");
-
-        await _db.collection("Users").add({
-          'user_id': username.toLowerCase().trim(),
-          'tag_line': tagline.toLowerCase().trim(),
-          'cheater_reported': isToxicityReport ? 0 : 1,
-          'toxicity_reported': isToxicityReport ? 1 : 0,
-          'last_cheater_reported': isToxicityReport ? [] : [newReportTime],
-          'last_toxicity_reported': isToxicityReport ? [newReportTime] : [],
-          'page_views': 0,
-        });
-
-        print("DEBUG: Successfully added new player.");
+        return;
       }
+
+      // **2️⃣ Firestore did NOT find the player → Check Riot API**
+      print("DEBUG: Player not found in Firestore. Checking Riot API...");
+
+      bool playerExists;
+      try {
+        playerExists =
+            await riotApiService.checkPlayerExists(username, tagline);
+        print("DEBUG: Riot API checkPlayerExists() returned: $playerExists");
+
+        if (!playerExists) {
+          print("ERROR: Player does NOT exist in Riot API. Cannot report.");
+          return; // 🚨 Prevents adding unknown players
+        }
+      } catch (error) {
+        print("ERROR: Exception in checkPlayerExists(): $error");
+        return; // 🚨 Prevents app crashes
+      }
+
+      // **3️⃣ If Riot API also fails, exit early**
+      if (!playerExists) {
+        print("ERROR: Player does NOT exist in Riot API. Cannot report.");
+        return; // ✅ Prevent adding invalid players
+      }
+
+      // **4️⃣ Riot API confirms player exists → Add them to Firestore**
+      print(
+          "DEBUG: Player exists in Riot API. Adding new player to Firestore...");
+
+      await _db.collection("Users").add({
+        'user_id': username.toLowerCase().trim(),
+        'tag_line': tagline.toLowerCase().trim(),
+        'cheater_reported': isToxicityReport ? 0 : 1,
+        'toxicity_reported': isToxicityReport ? 1 : 0,
+        'last_cheater_reported': isToxicityReport ? [] : [newReportTime],
+        'last_toxicity_reported': isToxicityReport ? [newReportTime] : [],
+        'page_views': 0,
+      });
+
+      print("DEBUG: Successfully added new player.");
     } catch (error) {
       print("ERROR: Failed to report player - $error");
     }
