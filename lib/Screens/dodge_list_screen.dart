@@ -32,15 +32,14 @@ class _DodgeListState extends State<DodgeList> {
   Future<void> _loadDodgeList() async {
     final prefs = await SharedPreferences.getInstance();
     String? storedList = prefs.getString("dodge_list");
-    print("DEBUG: Loaded raw Dodge List JSON: $storedList");
+    ("DEBUG: Loaded raw Dodge List JSON: $storedList");
     if (storedList != null) {
       List<dynamic> jsonData = jsonDecode(storedList);
       setState(() {
         dodgeList = jsonData.map((e) => LeaderboardModel.fromJson(e)).toList();
       });
       for (var user in dodgeList) {
-        print(
-            "DEBUG: Loaded User - ${user.username}#${user.tagline} | Cheater Reports: ${user.cheaterReports} | Toxicity Reports: ${user.toxicityReports}");
+        ("DEBUG: Loaded User - ${user.username}#${user.tagline} | Cheater Reports: ${user.cheaterReports} | Toxicity Reports: ${user.toxicityReports}");
       }
     }
   }
@@ -51,8 +50,7 @@ class _DodgeListState extends State<DodgeList> {
         dodgeList.map((user) => user.toJson()).toList();
 
     String jsonString = jsonEncode(jsonData);
-    print(
-        "DEBUG: Saving Dodge List JSON: $jsonString"); // ✅ Debug before saving
+    ("DEBUG: Saving Dodge List JSON: $jsonString"); // ✅ Debug before saving
 
     await prefs.setString("dodge_list", jsonString);
   }

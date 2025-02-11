@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_application_2/pages/user_detail_page.dart';
 import 'package:flutter_application_2/shared/classes/shared_components.dart';
 import 'package:get/get.dart';
 import 'package:flutter_application_2/components/leaderboard_input_fields.dart';
@@ -50,14 +51,14 @@ class _LeaderBoardState extends State<LeaderBoard> {
   }
 
   Future<void> _initializeLeaderboardScreen() async {
-    print("DEBUG: Initializing leaderboard screen...");
+    ("DEBUG: Initializing leaderboard screen...");
     setState(() {
       _loadedUsers.clear(); // Clear any stale data
       _currentStartIndex = 0;
       _hasMoreData = true;
     });
     await userRepository.loadFullLeaderboard();
-    print("DEBUG: Full leaderboard has finished loading.");
+    ("DEBUG: Full leaderboard has finished loading.");
     _scrollController.addListener(_onScroll);
     await _loadLeaderboard(); // Load the appropriate leaderboard
   }
@@ -66,7 +67,7 @@ class _LeaderBoardState extends State<LeaderBoard> {
   Future<void> _loadLeaderboard({bool loadMore = false}) async {
     if (_isLoadingMore || (!_hasMoreData && loadMore)) return;
 
-    print("DEBUG: Fetching ${selectedLeaderboard.name} leaderboard...");
+    ("DEBUG: Fetching ${selectedLeaderboard.name} leaderboard...");
     if (!loadMore) {
       // Reset pagination and clear data for a new leaderboard type
       setState(() {
@@ -84,15 +85,14 @@ class _LeaderBoardState extends State<LeaderBoard> {
 
       if (selectedLeaderboard == LeaderboardType.ranked) {
         // Fetch ranked leaderboard from Riot API
-        print(
-            "DEBUG: Fetching from Riot API start=$_currentStartIndex, size=$_pageSize");
+        ("DEBUG: Fetching from Riot API start=$_currentStartIndex, size=$_pageSize");
         newUsers = await riotApiService.getLeaderboard(
           startIndex: _currentStartIndex,
           size: _pageSize,
         );
       } else {
         // Fetch Firestore leaderboard
-        print("DEBUG: Fetching Firestore leaderboard...");
+        ("DEBUG: Fetching Firestore leaderboard...");
         List<LeaderboardModel> allUsers =
             await userRepository.firestoreGetLeaderboard();
 
@@ -129,10 +129,9 @@ class _LeaderBoardState extends State<LeaderBoard> {
         });
       }
 
-      print(
-          "DEBUG: Loaded ${newUsers.length} users. Total: ${_loadedUsers.length}");
+      ("DEBUG: Loaded ${newUsers.length} users. Total: ${_loadedUsers.length}");
     } catch (e) {
-      print("❌ ERROR: Failed to load leaderboard: $e");
+      ("❌ ERROR: Failed to load leaderboard: $e");
     } finally {
       _isLoadingMore = false;
       setState(() {});
@@ -144,14 +143,14 @@ class _LeaderBoardState extends State<LeaderBoard> {
     if (_scrollController.position.pixels >=
         _scrollController.position.maxScrollExtent - 200) {
       // ✅ Triggers earlier
-      print("DEBUG: Scroll reached bottom. Loading more...");
+      ("DEBUG: Scroll reached bottom. Loading more...");
       _loadLeaderboard(loadMore: true);
     }
   }
 
   // Future<void> _reportUser(bool isToxicityReport) async {
   //   if (_isReportingUser) {
-  //     print("DEBUG: _reportUser() BLOCKED because it's already running.");
+  //     ("DEBUG: _reportUser() BLOCKED because it's already running.");
   //     return; // ✅ Prevents duplicate execution
   //   }
   //   // ✅ Stop duplicate execution
@@ -172,7 +171,7 @@ class _LeaderBoardState extends State<LeaderBoard> {
   //       ),
   //     );
 
-  //     print("DEBUG: Refreshing leaderboard after report...");
+  //     ("DEBUG: Refreshing leaderboard after report...");
   //     setState(() {
   //       _loadedUsers.clear(); // Clear previous leaderboard data
   //       _currentStartIndex = 0; // Reset pagination
@@ -195,44 +194,43 @@ class _LeaderBoardState extends State<LeaderBoard> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        leading: BackButton(
-          onPressed: () {
-            Navigator.pushReplacementNamed(context, '/homepage');
-          },
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.search, color: Colors.black),
+        appBar: AppBar(
+          leading: BackButton(
             onPressed: () {
-              showSearch(
-                context: context,
-                delegate: MySearchDelegate(_loadedUsers),
-              );
+              Navigator.pushReplacementNamed(context, '/homepage');
             },
           ),
-        ],
-        backgroundColor: Colors.white,
-        centerTitle: true,
-        titleTextStyle: const TextStyle(
-          color: Colors.grey,
-          fontSize: 20,
-          fontWeight: FontWeight.bold,
-        ),
-        title: const Column(
-          children: [
-            Text("Valorant Leaderboard", style: TextStyle(fontSize: 15)),
-            SizedBox(height: 8),
-            Text(
-              'Leaderboard',
-              style: TextStyle(color: Colors.black, fontSize: 30),
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.search, color: Colors.black),
+              onPressed: () {
+                showSearch(
+                  context: context,
+                  delegate: MySearchDelegate(_loadedUsers),
+                );
+              },
             ),
           ],
+          backgroundColor: Colors.white,
+          centerTitle: true,
+          titleTextStyle: const TextStyle(
+            color: Colors.grey,
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+          ),
+          title: const Column(
+            children: [
+              Text("Valorant Leaderboard", style: TextStyle(fontSize: 15)),
+              SizedBox(height: 8),
+              Text(
+                'Leaderboard',
+                style: TextStyle(color: Colors.black, fontSize: 30),
+              ),
+            ],
+          ),
         ),
-      ),
-      backgroundColor: Colors.blue[200],
-      body: Column(
-        children: [
+        backgroundColor: Colors.blue[200],
+        body: Column(children: [
           if (selectedLeaderboard == LeaderboardType.cheater ||
               selectedLeaderboard == LeaderboardType.toxicity) ...[
             LeaderboardInputFields(
@@ -255,7 +253,7 @@ class _LeaderBoardState extends State<LeaderBoard> {
               newUserId: newUserId,
               newTagLine: newTagLine,
               onSuccess: () async {
-                print("DEBUG: onSuccess triggered for $newUserId#$newTagLine");
+                ("DEBUG: onSuccess triggered for $newUserId#$newTagLine");
 
                 setState(() {
                   _loadedUsers.clear(); // ✅ Clear old leaderboard data
@@ -265,7 +263,7 @@ class _LeaderBoardState extends State<LeaderBoard> {
 
                 await _loadLeaderboard(); // ✅ Refresh leaderboard, but DON'T report again
 
-                print("DEBUG: onSuccess finished refreshing leaderboard.");
+                ("DEBUG: onSuccess finished refreshing leaderboard.");
               },
               buttonText: selectedLeaderboard == LeaderboardType.toxicity
                   ? 'Report for Toxicity'
@@ -300,6 +298,10 @@ class _LeaderBoardState extends State<LeaderBoard> {
                 }
 
                 final user = _loadedUsers[index];
+                final bool isClickable =
+                    selectedLeaderboard == LeaderboardType.cheater ||
+                        selectedLeaderboard == LeaderboardType.toxicity;
+
                 return ListTile(
                   title: Text('${user.username}#${user.tagline}'),
                   subtitle: Text(
@@ -309,12 +311,21 @@ class _LeaderBoardState extends State<LeaderBoard> {
                             ? 'Rank: ${user.leaderboardNumber} | Cheater Reports: ${user.cheaterReports}'
                             : 'Rank: ${user.leaderboardNumber} | Toxicity Reports: ${user.toxicityReports}',
                   ),
+                  onTap: isClickable
+                      ? () {
+                          // ✅ Navigate only if in Cheater/Toxicity leaderboard
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => UserDetailPage(user: user),
+                            ),
+                          );
+                        }
+                      : null, // ❌ Not clickable for Ranked leaderboard
                 );
               },
             ),
-          )
-        ],
-      ),
-    );
+          ),
+        ]));
   }
 }
