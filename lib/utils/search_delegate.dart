@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_application_2/models/leaderboard_model.dart';
 import 'package:flutter_application_2/pages/user_detail_page.dart';
+import 'package:flutter_application_2/shared/classes/shared_components.dart';
 import 'package:get/get.dart';
 import 'package:flutter_application_2/repository/user_repository.dart';
 
 class MySearchDelegate extends SearchDelegate {
   final List<LeaderboardModel> leaderboard;
-
-  MySearchDelegate(this.leaderboard);
+  final LeaderboardType leaderboardType;
+  MySearchDelegate(this.leaderboard, this.leaderboardType);
 
   @override
   Widget? buildLeading(BuildContext context) => IconButton(
@@ -52,9 +53,7 @@ class MySearchDelegate extends SearchDelegate {
 
         return ListTile(
           title: Text('${result.username}#${result.tagline}'),
-          subtitle: Text(
-            'Toxicity: ${result.toxicityReports} | Cheater: ${result.cheaterReports} | Ranked Position: ${result.leaderboardNumber}',
-          ),
+          subtitle: _getSubtitle(result),
           onTap: () {
             // Increment page views before navigating
             Get.find<UserRepository>().incrementPageViews(
@@ -66,7 +65,10 @@ class MySearchDelegate extends SearchDelegate {
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (context) => UserDetailPage(user: result),
+                builder: (context) => UserDetailPage(
+                  user: result,
+                  leaderboardType: leaderboardType,
+                ),
               ),
             );
           },
@@ -90,6 +92,7 @@ class MySearchDelegate extends SearchDelegate {
 
         return ListTile(
           title: Text('${result.username}#${result.tagline}'),
+          subtitle: _getSubtitle(result),
           onTap: () {
             // Increment page views before navigating
             Get.find<UserRepository>().incrementPageViews(
@@ -101,12 +104,28 @@ class MySearchDelegate extends SearchDelegate {
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (context) => UserDetailPage(user: result),
+                builder: (context) => UserDetailPage(
+                  user: result,
+                  leaderboardType: leaderboardType,
+                ),
               ),
             );
           },
         );
       },
     );
+  }
+
+  Widget _getSubtitle(LeaderboardModel result) {
+    switch (leaderboardType) {
+      case LeaderboardType.cheater:
+      case LeaderboardType.toxicity:
+        return Text(
+          // ✅ Show reports for cheater/toxicity leaderboards
+          'Toxicity Reports: ${result.toxicityReports} | Cheater Reports: ${result.cheaterReports}',
+        );
+      case LeaderboardType.ranked:
+        return SizedBox.shrink();
+    }
   }
 }
