@@ -24,7 +24,7 @@ class _LeaderBoardState extends State<LeaderBoard> {
   final UserRepository userRepository = Get.find<UserRepository>();
 
   final ScrollController _scrollController = ScrollController();
-  List<LeaderboardModel> _loadedUsers = []; // List to store fetched users
+  final List<LeaderboardModel> _loadedUsers = []; // List to store fetched users
   bool _isLoadingMore = false; // Prevent duplicate fetches
   int _currentStartIndex = 0; // Tracks where pagination starts
   final int _pageSize = 50; // How many users to fetch per page
@@ -41,7 +41,7 @@ class _LeaderBoardState extends State<LeaderBoard> {
     super.initState();
     _initializeLeaderboardScreen();
     _scrollController.addListener(_onScroll);
-    _loadLeaderboard();
+    // _loadLeaderboard();
   }
 
   @override
@@ -51,14 +51,12 @@ class _LeaderBoardState extends State<LeaderBoard> {
   }
 
   Future<void> _initializeLeaderboardScreen() async {
-    ("DEBUG: Initializing leaderboard screen...");
     setState(() {
       _loadedUsers.clear(); // Clear any stale data
       _currentStartIndex = 0;
       _hasMoreData = true;
     });
     await userRepository.loadFullLeaderboard();
-    ("DEBUG: Full leaderboard has finished loading.");
     _scrollController.addListener(_onScroll);
     await _loadLeaderboard(); // Load the appropriate leaderboard
   }
@@ -66,8 +64,6 @@ class _LeaderBoardState extends State<LeaderBoard> {
   /// **🔥 Load More Users with Pagination**
   Future<void> _loadLeaderboard({bool loadMore = false}) async {
     if (_isLoadingMore || (!_hasMoreData && loadMore)) return;
-
-    ("DEBUG: Fetching ${selectedLeaderboard.name} leaderboard...");
     if (!loadMore) {
       // Reset pagination and clear data for a new leaderboard type
       setState(() {
@@ -85,14 +81,13 @@ class _LeaderBoardState extends State<LeaderBoard> {
 
       if (selectedLeaderboard == LeaderboardType.ranked) {
         // Fetch ranked leaderboard from Riot API
-        ("DEBUG: Fetching from Riot API start=$_currentStartIndex, size=$_pageSize");
         newUsers = await riotApiService.getLeaderboard(
           startIndex: _currentStartIndex,
           size: _pageSize,
         );
       } else {
         // Fetch Firestore leaderboard
-        ("DEBUG: Fetching Firestore leaderboard...");
+
         List<LeaderboardModel> allUsers =
             await userRepository.firestoreGetLeaderboard();
 
@@ -128,10 +123,9 @@ class _LeaderBoardState extends State<LeaderBoard> {
           _hasMoreData = false;
         });
       }
-
-      ("DEBUG: Loaded ${newUsers.length} users. Total: ${_loadedUsers.length}");
     } catch (e) {
-      ("❌ ERROR: Failed to load leaderboard: $e");
+      // ignore: avoid_print
+      print("❌ ERROR: Failed to load leaderboard: $e");
     } finally {
       _isLoadingMore = false;
       setState(() {});
@@ -143,53 +137,9 @@ class _LeaderBoardState extends State<LeaderBoard> {
     if (_scrollController.position.pixels >=
         _scrollController.position.maxScrollExtent - 200) {
       // ✅ Triggers earlier
-      ("DEBUG: Scroll reached bottom. Loading more...");
       _loadLeaderboard(loadMore: true);
     }
   }
-
-  // Future<void> _reportUser(bool isToxicityReport) async {
-  //   if (_isReportingUser) {
-  //     ("DEBUG: _reportUser() BLOCKED because it's already running.");
-  //     return; // ✅ Prevents duplicate execution
-  //   }
-  //   // ✅ Stop duplicate execution
-  //   _isReportingUser = true;
-  //   try {
-  //     await userRepository.reportPlayer(
-  //       username: newUserId.trim(),
-  //       tagline: newTagLine.trim(),
-  //       isToxicityReport: isToxicityReport,
-  //     );
-
-  //     ScaffoldMessenger.of(context).showSnackBar(
-  //       SnackBar(
-  //         content: Text(isToxicityReport
-  //             ? "Player successfully reported for toxicity!"
-  //             : "Player successfully reported as a cheater!"),
-  //         backgroundColor: Colors.green,
-  //       ),
-  //     );
-
-  //     ("DEBUG: Refreshing leaderboard after report...");
-  //     setState(() {
-  //       _loadedUsers.clear(); // Clear previous leaderboard data
-  //       _currentStartIndex = 0; // Reset pagination
-  //       _hasMoreData = true; // Allow fetching new data
-  //     });
-
-  //     await _loadLeaderboard(); // ✅ Refresh the leaderboard here
-  //   } catch (e) {
-  //     ScaffoldMessenger.of(context).showSnackBar(
-  //       SnackBar(
-  //         content: Text("Failed to report player: $e"),
-  //         backgroundColor: Colors.red,
-  //       ),
-  //     );
-  //   } finally {
-  //     _isReportingUser = false;
-  //   }
-  // }
 
   @override
   Widget build(BuildContext context) {
@@ -206,7 +156,7 @@ class _LeaderBoardState extends State<LeaderBoard> {
               onPressed: () {
                 showSearch(
                   context: context,
-                  delegate: MySearchDelegate(_loadedUsers),
+                  delegate: MySearchDelegate(_loadedUsers, selectedLeaderboard),
                 );
               },
             ),
@@ -253,8 +203,6 @@ class _LeaderBoardState extends State<LeaderBoard> {
               newUserId: newUserId,
               newTagLine: newTagLine,
               onSuccess: () async {
-                ("DEBUG: onSuccess triggered for $newUserId#$newTagLine");
-
                 setState(() {
                   _loadedUsers.clear(); // ✅ Clear old leaderboard data
                   _currentStartIndex = 0; // Reset pagination
@@ -262,8 +210,6 @@ class _LeaderBoardState extends State<LeaderBoard> {
                 });
 
                 await _loadLeaderboard(); // ✅ Refresh leaderboard, but DON'T report again
-
-                ("DEBUG: onSuccess finished refreshing leaderboard.");
               },
               buttonText: selectedLeaderboard == LeaderboardType.toxicity
                   ? 'Report for Toxicity'
@@ -317,7 +263,9 @@ class _LeaderBoardState extends State<LeaderBoard> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => UserDetailPage(user: user),
+                              builder: (context) => UserDetailPage(
+                                  user: user,
+                                  leaderboardType: selectedLeaderboard),
                             ),
                           );
                         }

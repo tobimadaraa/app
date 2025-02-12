@@ -49,6 +49,8 @@ class LeaderboardModel {
     );
   }
 
+  get leaderboardType => null;
+
   Map<String, dynamic> toJson() {
     return {
       'leaderboardNumber': leaderboardNumber,

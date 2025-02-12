@@ -26,6 +26,7 @@ class ReportButtonState extends State<ReportButton> {
   final UserRepository _userRepository = UserRepository();
 
   Future<void> _handleReport() async {
+    // ignore: avoid_print
     print(
         "DEBUG: Report button pressed for ${widget.newUserId}#${widget.newTagLine}");
     if (widget.newUserId.isEmpty || widget.newTagLine.isEmpty) {
