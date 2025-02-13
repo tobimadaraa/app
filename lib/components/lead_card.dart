@@ -78,7 +78,7 @@ class LeadCardState extends State<LeadCard> {
                         if (widget.rating !=
                             null) // ✅ Correctly conditionally showing rating
                           Text(
-                            'RR: ${widget.rating}',
+                            'RR: ${widget.rating ?? "N/A"}',
                             style: TextStyle(
                               color: CustomColours.whiteDiscordText,
                               fontSize: 14,
