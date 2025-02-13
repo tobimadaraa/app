@@ -20,10 +20,9 @@ class UserDetailPage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(title: Text('${user.username}#${user.tagline}')),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
+          padding: const EdgeInsets.all(16.0),
+          child:
+              Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             if (!isRanked) // ✅ Only show reports for Cheater/Toxicity leaderboards
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -87,10 +86,22 @@ class UserDetailPage extends StatelessWidget {
                 ],
               )
             else
-              const SizedBox.shrink(), // ✅ Completely hide for Ranked users
-          ],
-        ),
-      ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '${user.rankedRating.toString()} RR',
+                    style: const TextStyle(fontSize: 18),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    '${user.numberOfWins.toString()} wins',
+                    style: TextStyle(fontSize: 18),
+                  ),
+                  const SizedBox(height: 8),
+                ],
+              ),
+          ])),
     );
   }
 }

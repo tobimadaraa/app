@@ -118,6 +118,12 @@ class _LeaderBoardState extends State<LeaderBoard> {
           _currentStartIndex += newUsers.length;
           _hasMoreData = newUsers.length == _pageSize;
         });
+        for (var user in newUsers) {
+          final rating = user.rankedRating ?? -1; // Default to 0 if null
+          final wins = user.numberOfWins ?? -1; // Default to 0 if null
+          print(
+              "Fetched from API: ${user.username} | Rank: ${user.leaderboardNumber} | Rating: $rating | Wins: $wins");
+        }
       } else {
         setState(() {
           _hasMoreData = false;
@@ -252,7 +258,7 @@ class _LeaderBoardState extends State<LeaderBoard> {
                   title: Text('${user.username}#${user.tagline}'),
                   subtitle: Text(
                     selectedLeaderboard == LeaderboardType.ranked
-                        ? 'Rank: ${user.leaderboardNumber}'
+                        ? 'Rank: ${user.leaderboardNumber} | Rating: ${user.rankedRating ?? "N/A"} | Wins: ${user.numberOfWins ?? "N/A"}'
                         : selectedLeaderboard == LeaderboardType.cheater
                             ? 'Rank: ${user.leaderboardNumber} | Cheater Reports: ${user.cheaterReports}'
                             : 'Rank: ${user.leaderboardNumber} | Toxicity Reports: ${user.toxicityReports}',

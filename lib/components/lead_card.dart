@@ -3,6 +3,8 @@ import 'package:flutter_application_2/shared/classes/colour_classes.dart';
 import 'package:intl/intl.dart';
 
 class LeadCard extends StatefulWidget {
+  final String? rating;
+  final String? numberOfWins;
   final String text;
   final String leaderboardname;
   final String reportLabel;
@@ -15,6 +17,8 @@ class LeadCard extends StatefulWidget {
   const LeadCard({
     super.key,
     required this.text,
+    this.rating,
+    this.numberOfWins,
     required this.leaderboardname,
     required this.reportLabel,
     required this.cheaterReports,
@@ -62,12 +66,25 @@ class LeadCardState extends State<LeadCard> {
                   child: Container(
                     alignment: Alignment.center,
                     padding: const EdgeInsets.all(8.0),
-                    child: Text(
-                      widget.text,
-                      style: TextStyle(
-                        color: CustomColours.whiteDiscordText,
-                        fontSize: 16,
-                      ),
+                    child: Column(
+                      children: [
+                        Text(
+                          '${widget.text})',
+                          style: TextStyle(
+                            color: CustomColours.whiteDiscordText,
+                            fontSize: 16,
+                          ),
+                        ),
+                        if (widget.rating !=
+                            null) // ✅ Correctly conditionally showing rating
+                          Text(
+                            'RR: ${widget.rating}',
+                            style: TextStyle(
+                              color: CustomColours.whiteDiscordText,
+                              fontSize: 14,
+                            ),
+                          ),
+                      ],
                     ),
                   ),
                 ),
@@ -102,15 +119,26 @@ class LeadCardState extends State<LeadCard> {
                   child: Container(
                     padding: const EdgeInsets.only(right: 8),
                     alignment: Alignment.centerRight,
-                    child: Text(
-                      '${widget.reportLabel == "Toxicity Reports" ? widget.toxicityReports : widget.cheaterReports}\n${widget.reportLabel}',
-                      style: TextStyle(
-                        color: CustomColours.whiteDiscordText,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 12,
-                      ),
-                      textAlign: TextAlign.right,
-                      overflow: TextOverflow.ellipsis,
+                    child: Column(
+                      children: [
+                        Text(
+                          '${widget.reportLabel == "Toxicity Reports" ? widget.toxicityReports : widget.cheaterReports}\n${widget.reportLabel}',
+                          style: TextStyle(
+                            color: CustomColours.whiteDiscordText,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 12,
+                          ),
+                          textAlign: TextAlign.right,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                            'Wins: ${widget.numberOfWins ?? "N/A"}', // ✅ Fixed string formatting
+                            style: TextStyle(
+                              color: CustomColours.whiteDiscordText,
+                              fontSize: 12,
+                            )),
+                      ],
                     ),
                   ),
                 ),
