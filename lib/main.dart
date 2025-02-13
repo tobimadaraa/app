@@ -1,6 +1,7 @@
 // ignore_for_file: avoid_print
 
 import 'package:flutter/material.dart';
+import 'package:flutter_application_2/Screens/dodge_list_screen.dart';
 import 'package:flutter_application_2/Screens/home_page.dart';
 import 'package:flutter_application_2/Screens/leaderboard_screen.dart';
 import 'package:flutter_application_2/Screens/login_screen.dart';
@@ -38,6 +39,7 @@ class _MyAppState extends State<MyApp> {
         '/homepage': (context) => HomePage(),
         '/login': (context) => LoginPage(),
         '/leaderboard': (context) => LeaderBoard(),
+        '/discord': (context) => DodgeList(key: dodgeListKey)
       },
     );
   }
