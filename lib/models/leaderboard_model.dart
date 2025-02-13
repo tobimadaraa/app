@@ -7,7 +7,8 @@ class LeaderboardModel {
   final int pageViews;
   final List<String> lastCheaterReported;
   final List<String> lastToxicityReported;
-
+  final int? rankedRating;
+  final int? numberOfWins;
   LeaderboardModel({
     required this.leaderboardNumber,
     required this.username,
@@ -16,11 +17,14 @@ class LeaderboardModel {
     required this.toxicityReports,
     required this.pageViews,
     required this.lastCheaterReported,
+    this.rankedRating,
+    this.numberOfWins,
     required this.lastToxicityReported,
   });
 
   // Factory constructor to convert JSON from API response
-  factory LeaderboardModel.fromJson(Map<String, dynamic> json) {
+  factory LeaderboardModel.fromJson(Map<String, dynamic> json,
+      {bool includeStats = true}) {
     ("DEBUG: Decoding JSON - ${json.toString()}");
 
     // Check if the data comes from the API, Firestore, or Local Storage
@@ -37,6 +41,8 @@ class LeaderboardModel {
       tagline: isFromApi
           ? json['tagLine'].toString().trim()
           : json['tagline'].toString().trim(),
+      rankedRating: includeStats ? json['rankedRating'] ?? 0 : null,
+      numberOfWins: includeStats ? json['numberOfWins'] ?? 0 : null,
       cheaterReports: json['cheater_reported'] ?? 0,
       toxicityReports: json['toxicity_reported'] ?? 0,
       pageViews: json['page_views'] ?? 0,
