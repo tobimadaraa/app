@@ -12,6 +12,7 @@ final GlobalKey<DodgeListState> dodgeListKey = GlobalKey<DodgeListState>();
 
 class DodgeList extends StatefulWidget {
   const DodgeList({super.key});
+
   @override
   State<DodgeList> createState() => DodgeListState();
 }

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_application_2/Screens/dodge_list_screen.dart';
 import 'package:flutter_application_2/pages/user_detail_page.dart';
 import 'package:flutter_application_2/shared/classes/shared_components.dart';
 import 'package:get/get.dart';
@@ -13,7 +12,9 @@ import 'package:flutter_application_2/utils/search_delegate.dart';
 import 'package:flutter_application_2/utils/validators.dart';
 
 class LeaderBoard extends StatefulWidget {
-  const LeaderBoard({super.key});
+  const LeaderBoard({
+    super.key,
+  });
 
   @override
   State<LeaderBoard> createState() => _LeaderBoardState();
@@ -215,12 +216,6 @@ class _LeaderBoardState extends State<LeaderBoard> {
                 });
 
                 await _loadLeaderboard(); // ✅ Refresh leaderboard, but DON'T report again
-                if (dodgeListKey.currentState != null) {
-                  print("🔄 Refreshing Dodge List from Leaderboard...");
-                  dodgeListKey.currentState!.syncDodgeListWithLeaderboard();
-                } else {
-                  print("❌ Dodge List key is NULL, could not refresh.");
-                }
               },
               buttonText: selectedLeaderboard == LeaderboardType.toxicity
                   ? 'Report for Toxicity'
