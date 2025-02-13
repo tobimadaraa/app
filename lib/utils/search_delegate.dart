@@ -53,7 +53,6 @@ class MySearchDelegate extends SearchDelegate {
 
         return ListTile(
           title: Text('${result.username}#${result.tagline}'),
-          subtitle: _getSubtitle(result),
           onTap: () {
             // Increment page views before navigating
             Get.find<UserRepository>().incrementPageViews(
@@ -92,7 +91,6 @@ class MySearchDelegate extends SearchDelegate {
 
         return ListTile(
           title: Text('${result.username}#${result.tagline}'),
-          subtitle: _getSubtitle(result),
           onTap: () {
             // Increment page views before navigating
             Get.find<UserRepository>().incrementPageViews(
@@ -114,18 +112,5 @@ class MySearchDelegate extends SearchDelegate {
         );
       },
     );
-  }
-
-  Widget _getSubtitle(LeaderboardModel result) {
-    switch (leaderboardType) {
-      case LeaderboardType.cheater:
-      case LeaderboardType.toxicity:
-        return Text(
-          // ✅ Show reports for cheater/toxicity leaderboards
-          'Toxicity Reports: ${result.toxicityReports} | Cheater Reports: ${result.cheaterReports}',
-        );
-      case LeaderboardType.ranked:
-        return SizedBox.shrink();
-    }
   }
 }

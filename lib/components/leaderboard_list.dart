@@ -17,14 +17,20 @@ class LeaderboardList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    print(
+        "LeaderboardList.build() is running with selectedLeaderboard: $selectedLeaderboard");
+
     return FutureBuilder<List<LeaderboardModel>>(
       future: leaderboardFuture,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
+          print("DEBUG: Waiting for leaderboard data...");
           return const Center(child: CircularProgressIndicator());
         } else if (snapshot.hasError) {
+          print("ERROR: ${snapshot.error}");
           return Center(child: Text("Error: ${snapshot.error}"));
         } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+          print("DEBUG: No reports found.");
           return const Center(child: Text("No reports found"));
         }
 
@@ -47,7 +53,10 @@ class LeaderboardList extends StatelessWidget {
           itemBuilder: (context, index) {
             final model = leaderboard[index];
             final rank = index + 1;
-
+            if (selectedLeaderboard == LeaderboardType.ranked) {
+              print(
+                  "DEBUG: Rank: $rank, Player: ${model.username}, Rating: ${model.rankedRating}, Wins: ${model.numberOfWins}");
+            }
             // ✅ DEBUG  - Verify if data is correct
 
             // ✅ Check if the user is "famous" (lots of page views)
@@ -79,10 +88,20 @@ class LeaderboardList extends StatelessWidget {
             return LeadCard(
               key: ValueKey(model.username), // 🔥 Ensures individual updates
               text: rank.toString(), // Rank number
+
               leaderboardname:
                   '${model.username.toLowerCase()}#${model.tagline.toLowerCase()}',
               reportLabel: reportLabel,
-
+              rating: selectedLeaderboard == LeaderboardType.ranked
+                  ? (model.rankedRating != null
+                      ? model.rankedRating.toString()
+                      : "N/A")
+                  : null,
+              numberOfWins: selectedLeaderboard == LeaderboardType.ranked
+                  ? (model.numberOfWins != null
+                      ? model.numberOfWins.toString()
+                      : "N/A")
+                  : null,
               // ✅ Fix: Ensure no null value is passed
               cheaterReports: selectedLeaderboard == LeaderboardType.cheater
                   ? (model.cheaterReports).toString() // ✅ If null, default to 0
