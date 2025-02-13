@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_application_2/Screens/dodge_list_screen.dart';
 import 'package:flutter_application_2/pages/user_detail_page.dart';
 import 'package:flutter_application_2/shared/classes/shared_components.dart';
 import 'package:get/get.dart';
 import 'package:flutter_application_2/components/leaderboard_input_fields.dart';
-
 import 'package:flutter_application_2/components/leaderboard_toggle.dart';
 import 'package:flutter_application_2/pages/buttons/report_button.dart';
 import 'package:flutter_application_2/models/leaderboard_model.dart';
@@ -87,10 +87,9 @@ class _LeaderBoardState extends State<LeaderBoard> {
         );
       } else {
         // Fetch Firestore leaderboard
-
+        // 🔥 New function to clear cache
         List<LeaderboardModel> allUsers =
             await userRepository.firestoreGetLeaderboard();
-
         // Filter and sort based on the selected leaderboard type
         if (selectedLeaderboard == LeaderboardType.cheater) {
           allUsers = allUsers
@@ -216,6 +215,12 @@ class _LeaderBoardState extends State<LeaderBoard> {
                 });
 
                 await _loadLeaderboard(); // ✅ Refresh leaderboard, but DON'T report again
+                if (dodgeListKey.currentState != null) {
+                  print("🔄 Refreshing Dodge List from Leaderboard...");
+                  dodgeListKey.currentState!.syncDodgeListWithLeaderboard();
+                } else {
+                  print("❌ Dodge List key is NULL, could not refresh.");
+                }
               },
               buttonText: selectedLeaderboard == LeaderboardType.toxicity
                   ? 'Report for Toxicity'
