@@ -16,7 +16,7 @@ class _HomePageState extends State<HomePage> {
   static final List<Widget> _widgetOptions = <Widget>[
     UserPage(),
     LeaderBoard(),
-    DodgeList(),
+    DodgeList(key: dodgeListKey),
   ];
 
   void _onItemTapped(int index) {
