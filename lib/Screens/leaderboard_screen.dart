@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_application_2/pages/user_detail_page.dart';
+import 'package:flutter_application_2/shared/classes/notifiers.dart';
 import 'package:flutter_application_2/shared/classes/shared_components.dart';
+import 'package:flutter_application_2/shared/helperfile.dart';
 import 'package:get/get.dart';
 import 'package:flutter_application_2/components/leaderboard_input_fields.dart';
 import 'package:flutter_application_2/components/leaderboard_toggle.dart';
@@ -10,6 +12,7 @@ import 'package:flutter_application_2/repository/user_repository.dart';
 import 'package:flutter_application_2/repository/valorant_api.dart';
 import 'package:flutter_application_2/utils/search_delegate.dart';
 import 'package:flutter_application_2/utils/validators.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class LeaderBoard extends StatefulWidget {
   const LeaderBoard({
@@ -214,6 +217,13 @@ class _LeaderBoardState extends State<LeaderBoard> {
                   _currentStartIndex = 0; // Reset pagination
                   _hasMoreData = true; // Allow new fetch
                 });
+
+                // 🔄 Update the stored dodge list data immediately
+                // await updateDodgeListStorage(newUserId, newTagLine);
+                (newUserId, newTagLine);
+
+                // 🔔 Notify DodgeListScreen if it's open
+                dodgeListEventNotifier.triggerUpdate();
 
                 await _loadLeaderboard(); // ✅ Refresh leaderboard, but DON'T report again
               },
