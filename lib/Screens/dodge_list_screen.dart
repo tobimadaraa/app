@@ -4,6 +4,7 @@ import 'package:flutter_application_2/components/dodge_list_input_fields.dart';
 import 'package:flutter_application_2/shared/classes/colour_classes.dart';
 import 'package:flutter_application_2/repository/user_repository.dart';
 import 'package:flutter_application_2/models/leaderboard_model.dart';
+import 'package:flutter_application_2/shared/classes/notifiers.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
@@ -31,20 +32,35 @@ class DodgeListState extends State<DodgeList> {
     super.initState();
     _loadDodgeList();
     syncDodgeListWithLeaderboard();
+    print("🟡 DodgeListScreen: Listening for global update events...");
+    dodgeListEventNotifier.addListener(_refreshDodgeListOnEvent);
+  }
+
+  @override
+  void dispose() {
+    dodgeListEventNotifier.removeListener(_refreshDodgeListOnEvent);
+    super.dispose();
+  }
+
+  /// 🔄 Requeries Firestore and updates the cache when triggered
+  void _refreshDodgeListOnEvent() {
+    print("🔄 DodgeListScreen: Requerying Firestore due to event...");
+    syncDodgeListWithLeaderboard(); // 🔄 Refresh the data from Firestore
   }
 
   Future<void> _loadDodgeList() async {
     final prefs = await SharedPreferences.getInstance();
     String? storedList = prefs.getString("dodge_list");
-    ("DEBUG: Loaded raw Dodge List JSON: $storedList");
+
     if (storedList != null) {
       List<dynamic> jsonData = jsonDecode(storedList);
       setState(() {
         dodgeList = jsonData.map((e) => LeaderboardModel.fromJson(e)).toList();
       });
-      for (var user in dodgeList) {
-        ("DEBUG: Loaded User - ${user.username}#${user.tagline} | Cheater Reports: ${user.cheaterReports} | Toxicity Reports: ${user.toxicityReports}");
-      }
+
+      print("✅ Loaded Dodge List from cache.");
+    } else {
+      print("❌ No cached Dodge List found, querying Firestore...");
     }
   }
 
@@ -54,9 +70,9 @@ class DodgeListState extends State<DodgeList> {
         dodgeList.map((user) => user.toJson()).toList();
 
     String jsonString = jsonEncode(jsonData);
-    ("DEBUG: Saving Dodge List JSON: $jsonString"); // ✅ Debug before saving
-
     await prefs.setString("dodge_list", jsonString);
+
+    print("🟢 Dodge List cached successfully!");
   }
 
   Future<void> _addUserToDodgeList() async {
