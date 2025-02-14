@@ -1,8 +1,9 @@
+// ignore_for_file: avoid_print
+
 import 'package:flutter/material.dart';
 import 'package:flutter_application_2/pages/user_detail_page.dart';
 import 'package:flutter_application_2/shared/classes/notifiers.dart';
 import 'package:flutter_application_2/shared/classes/shared_components.dart';
-import 'package:flutter_application_2/shared/helperfile.dart';
 import 'package:get/get.dart';
 import 'package:flutter_application_2/components/leaderboard_input_fields.dart';
 import 'package:flutter_application_2/components/leaderboard_toggle.dart';
@@ -12,7 +13,6 @@ import 'package:flutter_application_2/repository/user_repository.dart';
 import 'package:flutter_application_2/repository/valorant_api.dart';
 import 'package:flutter_application_2/utils/search_delegate.dart';
 import 'package:flutter_application_2/utils/validators.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 class LeaderBoard extends StatefulWidget {
   const LeaderBoard({
@@ -65,79 +65,99 @@ class _LeaderBoardState extends State<LeaderBoard> {
     await _loadLeaderboard(); // Load the appropriate leaderboard
   }
 
-  /// **🔥 Load More Users with Pagination**
+  /// Track the latest active request
+  int _latestRequestId = 0;
+
+  /// Keep track of whether a leaderboard is actively loading
+  bool _isActiveLoading = false;
   Future<void> _loadLeaderboard({bool loadMore = false}) async {
+    print("📢 LB Current Active Request ID: $_latestRequestId");
+    print("🔍 LB _isActiveLoading: $_isActiveLoading");
+    print("🔍 LB _isLoadingMore: $_isLoadingMore");
+
     if (_isLoadingMore || (!_hasMoreData && loadMore)) return;
+
+    _latestRequestId++; // 🔥 Generate a unique request ID
+    final int requestId = _latestRequestId; // 🔥 Capture this request’s ID
+
+    print(
+        "📢 Starting new request: Request ID $requestId for $selectedLeaderboard");
+
     if (!loadMore) {
-      // Reset pagination and clear data for a new leaderboard type
       setState(() {
         _loadedUsers.clear();
         _currentStartIndex = 0;
         _hasMoreData = true;
+        _isActiveLoading = true; // ✅ Mark as actively loading
       });
     }
 
-    _isLoadingMore = true; // Prevent duplicate fetches
+    _isLoadingMore = true;
     setState(() {});
 
     try {
       List<LeaderboardModel> newUsers = [];
 
       if (selectedLeaderboard == LeaderboardType.ranked) {
-        // Fetch ranked leaderboard from Riot API
+        print("⏳ Fetching Ranked leaderboard...");
         newUsers = await riotApiService.getLeaderboard(
           startIndex: _currentStartIndex,
           size: _pageSize,
         );
+        print("✅ Ranked leaderboard received for request ID $requestId");
       } else {
-        // Fetch Firestore leaderboard
-        // 🔥 New function to clear cache
+        print("⏳ Fetching Firestore leaderboard...");
         List<LeaderboardModel> allUsers =
             await userRepository.firestoreGetLeaderboard();
-        // Filter and sort based on the selected leaderboard type
+
         if (selectedLeaderboard == LeaderboardType.cheater) {
-          allUsers = allUsers
-              .where((user) =>
-                  user.cheaterReports > 0) // Filter only cheater reports
-              .toList();
-          allUsers.sort((a, b) => b.cheaterReports
-              .compareTo(a.cheaterReports)); // Sort by cheater reports
+          allUsers = allUsers.where((user) => user.cheaterReports > 0).toList();
+          allUsers.sort((a, b) => b.cheaterReports.compareTo(a.cheaterReports));
         } else if (selectedLeaderboard == LeaderboardType.toxicity) {
-          allUsers = allUsers
-              .where((user) =>
-                  user.toxicityReports > 0) // Filter only toxicity reports
-              .toList();
-          allUsers.sort((a, b) => b.toxicityReports
-              .compareTo(a.toxicityReports)); // Sort by toxicity reports
+          allUsers =
+              allUsers.where((user) => user.toxicityReports > 0).toList();
+          allUsers
+              .sort((a, b) => b.toxicityReports.compareTo(a.toxicityReports));
         }
 
-        // Paginate filtered data
         newUsers = allUsers.skip(_currentStartIndex).take(_pageSize).toList();
+        print("✅ Firestore leaderboard received for request ID $requestId");
+      }
+
+      // 🚨 Ensure response is for the latest request before updating UI
+      if (requestId != _latestRequestId) {
+        print(
+            "🚨 Ignoring outdated response: Request $requestId (Current: $_latestRequestId)");
+        return;
       }
 
       if (newUsers.isNotEmpty) {
         setState(() {
+          print(
+              "🔄 Updating UI with ${newUsers.length} users for $selectedLeaderboard");
           _loadedUsers.addAll(newUsers);
           _currentStartIndex += newUsers.length;
-          _hasMoreData = newUsers.length == _pageSize;
+          _hasMoreData = newUsers.length ==
+              _pageSize; // ✅ Correctly updates when no more data exists
         });
-        for (var user in newUsers) {
-          final rating = user.rankedRating ?? -1; // Default to 0 if null
-          final wins = user.numberOfWins ?? -1; // Default to 0 if null
-          print(
-              "Fetched from API: ${user.username} | Rank: ${user.leaderboardNumber} | Rating: $rating | Wins: $wins");
-        }
       } else {
         setState(() {
-          _hasMoreData = false;
+          _hasMoreData =
+              false; // ✅ Ensure it stops loading when no more data is available
         });
+        print("⚠️ No more data available, stopping load requests.");
       }
     } catch (e) {
-      // ignore: avoid_print
       print("❌ ERROR: Failed to load leaderboard: $e");
     } finally {
-      _isLoadingMore = false;
-      setState(() {});
+      if (requestId == _latestRequestId) {
+        _isLoadingMore = false; // ✅ Always reset loading state
+        _isActiveLoading = false; // ✅ Ensure we mark loading as done
+        print("✅ Finished loading Request $requestId, UI can update");
+        setState(() {});
+      } else {
+        print("⚠️ Request $requestId finished but was ignored.");
+      }
     }
   }
 
@@ -236,13 +256,25 @@ class _LeaderBoardState extends State<LeaderBoard> {
           LeaderboardToggle(
             selectedLeaderboard: selectedLeaderboard,
             onSelectLeaderboard: (LeaderboardType type) {
-              setState(() {
-                selectedLeaderboard = type;
-                _loadedUsers.clear(); // Clear the current leaderboard data
-                _currentStartIndex = 0; // Reset pagination
-                _hasMoreData = true; // Allow loading new data
-              });
-              _loadLeaderboard(); // Load the selected leaderboard
+              if (type != selectedLeaderboard) {
+                print("🔄 LB1 Switching leaderboard to $type...");
+                print("📢 LB1 Current Active Request ID: $_latestRequestId");
+                print("🔍 LB1 _isActiveLoading: $_isActiveLoading");
+                print("🔍 LB1 _isLoadingMore: $_isLoadingMore");
+
+                setState(() {
+                  selectedLeaderboard = type;
+                  _loadedUsers.clear();
+                  _currentStartIndex = 0;
+                  _hasMoreData = true;
+                  _latestRequestId++; // 🔥 Cancel previous requests
+                  _isLoadingMore =
+                      false; // ✅ Ensure loading resets when switching
+                  _isActiveLoading = false; // ✅ Prevent the infinite loop
+                });
+
+                _loadLeaderboard();
+              }
             },
           ),
           Expanded(
