@@ -14,7 +14,7 @@ class UserRepository extends GetxController {
     try {
       ("DEBUG: Sending request to Riot API...");
       List<LeaderboardModel> riotLeaderboard =
-          await riotApiService.getLeaderboard();
+          await riotApiService.getLeaderboard(startIndex: 0, size: 200);
       _fullLeaderboard = riotLeaderboard;
       ("DEBUG: Loaded full leaderboard with ${_fullLeaderboard.length} players.");
     } catch (error) {
@@ -112,7 +112,7 @@ class UserRepository extends GetxController {
   Future<List<LeaderboardModel>> firestoreGetLeaderboard() async {
     try {
       List<LeaderboardModel> riotLeaderboard =
-          await riotApiService.getLeaderboard();
+          await riotApiService.getLeaderboard(startIndex: 0, size: 200);
 
       final snapshot = await _db.collection("Users").get();
       Map<String, Map<String, dynamic>> firestoreUsers = {};

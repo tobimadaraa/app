@@ -34,7 +34,7 @@ class LeaderboardModel {
     return LeaderboardModel(
       leaderboardNumber: json['leaderboardRank'] ??
           json['leaderboardNumber'] ??
-          -1, // Handle both API & Local cases
+          -1, // Riot API handling/ Handle both API & Local cases
       username: isFromApi
           ? json['gameName'].toString().trim()
           : json['username'].toString().trim(),
@@ -68,5 +68,31 @@ class LeaderboardModel {
       'last_cheater_reported': lastCheaterReported,
       'last_toxicity_reported': lastToxicityReported,
     };
+  }
+
+  LeaderboardModel copyWith({
+    int? leaderboardNumber,
+    String? username,
+    String? tagline,
+    int? cheaterReports,
+    int? toxicityReports,
+    int? pageViews,
+    List<String>? lastCheaterReported,
+    List<String>? lastToxicityReported,
+    int? rankedRating,
+    int? numberOfWins,
+  }) {
+    return LeaderboardModel(
+      leaderboardNumber: leaderboardNumber ?? this.leaderboardNumber,
+      username: username ?? this.username,
+      tagline: tagline ?? this.tagline,
+      cheaterReports: cheaterReports ?? this.cheaterReports,
+      toxicityReports: toxicityReports ?? this.toxicityReports,
+      pageViews: pageViews ?? this.pageViews,
+      lastCheaterReported: lastCheaterReported ?? this.lastCheaterReported,
+      lastToxicityReported: lastToxicityReported ?? this.lastToxicityReported,
+      rankedRating: rankedRating ?? this.rankedRating,
+      numberOfWins: numberOfWins ?? this.numberOfWins,
+    );
   }
 }
