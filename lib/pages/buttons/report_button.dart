@@ -26,50 +26,86 @@ class ReportButtonState extends State<ReportButton> {
   final UserRepository _userRepository = UserRepository();
 
   Future<void> _handleReport() async {
-    // ignore: avoid_print
+    // Log the button press.
     print(
         "DEBUG: Report button pressed for ${widget.newUserId}#${widget.newTagLine}");
+
+    // Validate inputs.
     if (widget.newUserId.isEmpty || widget.newTagLine.isEmpty) {
-      Get.snackbar(
-        "Error",
-        "Please enter both Riot ID and Tagline.",
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.red,
-        colorText: Colors.white,
-      );
+      // Delay the snackbar until after the current frame.
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && Get.context != null) {
+          Get.snackbar(
+            "Error",
+            "Please enter both Riot ID and Tagline.",
+            snackPosition: SnackPosition.BOTTOM,
+            backgroundColor: Colors.red,
+            colorText: Colors.white,
+          );
+        }
+      });
       return;
     }
 
     try {
-      await _userRepository.reportPlayer(
+      // 1️⃣ Attempt to report the player; capture success/failure.
+      final success = await _userRepository.reportPlayer(
         username: widget.newUserId.toLowerCase(),
         tagline: widget.newTagLine.toLowerCase(),
-        isToxicityReport:
-            widget.isToxicity, // ✅ Ensure this boolean is correctly passed
+        isToxicityReport: widget.isToxicity,
       );
 
-      Get.snackbar(
-        "Success",
-        widget.isToxicity
-            ? "Player successfully reported as toxic!"
-            : "Player successfully reported as a cheater!",
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.green,
-        colorText: Colors.white,
-      );
+      // 2️⃣ If `success` is false, show an error snackbar and return.
+      if (!success) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted && Get.context != null) {
+            Get.snackbar(
+              "Error",
+              "Player does not exist or could not be reported.",
+              snackPosition: SnackPosition.BOTTOM,
+              backgroundColor: Colors.red,
+              colorText: Colors.white,
+            );
+          }
+        });
+        return;
+      }
 
-      await widget.onSuccess(); // ✅ Refresh leaderboard
+      // 3️⃣ If `success` is true, show the success snackbar.
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && Get.context != null) {
+          Get.snackbar(
+            "Success",
+            widget.isToxicity
+                ? "Player successfully reported as toxic!"
+                : "Player successfully reported as a cheater!",
+            snackPosition: SnackPosition.BOTTOM,
+            backgroundColor: Colors.green,
+            colorText: Colors.white,
+          );
+        }
+      });
+
+      // 4️⃣ Call the onSuccess callback to refresh data.
+      await widget.onSuccess();
+
+      // 5️⃣ Safely update the UI if we're still mounted.
       if (mounted) {
         setState(() {});
-      } // ✅ Force UI refresh
+      }
     } catch (error) {
-      Get.snackbar(
-        "Error",
-        error.toString(),
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.red,
-        colorText: Colors.white,
-      );
+      // If the repository method throws an exception for other reasons:
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && Get.context != null) {
+          Get.snackbar(
+            "Error",
+            error.toString(),
+            snackPosition: SnackPosition.BOTTOM,
+            backgroundColor: Colors.red,
+            colorText: Colors.white,
+          );
+        }
+      });
     }
   }
 
