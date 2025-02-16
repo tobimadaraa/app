@@ -12,13 +12,14 @@ class UserRepository extends GetxController {
 
   Future<void> loadFullLeaderboard() async {
     try {
-      ("DEBUG: Sending request to Riot API...");
+      print("DEBUG: Sending request to Riot API...");
       List<LeaderboardModel> riotLeaderboard =
           await riotApiService.getLeaderboard(startIndex: 0, size: 200);
       _fullLeaderboard = riotLeaderboard;
-      ("DEBUG: Loaded full leaderboard with ${_fullLeaderboard.length} players.");
+      print(
+          "DEBUG: Loaded full leaderboard with ${_fullLeaderboard.length} players.");
     } catch (error) {
-      ("ERROR: Failed to fetch full leaderboard - $error");
+      print("ERROR: Failed to fetch full leaderboard - $error");
     }
   }
 
@@ -32,7 +33,8 @@ class UserRepository extends GetxController {
     required String tagline,
     required bool isToxicityReport,
   }) async {
-    ("DEBUG: reportPlayer() called for $username#$tagline at ${DateTime.now().toIso8601String()}");
+    print(
+        "DEBUG: reportPlayer() called for $username#$tagline at ${DateTime.now().toIso8601String()}");
 
     try {
       String newReportTime = DateTime.now().toIso8601String();
@@ -45,12 +47,13 @@ class UserRepository extends GetxController {
           .where('tag_line', isEqualTo: tagline.toLowerCase().trim())
           .get();
 
-      ("DEBUG: Firestore query result: Found ${query.docs.length} documents.");
+      print(
+          "DEBUG: Firestore query result: Found ${query.docs.length} documents.");
 
       if (query.docs.isNotEmpty) {
         // ✅ Player exists in Firestore → Just update reports
         final docRef = query.docs.first.reference;
-        ("DEBUG: Updating Firestore document: ${docRef.id}");
+        print("DEBUG: Updating Firestore document: ${docRef.id}");
 
         await docRef.update({
           if (isToxicityReport) 'toxicity_reported': FieldValue.increment(1),
@@ -61,37 +64,40 @@ class UserRepository extends GetxController {
             'last_cheater_reported': FieldValue.arrayUnion([newReportTime]),
         });
 
-        ("DEBUG: Successfully updated player reports in Firestore.");
+        print("DEBUG: Successfully updated player reports in Firestore.");
         return;
       }
 
       // **2️⃣ Firestore did NOT find the player → Check Riot API**
-      ("DEBUG: Player not found in Firestore. Checking Riot API...");
+      print("DEBUG: Player not found in Firestore. Checking Riot API...");
 
       bool playerExists;
       try {
         playerExists =
             await riotApiService.checkPlayerExists(username, tagline);
-        ("DEBUG: Riot API checkPlayerExists() returned: $playerExists");
+        print("DEBUG: Riot API checkPlayerExists() returned: $playerExists");
 
         if (!playerExists) {
-          ("ERROR: Player does NOT exist in Riot API. Cannot report.");
+          print("ERROR: Player does NOT exist in Riot API. Cannot report.");
           return; // 🚨 Prevents adding unknown players
         }
       } catch (error) {
-        ("ERROR: Exception in checkPlayerExists(): $error");
+        print("ERROR: Exception in checkPlayerExists(): $error");
         return; // 🚨 Prevents app crashes
       }
 
       // **3️⃣ If Riot API also fails, handle it gracefully**
       if (!playerExists) {
-        ("ERROR: Player does NOT exist in Riot API. Skipping addition to Firestore.");
+        print(
+            "ERROR: Player does NOT exist in Riot API. Skipping addition to Firestore.");
         return; // ✅ Instead of breaking, just log the issue and continue
       }
 
       // **4️⃣ Riot API confirms player exists → Add them to Firestore**
-      ("DEBUG: Player exists in Riot API. Adding new player to Firestore...");
-
+      print(
+          "DEBUG: Player exists in Riot API. Adding new player to Firestore...");
+      print(
+          "DEBUG: Player exists in Riot API. Adding new player to Firestore...");
       await _db.collection("Users").add({
         'user_id': username.toLowerCase().trim(),
         'tag_line': tagline.toLowerCase().trim(),
@@ -102,9 +108,9 @@ class UserRepository extends GetxController {
         'page_views': 0,
       });
 
-      ("DEBUG: Successfully added new player.");
+      print("DEBUG: Successfully added new player.");
     } catch (error) {
-      ("ERROR: Failed to report player - $error");
+      print("ERROR: Failed to report player - $error");
     }
   }
 

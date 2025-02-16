@@ -304,11 +304,6 @@ class _LeaderBoardState extends State<LeaderBoard> {
             selectedLeaderboard: selectedLeaderboard,
             onSelectLeaderboard: (LeaderboardType type) {
               if (type != selectedLeaderboard) {
-                print("🔄 LB1 Switching leaderboard to $type...");
-                print("📢 LB1 Current Active Request ID: $_latestRequestId");
-                print("🔍 LB1 _isActiveLoading: $_isActiveLoading");
-                print("🔍 LB1 _isLoadingMore: $_isLoadingMore");
-
                 setState(() {
                   selectedLeaderboard = type;
                   _loadedUsers.clear();

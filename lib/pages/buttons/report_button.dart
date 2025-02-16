@@ -59,7 +59,9 @@ class ReportButtonState extends State<ReportButton> {
       );
 
       await widget.onSuccess(); // ✅ Refresh leaderboard
-      setState(() {}); // ✅ Force UI refresh
+      if (mounted) {
+        setState(() {});
+      } // ✅ Force UI refresh
     } catch (error) {
       Get.snackbar(
         "Error",

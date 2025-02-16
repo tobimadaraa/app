@@ -136,6 +136,9 @@ class RiotApiService {
       _mergeCachedPages();
       print("✅ Fetched and cached leaderboard page: startIndex=$startIndex");
       return leaderboardPage;
+    } else if (response.statusCode == 400) {
+      print("Skipping Riot API request: Using cached data instead.");
+      return []; // ✅ Return an empty list to maintain a valid return type
     } else {
       throw Exception("Failed to fetch leaderboard: ${response.statusCode}");
     }
@@ -163,6 +166,12 @@ class RiotApiService {
       print("⏳ Fetching enough leaderboard pages for checkPlayerExists...");
       await getLeaderboard(startIndex: 0, size: 500);
       _lastFullFetchTime = DateTime.now();
+      print(
+          "DEBUG: Cached leaderboard has ${cachedLeaderboard.length} players.");
+      for (int i = 0; i < 10 && i < cachedLeaderboard.length; i++) {
+        print(
+            "Player $i: ${cachedLeaderboard[i].username}#${cachedLeaderboard[i].tagline}");
+      }
     }
 
     // 3️⃣ Check if the player exists in the cached leaderboard.
