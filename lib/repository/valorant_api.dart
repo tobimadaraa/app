@@ -15,7 +15,7 @@ class RiotApiService {
   RiotApiService._internal();
 
   // --- API Details ---
-  static const String apiKey = "hidden";
+  static const String apiKey = "hiddenfewfewo";
   static const String baseUrl =
       "https://eu.api.riotgames.com"; // Change region if needed
 
