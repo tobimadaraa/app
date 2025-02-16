@@ -28,7 +28,7 @@ class UserRepository extends GetxController {
   }
 
   /// **🔥 Report a Player (Only If They Exist)**
-  Future<void> reportPlayer({
+  Future<bool> reportPlayer({
     required String username,
     required String tagline,
     required bool isToxicityReport,
@@ -65,7 +65,7 @@ class UserRepository extends GetxController {
         });
 
         print("DEBUG: Successfully updated player reports in Firestore.");
-        return;
+        return true;
       }
 
       // **2️⃣ Firestore did NOT find the player → Check Riot API**
@@ -79,18 +79,18 @@ class UserRepository extends GetxController {
 
         if (!playerExists) {
           print("ERROR: Player does NOT exist in Riot API. Cannot report.");
-          return; // 🚨 Prevents adding unknown players
+          return false; // 🚨 Prevents adding unknown players
         }
       } catch (error) {
         print("ERROR: Exception in checkPlayerExists(): $error");
-        return; // 🚨 Prevents app crashes
+        return false; // 🚨 Prevents app crashes
       }
 
       // **3️⃣ If Riot API also fails, handle it gracefully**
       if (!playerExists) {
         print(
             "ERROR: Player does NOT exist in Riot API. Skipping addition to Firestore.");
-        return; // ✅ Instead of breaking, just log the issue and continue
+        return false; // ✅ Instead of breaking, just log the issue and continue
       }
 
       // **4️⃣ Riot API confirms player exists → Add them to Firestore**
@@ -107,10 +107,11 @@ class UserRepository extends GetxController {
         'last_toxicity_reported': isToxicityReport ? [newReportTime] : [],
         'page_views': 0,
       });
-
       print("DEBUG: Successfully added new player.");
+      return true;
     } catch (error) {
       print("ERROR: Failed to report player - $error");
+      return false;
     }
   }
 

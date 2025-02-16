@@ -32,15 +32,17 @@ class _MyAppState extends State<MyApp> {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return GetMaterialApp(
       debugShowCheckedModeBanner: false,
+      // You can still use initialRoute if you want:
       initialRoute: '/homepage',
-      routes: {
-        '/homepage': (context) => HomePage(),
-        '/login': (context) => LoginPage(),
-        '/leaderboard': (context) => LeaderBoard(),
-        '/discord': (context) => DodgeList(key: dodgeListKey)
-      },
+      // Replace MaterialApp's routes with GetX's getPages:
+      getPages: [
+        GetPage(name: '/homepage', page: () => HomePage()),
+        GetPage(name: '/login', page: () => LoginPage()),
+        GetPage(name: '/leaderboard', page: () => LeaderBoard()),
+        GetPage(name: '/discord', page: () => DodgeList(key: dodgeListKey)),
+      ],
     );
   }
 }
