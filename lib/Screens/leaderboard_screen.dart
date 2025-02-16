@@ -115,24 +115,23 @@ class _LeaderBoardState extends State<LeaderBoard> {
         );
         print("✅ Ranked leaderboard received for request ID $requestId");
       } else {
-        print("⏳ Fetching Firestore leaderboard...");
+        // For cheater or toxicity, fetch from your "Users" collection only.
+        print("⏳ Fetching Firebase leaderboard for reported users...");
+
+        // Decide if it's toxicity or cheater
+        bool forToxic = (selectedLeaderboard == LeaderboardType.toxicity);
+
+        // Call your custom function
         List<LeaderboardModel> allUsers =
-            await userRepository.firestoreGetLeaderboard();
+            await userRepository.getReportedUsersFromFirebase(
+          forToxicity: forToxic,
+          leaderboardType: selectedLeaderboard,
+        );
 
-        if (selectedLeaderboard == LeaderboardType.cheater) {
-          allUsers = allUsers.where((user) => user.cheaterReports > 0).toList();
-          allUsers.sort((a, b) => b.cheaterReports.compareTo(a.cheaterReports));
-        } else if (selectedLeaderboard == LeaderboardType.toxicity) {
-          allUsers =
-              allUsers.where((user) => user.toxicityReports > 0).toList();
-          allUsers
-              .sort((a, b) => b.toxicityReports.compareTo(a.toxicityReports));
-        }
-
+        // Apply pagination
         newUsers = allUsers.skip(_currentStartIndex).take(_pageSize).toList();
-        print("✅ Firestore leaderboard received for request ID $requestId");
+        print("✅ Firebase leaderboard received for request ID $requestId");
       }
-
       // 🚨 Ensure response is for the latest request before updating UI
       if (requestId != _latestRequestId) {
         print(

@@ -11,16 +11,16 @@ class UserModel {
 
   Map<String, dynamic> toJson() {
     return {
-      'user_id': userId,
-      'tag_line': tagline,
+      'username': userId,
+      'tagline': tagline,
       // 'last_reported': lastReported.toIso8601String(),
     };
   }
 
   factory UserModel.fromJson(Map<String, dynamic> json) {
     return UserModel(
-      userId: json['user_id'] ?? '',
-      tagline: json['tag_line'] ?? '',
+      userId: json['username'] ?? '',
+      tagline: json['tagline'] ?? '',
       // lastReported:
       //     json['last_reported'] != null
       //         ? DateTime.parse(json['last_reported'])
