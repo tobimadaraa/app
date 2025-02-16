@@ -1,3 +1,5 @@
+// ignore_for_file: avoid_print
+
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter_application_2/models/leaderboard_model.dart';
@@ -27,10 +29,17 @@ class RiotApiService {
   // Full cached leaderboard storage (merged from all pages)
   List<LeaderboardModel> cachedLeaderboard = [];
   DateTime? _lastFullFetchTime;
-
   // Caching act ID to ensure it stays consistent during the cacheDuration.
   String? _cachedActId;
   DateTime? _cachedActIdTimestamp;
+  void clearCache() {
+    _pageCache.clear();
+    cachedLeaderboard.clear();
+    _cachedActId = null; // optional: also reset the cached act ID if you want
+    _cachedActIdTimestamp = null;
+    _lastFullFetchTime = null;
+    print("⚠️ Cache cleared. Next request will be forced from Riot API.");
+  }
 
   /// **Fetch the Current Act ID with Caching**
   Future<String> getCurrentActId() async {
@@ -72,34 +81,36 @@ class RiotApiService {
     }
   }
 
-  /// **Fetch Leaderboard with Caching for Each Page**
   Future<List<LeaderboardModel>> getLeaderboard({
     required int startIndex,
     required int size,
     bool includeStats = true,
+    bool forceRefresh = false,
   }) async {
-    // Get the current act id (cached if possible)
     final actId = await getCurrentActId();
-    // Build a unique cache key using act id, startIndex, and size.
     final cacheKey = _buildCacheKey(actId, startIndex, size);
     print("🔑 Cache Key: $cacheKey");
-
-    // 1️⃣ Check if the requested page is already cached & fresh.
-    final cachedPage = _pageCache[cacheKey];
-    if (cachedPage != null) {
-      final timeSinceLastFetch =
-          DateTime.now().difference(cachedPage.fetchTime);
-      if (timeSinceLastFetch < cacheDuration) {
-        print(
-            "✅ Using cached page: startIndex=$startIndex (age: ${timeSinceLastFetch.inSeconds}s)");
-        return cachedPage.data;
-      } else {
-        print(
-            "⚠️ Cache expired for page: startIndex=$startIndex (age: ${timeSinceLastFetch.inSeconds}s)");
+    // Only check cache if not forcing refresh.
+    if (!forceRefresh) {
+      final cachedPage = _pageCache[cacheKey];
+      if (cachedPage != null) {
+        final timeSinceLastFetch =
+            DateTime.now().difference(cachedPage.fetchTime);
+        if (timeSinceLastFetch < cacheDuration) {
+          print(
+              "✅ Using cached page: startIndex=$startIndex (age: ${timeSinceLastFetch.inSeconds}s)");
+          return cachedPage.data;
+        } else {
+          print(
+              "🔄 forceRefresh=true. Skipping cache for startIndex=$startIndex");
+        }
       }
+    } else {
+      print(
+          "🔄 Force refresh requested. Skipping cache for startIndex=$startIndex");
     }
 
-    // 2️⃣ Cache is missing or expired -> Fetch fresh data.
+    // 2️⃣ If we got here, we need to fetch fresh data.
     print("⏳ Fetching leaderboard from Riot API for startIndex=$startIndex...");
     final response = await http.get(
       Uri.parse(
@@ -116,15 +127,13 @@ class RiotApiService {
               LeaderboardModel.fromJson(player, includeStats: includeStats))
           .toList();
 
-      // 3️⃣ Store this page in cache.
+      // Update the cache with fresh data.
       _pageCache[cacheKey] = _PageCache(
         fetchTime: DateTime.now(),
         data: leaderboardPage,
       );
 
-      // 4️⃣ Merge the cached pages into `cachedLeaderboard`.
       _mergeCachedPages();
-
       print("✅ Fetched and cached leaderboard page: startIndex=$startIndex");
       return leaderboardPage;
     } else {

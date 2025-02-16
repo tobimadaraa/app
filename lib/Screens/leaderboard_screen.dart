@@ -77,7 +77,8 @@ class _LeaderBoardState extends State<LeaderBoard> {
 
   /// Keep track of whether a leaderboard is actively loading
   bool _isActiveLoading = false;
-  Future<void> _loadLeaderboard({bool loadMore = false}) async {
+  Future<void> _loadLeaderboard(
+      {bool loadMore = false, bool forceRefresh = false}) async {
     print("📢 LB Current Active Request ID: $_latestRequestId");
     print("🔍 LB _isActiveLoading: $_isActiveLoading");
     print("🔍 LB _isLoadingMore: $_isLoadingMore");
@@ -110,6 +111,7 @@ class _LeaderBoardState extends State<LeaderBoard> {
         newUsers = await riotApiService.getLeaderboard(
           startIndex: _currentStartIndex,
           size: _pageSize,
+          forceRefresh: forceRefresh,
         );
         print("✅ Ranked leaderboard received for request ID $requestId");
       } else {
@@ -166,6 +168,21 @@ class _LeaderBoardState extends State<LeaderBoard> {
         print("⚠️ Request $requestId finished but was ignored.");
       }
     }
+  }
+
+  Future<void> _refreshLeaderboard() async {
+    setState(() {
+      _loadedUsers.clear();
+      _currentStartIndex = 0;
+      _hasMoreData = true;
+      _isInitialLoading = true;
+    });
+    // Force refresh: set forceRefresh to true.
+    riotApiService.clearCache();
+    await _loadLeaderboard(forceRefresh: true);
+    setState(() {
+      _isInitialLoading = false;
+    });
   }
 
   /// **🖱 Detect Bottom Scroll & Load More**
@@ -310,50 +327,53 @@ class _LeaderBoardState extends State<LeaderBoard> {
           Expanded(
             child: _isInitialLoading
                 ? _buildSkeletonLoader()
-                : ListView.builder(
-                    controller: _scrollController,
-                    itemCount: _loadedUsers.length + (_isLoadingMore ? 1 : 0),
-                    itemBuilder: (context, index) {
-                      if (index >= _loadedUsers.length) {
-                        return const Padding(
-                          padding: EdgeInsets.all(16.0),
-                          child: Center(
-                              child:
-                                  CircularProgressIndicator()), // ✅ Loading Spinner
+                : RefreshIndicator(
+                    onRefresh: _refreshLeaderboard,
+                    child: ListView.builder(
+                      controller: _scrollController,
+                      itemCount: _loadedUsers.length + (_isLoadingMore ? 1 : 0),
+                      itemBuilder: (context, index) {
+                        if (index >= _loadedUsers.length) {
+                          return const Padding(
+                            padding: EdgeInsets.all(16.0),
+                            child: Center(
+                                child:
+                                    CircularProgressIndicator()), // ✅ Loading Spinner
+                          );
+                        }
+
+                        final user = _loadedUsers[index];
+                        final bool isClickable =
+                            selectedLeaderboard == LeaderboardType.cheater ||
+                                selectedLeaderboard == LeaderboardType.toxicity;
+
+                        return ListTile(
+                          title: Text('${user.username}#${user.tagline}'),
+                          subtitle: Text(
+                            selectedLeaderboard == LeaderboardType.ranked
+                                ? 'Rank: ${user.leaderboardNumber} | Rating: ${user.rankedRating ?? "N/A"} | Wins: ${user.numberOfWins ?? "N/A"}'
+                                : selectedLeaderboard == LeaderboardType.cheater
+                                    ? 'Rank: ${user.leaderboardNumber} | Cheater Reports: ${user.cheaterReports}'
+                                    : 'Rank: ${user.leaderboardNumber} | Toxicity Reports: ${user.toxicityReports}',
+                          ),
+                          onTap: isClickable
+                              ? () {
+                                  // ✅ Navigate only if in Cheater/Toxicity leaderboard
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => UserDetailPage(
+                                          user: user,
+                                          leaderboardType: selectedLeaderboard),
+                                    ),
+                                  );
+                                }
+                              : null, // ❌ Not clickable for Ranked leaderboard
                         );
-                      }
-
-                      final user = _loadedUsers[index];
-                      final bool isClickable =
-                          selectedLeaderboard == LeaderboardType.cheater ||
-                              selectedLeaderboard == LeaderboardType.toxicity;
-
-                      return ListTile(
-                        title: Text('${user.username}#${user.tagline}'),
-                        subtitle: Text(
-                          selectedLeaderboard == LeaderboardType.ranked
-                              ? 'Rank: ${user.leaderboardNumber} | Rating: ${user.rankedRating ?? "N/A"} | Wins: ${user.numberOfWins ?? "N/A"}'
-                              : selectedLeaderboard == LeaderboardType.cheater
-                                  ? 'Rank: ${user.leaderboardNumber} | Cheater Reports: ${user.cheaterReports}'
-                                  : 'Rank: ${user.leaderboardNumber} | Toxicity Reports: ${user.toxicityReports}',
-                        ),
-                        onTap: isClickable
-                            ? () {
-                                // ✅ Navigate only if in Cheater/Toxicity leaderboard
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => UserDetailPage(
-                                        user: user,
-                                        leaderboardType: selectedLeaderboard),
-                                  ),
-                                );
-                              }
-                            : null, // ❌ Not clickable for Ranked leaderboard
-                      );
-                    },
+                      },
+                    ),
                   ),
-          ),
+          )
         ]));
   }
 }
