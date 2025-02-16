@@ -1,8 +1,9 @@
-// ignore_for_file: avoid_
+// ignore_for_file: avoid_print
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_application_2/models/leaderboard_model.dart';
 import 'package:flutter_application_2/repository/valorant_api.dart';
+import 'package:flutter_application_2/shared/classes/shared_components.dart';
 import 'package:get/get.dart';
 
 class UserRepository extends GetxController {
@@ -23,11 +24,124 @@ class UserRepository extends GetxController {
     }
   }
 
+  // Normalize a string by trimming and converting to lowercase.
   String normalize(String input) {
     return input.trim().toLowerCase();
   }
 
-  /// **🔥 Report a Player (Only If They Exist)**
+  /// Helper: Check the stored leaderboard in Firebase (only batches 0–7).
+  /// This scans through the stored leaderboard docs to see if the user exists.
+  /// Returns a LeaderboardModel if found, otherwise null.
+  Future<LeaderboardModel?> checkFirebaseStoredLeaderboard(
+      String username, String tagline) async {
+    final FirebaseFirestore firestore = FirebaseFirestore.instance;
+    final CollectionReference leaderboardRef =
+        firestore.collection("LeaderboardDoc");
+
+    for (int batchIndex = 0; batchIndex < 8; batchIndex++) {
+      try {
+        DocumentSnapshot docSnapshot =
+            await leaderboardRef.doc("batch_$batchIndex").get();
+        if (docSnapshot.exists) {
+          final data = docSnapshot.data();
+          if (data is Map<String, dynamic> && data.containsKey("players")) {
+            List<dynamic> players = data["players"];
+            for (var playerMap in players) {
+              if (playerMap is Map<String, dynamic>) {
+                String storedUser = normalize(playerMap["username"] ?? "");
+                String storedTag = normalize(playerMap["tagline"] ?? "");
+                if (storedUser == normalize(username) &&
+                    storedTag == normalize(tagline)) {
+                  print(
+                      "DEBUG: Found user in stored leaderboard in batch_$batchIndex");
+
+                  // Convert the batch data to a LeaderboardModel
+                  int rank = 0;
+                  if (playerMap["leaderboardNumber"] is int) {
+                    rank = playerMap["leaderboardNumber"];
+                  }
+                  // Or parse if it's stored as a string:
+                  // int rank = int.tryParse(playerMap["leaderboardNumber"]?.toString() ?? "0") ?? 0;
+
+                  return LeaderboardModel(
+                    leaderboardNumber: rank,
+                    username: playerMap["username"] ?? "",
+                    tagline: playerMap["tagline"] ?? "",
+                    cheaterReports: playerMap["cheater_reported"] ?? 0,
+                    toxicityReports: playerMap["toxicity_reported"] ?? 0,
+                    pageViews: playerMap["page_views"] ?? 0,
+                    lastCheaterReported: playerMap["last_cheater_reported"]
+                            is List
+                        ? List<String>.from(playerMap["last_cheater_reported"])
+                        : [],
+                    lastToxicityReported: playerMap["last_toxicity_reported"]
+                            is List
+                        ? List<String>.from(playerMap["last_toxicity_reported"])
+                        : [],
+                  );
+                }
+              }
+            }
+          }
+        }
+      } catch (e) {
+        print("ERROR: Could not check batch_$batchIndex: $e");
+        // Continue checking remaining batches.
+      }
+    }
+    print("DEBUG: User not found in any of batches 0-7.");
+    return null;
+  }
+
+  /// **Helper: Check Stored Leaderboard in Firebase (Batches 0-7)**
+  // Future<bool> checkFirebaseStoredLeaderboard(
+  //     String username, String tagline) async {
+  //   final FirebaseFirestore firestore = FirebaseFirestore.instance;
+  //   final CollectionReference leaderboardRef =
+  //       firestore.collection("LeaderboardDoc");
+
+  //   // Only check batches 0 through 7
+  //   for (int batchIndex = 0; batchIndex < 8; batchIndex++) {
+  //     try {
+  //       DocumentSnapshot docSnapshot =
+  //           await leaderboardRef.doc("batch_$batchIndex").get();
+  //       if (docSnapshot.exists) {
+  //         final data = docSnapshot.data();
+  //         if (data is Map<String, dynamic> && data.containsKey("players")) {
+  //           List<dynamic> players = data["players"];
+  //           for (var playerMap in players) {
+  //             if (playerMap is Map<String, dynamic>) {
+  //               String storedUser = normalize(playerMap["username"] ?? "");
+  //               String storedTag = normalize(playerMap["tagline"] ?? "");
+  //               if (storedUser == normalize(username) &&
+  //                   storedTag == normalize(tagline)) {
+  //                 print(
+  //                     "DEBUG: Found user in stored leaderboard in batch_$batchIndex");
+  //                 return true;
+  //               }
+  //             }
+  //           }
+  //         }
+  //       } else {
+  //         print("DEBUG: Document batch_$batchIndex does not exist.");
+  //       }
+  //     } catch (e) {
+  //       print("ERROR: Could not check batch_$batchIndex: $e");
+  //       // Continue checking remaining batches even if one fails.
+  //     }
+  //   }
+  //   print("DEBUG: User not found in any of batches 0-7.");
+  //   return false;
+  // }
+
+  /// **Report a Player (with Verification)**
+  /// Report a player for cheater/toxicity.
+  /// The logic is:
+  /// 1. Check if the user exists in the "Users" collection.
+  ///    - If so, update their report counts.
+  /// 2. If not, check the stored leaderboard (batches 0-7).
+  ///    - If found there, add them to Firestore.
+  /// 3. If not found in either, then the user is considered invalid.
   Future<bool> reportPlayer({
     required String username,
     required String tagline,
@@ -39,22 +153,21 @@ class UserRepository extends GetxController {
     try {
       String newReportTime = DateTime.now().toIso8601String();
 
-      // **1️⃣ Check Firestore First**
-      ("DEBUG: Searching Firestore for player: $username#$tagline");
+      // 1️⃣ Check Firestore first to see if the user already exists.
+      print("DEBUG: Searching Firestore for player: $username#$tagline");
       final query = await _db
           .collection("Users")
-          .where('user_id', isEqualTo: username.toLowerCase().trim())
-          .where('tag_line', isEqualTo: tagline.toLowerCase().trim())
+          .where('username', isEqualTo: normalize(username))
+          .where('tagline', isEqualTo: normalize(tagline))
           .get();
 
       print(
           "DEBUG: Firestore query result: Found ${query.docs.length} documents.");
 
       if (query.docs.isNotEmpty) {
-        // ✅ Player exists in Firestore → Just update reports
+        // User exists in Firestore → update their report counts.
         final docRef = query.docs.first.reference;
         print("DEBUG: Updating Firestore document: ${docRef.id}");
-
         await docRef.update({
           if (isToxicityReport) 'toxicity_reported': FieldValue.increment(1),
           if (!isToxicityReport) 'cheater_reported': FieldValue.increment(1),
@@ -63,44 +176,28 @@ class UserRepository extends GetxController {
           if (!isToxicityReport)
             'last_cheater_reported': FieldValue.arrayUnion([newReportTime]),
         });
-
         print("DEBUG: Successfully updated player reports in Firestore.");
         return true;
       }
 
-      // **2️⃣ Firestore did NOT find the player → Check Riot API**
-      print("DEBUG: Player not found in Firestore. Checking Riot API...");
-
-      bool playerExists;
-      try {
-        playerExists =
-            await riotApiService.checkPlayerExists(username, tagline);
-        print("DEBUG: Riot API checkPlayerExists() returned: $playerExists");
-
-        if (!playerExists) {
-          print("ERROR: Player does NOT exist in Riot API. Cannot report.");
-          return false; // 🚨 Prevents adding unknown players
-        }
-      } catch (error) {
-        print("ERROR: Exception in checkPlayerExists(): $error");
-        return false; // 🚨 Prevents app crashes
+      // 2️⃣ If not found in Firestore, check the stored leaderboard in Firebase.
+      print(
+          "DEBUG: Player not found in Firestore. Checking stored leaderboard in Firebase...");
+      final LeaderboardModel? storedPlayerModel =
+          await checkFirebaseStoredLeaderboard(username, tagline);
+      if (storedPlayerModel == null) {
+        print("ERROR: User not found in Riot API or stored leaderboard.");
+        return false;
       }
 
-      // **3️⃣ If Riot API also fails, handle it gracefully**
-      if (!playerExists) {
-        print(
-            "ERROR: Player does NOT exist in Riot API. Skipping addition to Firestore.");
-        return false; // ✅ Instead of breaking, just log the issue and continue
-      }
-
-      // **4️⃣ Riot API confirms player exists → Add them to Firestore**
+      // 3️⃣ If found, add the new player to Firestore.
       print(
-          "DEBUG: Player exists in Riot API. Adding new player to Firestore...");
-      print(
-          "DEBUG: Player exists in Riot API. Adding new player to Firestore...");
+          "DEBUG: User verified from stored leaderboard. Adding new player to Firestore...");
       await _db.collection("Users").add({
-        'user_id': username.toLowerCase().trim(),
-        'tag_line': tagline.toLowerCase().trim(),
+        'leaderboardNumber': storedPlayerModel.leaderboardNumber,
+        'username': normalize(username),
+        'tagline': normalize(tagline),
+        // store the rank
         'cheater_reported': isToxicityReport ? 0 : 1,
         'toxicity_reported': isToxicityReport ? 1 : 0,
         'last_cheater_reported': isToxicityReport ? [] : [newReportTime],
@@ -115,7 +212,55 @@ class UserRepository extends GetxController {
     }
   }
 
-  /// **🔥 Get Leaderboard from Firestore**
+  Future<List<LeaderboardModel>> getReportedUsersFromFirebase(
+      {required bool forToxicity,
+      required LeaderboardType leaderboardType}) async {
+    try {
+      // Fetch all reported users from the "Users" collection.
+      QuerySnapshot snapshot = await _db.collection("Users").get();
+      List<LeaderboardModel> reportedUsers = snapshot.docs.map((doc) {
+        final data = doc.data() as Map<String, dynamic>;
+        return LeaderboardModel(
+          leaderboardNumber: data['leaderboardNumber'] ?? 0,
+          username: data['username'] ??
+              "", // Ensure you're using consistent field names!
+          tagline: data['tagline'] ?? "",
+          cheaterReports: data['cheater_reported'] ?? 0,
+          toxicityReports: data['toxicity_reported'] ?? 0,
+          pageViews: data['page_views'] ?? 0,
+          lastCheaterReported: data['last_cheater_reported'] is List
+              ? List<String>.from(data['last_cheater_reported'])
+              : [],
+          lastToxicityReported: data['last_toxicity_reported'] is List
+              ? List<String>.from(data['last_toxicity_reported'])
+              : [],
+        );
+      }).toList();
+
+      // Filter based on the leaderboard type.
+      if (forToxicity) {
+        // Only include users with toxicity reports > 0.
+        reportedUsers =
+            reportedUsers.where((user) => user.toxicityReports > 0).toList();
+        // Optionally sort by toxicityReports descending.
+        reportedUsers
+            .sort((a, b) => b.toxicityReports.compareTo(a.toxicityReports));
+      } else {
+        // For cheater leaderboard.
+        reportedUsers =
+            reportedUsers.where((user) => user.cheaterReports > 0).toList();
+        reportedUsers
+            .sort((a, b) => b.cheaterReports.compareTo(a.cheaterReports));
+      }
+
+      return reportedUsers;
+    } catch (e) {
+      print("Error fetching reported users from Firebase: $e");
+      return [];
+    }
+  }
+
+  /// **Get Leaderboard from Firestore**
   Future<List<LeaderboardModel>> firestoreGetLeaderboard() async {
     try {
       List<LeaderboardModel> riotLeaderboard =
@@ -126,8 +271,8 @@ class UserRepository extends GetxController {
 
       for (var doc in snapshot.docs) {
         final data = doc.data();
-        String username = normalize(data['user_id'] ?? '');
-        String tagline = normalize(data['tag_line'] ?? '');
+        String username = normalize(data['username'] ?? '');
+        String tagline = normalize(data['tagline'] ?? '');
         firestoreUsers["$username#$tagline"] = data;
       }
 
@@ -164,12 +309,12 @@ class UserRepository extends GetxController {
 
       return uniquePlayers.values.toList();
     } catch (error) {
-      ("ERROR: Fetching merged leaderboard failed: $error");
+      print("ERROR: Fetching merged leaderboard failed: $error");
       return [];
     }
   }
 
-  /// **🔥 Get Dodge List from Firestore**
+  /// Get Dodge List from Firestore
   Future<List<LeaderboardModel>> firestoreGetDodgeList() async {
     try {
       final snapshot = await _db.collection("DodgeList").get();
@@ -182,8 +327,8 @@ class UserRepository extends GetxController {
         final data = doc.data();
         return LeaderboardModel(
           leaderboardNumber: -1,
-          username: data['user_id'] ?? '',
-          tagline: data['tag_line'] ?? '',
+          username: data['username'] ?? '',
+          tagline: data['tagline'] ?? '',
           cheaterReports: data['cheater_reported'] ?? 0,
           toxicityReports: data['toxicity_reported'] ?? 0,
           pageViews: data['page_views'] ?? 0,
@@ -196,52 +341,54 @@ class UserRepository extends GetxController {
         );
       }).toList();
     } catch (error) {
-      ("ERROR: Fetching Dodge List failed: $error");
+      print("ERROR: Fetching Dodge List failed: $error");
       return [];
     }
   }
 
-  /// **🔥 Add to Dodge List**
+  /// Add to Dodge List
   Future<void> addToDodgeList(LeaderboardModel user) async {
     try {
       await _db
           .collection("DodgeList")
           .doc("${user.username}#${user.tagline}")
           .set({
-        "user_id": user.username,
-        "tag_line": user.tagline,
+        "username": user.username,
+        "tagline": user.tagline,
         "cheater_reported": user.cheaterReports,
         "toxicity_reported": user.toxicityReports,
         "page_views": user.pageViews,
         "last_cheater_reported": user.lastCheaterReported,
         "last_toxicity_reported": user.lastToxicityReported,
       });
-      ("DEBUG: User added to Dodge List -> ${user.username}#${user.tagline}");
+      print(
+          "DEBUG: User added to Dodge List -> ${user.username}#${user.tagline}");
     } catch (error) {
-      ("ERROR: Adding user to Dodge List failed: $error");
+      print("ERROR: Adding user to Dodge List failed: $error");
     }
   }
 
-  /// **🔥 Remove from Dodge List**
+  /// Remove from Dodge List
   Future<void> removeFromDodgeList(LeaderboardModel user) async {
     try {
       await _db
           .collection("DodgeList")
           .doc("${user.username}#${user.tagline}")
           .delete();
-      ("DEBUG: User removed from Dodge List -> ${user.username}#${user.tagline}");
+      print(
+          "DEBUG: User removed from Dodge List -> ${user.username}#${user.tagline}");
     } catch (error) {
-      ("ERROR: Removing user from Dodge List failed: $error");
+      print("ERROR: Removing user from Dodge List failed: $error");
     }
   }
 
-  /// **🔥 Increment Page Views for a Player**
+  /// Increment Page Views for a Player
   Future<void> incrementPageViews(String username, String tagline) async {
     try {
       final query = await _db
           .collection("Users")
-          .where('user_id', isEqualTo: username)
-          .where('tag_line', isEqualTo: tagline)
+          .where('username', isEqualTo: username)
+          .where('tagline', isEqualTo: tagline)
           .get();
 
       if (query.docs.isNotEmpty) {
@@ -249,7 +396,7 @@ class UserRepository extends GetxController {
         await docRef.update({'page_views': FieldValue.increment(1)});
       }
     } catch (error) {
-      ("ERROR: Failed to increment page views: $error");
+      print("ERROR: Failed to increment page views: $error");
     }
   }
 }

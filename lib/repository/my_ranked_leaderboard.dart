@@ -1,3 +1,5 @@
+// ignore_for_file: avoid_print
+
 import 'dart:async'; // Import for delay function
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_application_2/models/leaderboard_model.dart';
