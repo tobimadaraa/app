@@ -19,7 +19,7 @@ class DodgeListView extends StatelessWidget {
         final user = dodgeList[index];
 
         return ListTile(
-          title: Text('${user.username}#${user.tagline}'),
+          title: Text('${user.gameName}#${user.tagLine}'),
           subtitle: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [

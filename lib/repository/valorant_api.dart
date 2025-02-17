@@ -156,7 +156,7 @@ class RiotApiService {
   }
 
   /// Check if a player exists using the merged leaderboard cache.
-  Future<bool> checkPlayerExists(String username, String tagline) async {
+  Future<bool> checkPlayerExists(String gameName, String tagLine) async {
     // 1️⃣ If full cache is fresh, use it instead of fetching.
     if (_lastFullFetchTime != null &&
         DateTime.now().difference(_lastFullFetchTime!) < cacheDuration) {
@@ -170,14 +170,14 @@ class RiotApiService {
           "DEBUG: Cached leaderboard has ${cachedLeaderboard.length} players.");
       for (int i = 0; i < 10 && i < cachedLeaderboard.length; i++) {
         print(
-            "Player $i: ${cachedLeaderboard[i].username}#${cachedLeaderboard[i].tagline}");
+            "Player $i: ${cachedLeaderboard[i].gameName}#${cachedLeaderboard[i].tagLine}");
       }
     }
 
     // 3️⃣ Check if the player exists in the cached leaderboard.
     return cachedLeaderboard.any((player) =>
-        player.username.toLowerCase() == username.toLowerCase() &&
-        player.tagline.toLowerCase() == tagline.toLowerCase());
+        player.gameName.toLowerCase() == gameName.toLowerCase() &&
+        player.tagLine.toLowerCase() == tagLine.toLowerCase());
   }
 
   /// Create a unique cache key for each page request.

@@ -18,7 +18,7 @@ class UserDetailPage extends StatelessWidget {
         leaderboardType == LeaderboardType.ranked; // ✅ Check if it's ranked
 
     return Scaffold(
-      appBar: AppBar(title: Text('${user.username}#${user.tagline}')),
+      appBar: AppBar(title: Text('${user.gameName}#${user.tagLine}')),
       body: SingleChildScrollView(
           padding: const EdgeInsets.all(16.0),
           child:
