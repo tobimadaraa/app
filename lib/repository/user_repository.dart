@@ -93,55 +93,6 @@ class UserRepository extends GetxController {
     return null;
   }
 
-  /// **Helper: Check Stored Leaderboard in Firebase (Batches 0-7)**
-  // Future<bool> checkFirebaseStoredLeaderboard(
-  //     String username, String tagline) async {
-  //   final FirebaseFirestore firestore = FirebaseFirestore.instance;
-  //   final CollectionReference leaderboardRef =
-  //       firestore.collection("LeaderboardDoc");
-
-  //   // Only check batches 0 through 7
-  //   for (int batchIndex = 0; batchIndex < 8; batchIndex++) {
-  //     try {
-  //       DocumentSnapshot docSnapshot =
-  //           await leaderboardRef.doc("batch_$batchIndex").get();
-  //       if (docSnapshot.exists) {
-  //         final data = docSnapshot.data();
-  //         if (data is Map<String, dynamic> && data.containsKey("players")) {
-  //           List<dynamic> players = data["players"];
-  //           for (var playerMap in players) {
-  //             if (playerMap is Map<String, dynamic>) {
-  //               String storedUser = normalize(playerMap["username"] ?? "");
-  //               String storedTag = normalize(playerMap["tagline"] ?? "");
-  //               if (storedUser == normalize(username) &&
-  //                   storedTag == normalize(tagline)) {
-  //                 print(
-  //                     "DEBUG: Found user in stored leaderboard in batch_$batchIndex");
-  //                 return true;
-  //               }
-  //             }
-  //           }
-  //         }
-  //       } else {
-  //         print("DEBUG: Document batch_$batchIndex does not exist.");
-  //       }
-  //     } catch (e) {
-  //       print("ERROR: Could not check batch_$batchIndex: $e");
-  //       // Continue checking remaining batches even if one fails.
-  //     }
-  //   }
-  //   print("DEBUG: User not found in any of batches 0-7.");
-  //   return false;
-  // }
-
-  /// **Report a Player (with Verification)**
-  /// Report a player for cheater/toxicity.
-  /// The logic is:
-  /// 1. Check if the user exists in the "Users" collection.
-  ///    - If so, update their report counts.
-  /// 2. If not, check the stored leaderboard (batches 0-7).
-  ///    - If found there, add them to Firestore.
-  /// 3. If not found in either, then the user is considered invalid.
   Future<bool> reportPlayer({
     required String username,
     required String tagline,

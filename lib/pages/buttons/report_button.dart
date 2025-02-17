@@ -27,7 +27,6 @@ class ReportButtonState extends State<ReportButton> {
 
   Future<void> _handleReport() async {
     // Log the button press.
-    // ignore: avoid_print
     print(
         "DEBUG: Report button pressed for ${widget.newUserId}#${widget.newTagLine}");
 
@@ -49,30 +48,14 @@ class ReportButtonState extends State<ReportButton> {
     }
 
     try {
-      // 1️⃣ Attempt to report the player; capture success/failure.
-      final success = await _userRepository.reportPlayer(
+      // Report the player.
+      await _userRepository.reportPlayer(
         username: widget.newUserId.toLowerCase(),
         tagline: widget.newTagLine.toLowerCase(),
         isToxicityReport: widget.isToxicity,
       );
 
-      // 2️⃣ If `success` is false, show an error snackbar and return.
-      if (!success) {
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (mounted && Get.context != null) {
-            Get.snackbar(
-              "Error",
-              "Player does not exist or could not be reported.",
-              snackPosition: SnackPosition.BOTTOM,
-              backgroundColor: Colors.red,
-              colorText: Colors.white,
-            );
-          }
-        });
-        return;
-      }
-
-      // 3️⃣ If `success` is true, show the success snackbar.
+      // Delay the success snackbar until after the current frame.
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted && Get.context != null) {
           Get.snackbar(
@@ -87,15 +70,15 @@ class ReportButtonState extends State<ReportButton> {
         }
       });
 
-      // 4️⃣ Call the onSuccess callback to refresh data.
+      // Call the onSuccess callback to refresh data.
       await widget.onSuccess();
 
-      // 5️⃣ Safely update the UI if we're still mounted.
+      // Safely update the UI.
       if (mounted) {
         setState(() {});
       }
     } catch (error) {
-      // If the repository method throws an exception for other reasons:
+      // Delay the error snackbar until after the current frame.
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted && Get.context != null) {
           Get.snackbar(
