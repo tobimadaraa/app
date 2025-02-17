@@ -33,6 +33,7 @@ migrate_working_dir/
 .pub/
 /build/
 # Ignore API Key file 
+.env
 apikey.env
 # Ignore google-services.json 
 android/app/google-services.json
