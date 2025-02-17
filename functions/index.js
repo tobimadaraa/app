@@ -2,11 +2,11 @@ const {onRequest} = require("firebase-functions/v2/https");
 const {schedule} = require("firebase-functions/v1/pubsub");
 const admin = require("firebase-admin");
 const axios = require("axios");
-
+require("dotenv").config();
 admin.initializeApp();
 
 // Hardcoded Riot API key for now (remember to secure this later)
-const RIOT_API_KEY = "hidden";
+const RIOT_API_KEY = process.env.API_KEY;
 
 /**
  * Fetches the current active act ID from the Riot API.

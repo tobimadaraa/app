@@ -1,6 +1,7 @@
 // ignore_for_file: avoid_print
 
 import 'dart:convert';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_application_2/models/leaderboard_model.dart';
 
@@ -15,7 +16,7 @@ class RiotApiService {
   RiotApiService._internal();
 
   // --- API Details ---
-  static const String apiKey = "hidden";
+  String apiKey = dotenv.env['API_KEY'] ?? 'Default_API_Key';
   static const String baseUrl =
       "https://eu.api.riotgames.com"; // Change region if needed
 

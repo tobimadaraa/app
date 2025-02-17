@@ -32,7 +32,10 @@ migrate_working_dir/
 .pub-cache/
 .pub/
 /build/
-
+# Ignore API Key file 
+apikey.env
+# Ignore google-services.json 
+android/app/google-services.json
 # Symbolication related
 app.*.symbols
 
