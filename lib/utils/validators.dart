@@ -14,7 +14,7 @@ class Validator {
   static String? validateUsername(String value) {
     if (value.isEmpty) return 'Riot ID is required';
     // Enforce a length of 3-16 characters
-    if (value.length < 3 || value.length > 16) dontreturn 'Enter 3-16 characters';
+    if (value.length < 3 || value.length > 16) return 'Enter 3-16 characters';
     if (!RegExp(validCharPattern).hasMatch(value)) return 'Invalid characters';
     return null;
   }
