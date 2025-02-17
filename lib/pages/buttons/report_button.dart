@@ -50,8 +50,8 @@ class ReportButtonState extends State<ReportButton> {
     try {
       // Report the player.
       await _userRepository.reportPlayer(
-        username: widget.newUserId.toLowerCase(),
-        tagline: widget.newTagLine.toLowerCase(),
+        gameName: widget.newUserId.toLowerCase(),
+        tagLine: widget.newTagLine.toLowerCase(),
         isToxicityReport: widget.isToxicity,
       );
 

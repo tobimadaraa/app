@@ -86,12 +86,12 @@ class DodgeListState extends State<DodgeList> {
       // ✅ Find the user in the leaderboard
       LeaderboardModel? userFound = data.firstWhere(
         (user) =>
-            user.username.toLowerCase() == newUserId.toLowerCase() &&
-            user.tagline.toLowerCase() == newTagLine.toLowerCase(),
+            user.gameName.toLowerCase() == newUserId.toLowerCase() &&
+            user.tagLine.toLowerCase() == newTagLine.toLowerCase(),
         orElse: () => LeaderboardModel(
-            leaderboardNumber: -1,
-            username: "",
-            tagline: "",
+            leaderboardRank: -1,
+            gameName: "",
+            tagLine: "",
             cheaterReports: 0,
             toxicityReports: 0,
             pageViews: 0,
@@ -99,7 +99,7 @@ class DodgeListState extends State<DodgeList> {
             lastToxicityReported: []),
       );
 
-      if (userFound.username.isNotEmpty) {
+      if (userFound.gameName.isNotEmpty) {
         // ✅ Store the user locally
         dodgeList.add(userFound);
         await _saveDodgeListToLocalStorage();
@@ -128,7 +128,7 @@ class DodgeListState extends State<DodgeList> {
             return AlertDialog(
               title: const Text("Confirm Deletion"),
               content: Text(
-                  "Are you sure you want to remove ${user.username}#${user.tagline} from your Dodge List?"),
+                  "Are you sure you want to remove ${user.gameName}#${user.tagLine} from your Dodge List?"),
               actions: [
                 TextButton(
                   onPressed: () => Navigator.of(context).pop(true), // ✅ Confirm
@@ -154,9 +154,9 @@ class DodgeListState extends State<DodgeList> {
         setState(() {
           dodgeList.removeWhere(
             (existing) =>
-                existing.username.toLowerCase() ==
-                    user.username.toLowerCase() &&
-                existing.tagline.toLowerCase() == user.tagline.toLowerCase(),
+                existing.gameName.toLowerCase() ==
+                    user.gameName.toLowerCase() &&
+                existing.tagLine.toLowerCase() == user.tagLine.toLowerCase(),
           );
         });
 
@@ -165,7 +165,7 @@ class DodgeListState extends State<DodgeList> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
               content: Text(
-                  "${user.username}#${user.tagline} removed from Dodge List")),
+                  "${user.gameName}#${user.tagLine} removed from Dodge List")),
         );
       } catch (error) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -238,8 +238,8 @@ class DodgeListState extends State<DodgeList> {
       // 🔹 Find the user in the latest leaderboard
       var leaderboardUser = latestLeaderboard.firstWhereOrNull(
         (user) =>
-            user.username.toLowerCase() == dodgeUser.username.toLowerCase() &&
-            user.tagline.toLowerCase() == dodgeUser.tagline.toLowerCase(),
+            user.gameName.toLowerCase() == dodgeUser.gameName.toLowerCase() &&
+            user.tagLine.toLowerCase() == dodgeUser.tagLine.toLowerCase(),
       );
 
       if (leaderboardUser != null) {
@@ -247,7 +247,7 @@ class DodgeListState extends State<DodgeList> {
         if (leaderboardUser.cheaterReports > dodgeUser.cheaterReports ||
             leaderboardUser.toxicityReports > dodgeUser.toxicityReports) {
           print(
-              "⚠️ Updated Reports for ${dodgeUser.username}#${dodgeUser.tagline}");
+              "⚠️ Updated Reports for ${dodgeUser.gameName}#${dodgeUser.tagLine}");
 
           // 🔄 Update the Dodge List user with new report counts
           dodgeUser.cheaterReports = leaderboardUser.cheaterReports;

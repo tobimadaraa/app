@@ -34,7 +34,7 @@ class MySearchDelegate extends SearchDelegate {
   Widget buildResults(BuildContext context) {
     // Filter the leaderboard based on the query
     final matchQuery = leaderboard.where((user) {
-      final fullName = '${user.username}#${user.tagline}'.toLowerCase();
+      final fullName = '${user.gameName}#${user.tagLine}'.toLowerCase();
       return fullName.contains(query.toLowerCase());
     }).toList();
 
@@ -52,12 +52,12 @@ class MySearchDelegate extends SearchDelegate {
         final result = matchQuery[index];
 
         return ListTile(
-          title: Text('${result.username}#${result.tagline}'),
+          title: Text('${result.gameName}#${result.tagLine}'),
           onTap: () {
             // Increment page views before navigating
             Get.find<UserRepository>().incrementPageViews(
-              result.username,
-              result.tagline,
+              result.gameName,
+              result.tagLine,
             );
 
             // Navigate to the user detail page
@@ -80,7 +80,7 @@ class MySearchDelegate extends SearchDelegate {
   Widget buildSuggestions(BuildContext context) {
     // Suggest matching results as the user types
     final matchQuery = leaderboard.where((user) {
-      final fullName = '${user.username}#${user.tagline}'.toLowerCase();
+      final fullName = '${user.gameName}#${user.tagLine}'.toLowerCase();
       return fullName.startsWith(query.toLowerCase());
     }).toList();
 
@@ -90,12 +90,12 @@ class MySearchDelegate extends SearchDelegate {
         final result = matchQuery[index];
 
         return ListTile(
-          title: Text('${result.username}#${result.tagline}'),
+          title: Text('${result.gameName}#${result.tagLine}'),
           onTap: () {
             // Increment page views before navigating
             Get.find<UserRepository>().incrementPageViews(
-              result.username,
-              result.tagline,
+              result.gameName,
+              result.tagLine,
             );
 
             // Navigate to the user detail page

@@ -1,7 +1,7 @@
 class LeaderboardModel {
-  final int leaderboardNumber;
-  final String username;
-  final String tagline;
+  final int leaderboardRank;
+  final String gameName;
+  final String tagLine;
   int cheaterReports;
   int toxicityReports;
   final int pageViews;
@@ -10,9 +10,9 @@ class LeaderboardModel {
   final int? rankedRating;
   final int? numberOfWins;
   LeaderboardModel({
-    required this.leaderboardNumber,
-    required this.username,
-    required this.tagline,
+    required this.leaderboardRank,
+    required this.gameName,
+    required this.tagLine,
     required this.cheaterReports,
     required this.toxicityReports,
     required this.pageViews,
@@ -32,15 +32,15 @@ class LeaderboardModel {
         json.containsKey('gameName') && json.containsKey('tagLine');
 
     return LeaderboardModel(
-      leaderboardNumber: json['leaderboardRank'] ??
-          json['leaderboardNumber'] ??
+      leaderboardRank: json['leaderboardRank'] ??
+          json['leaderboardRank'] ??
           -1, // Riot API handling/ Handle both API & Local cases
-      username: isFromApi
+      gameName: isFromApi
           ? json['gameName'].toString().trim()
-          : json['username'].toString().trim(),
-      tagline: isFromApi
+          : json['gameName'].toString().trim(),
+      tagLine: isFromApi
           ? json['tagLine'].toString().trim()
-          : json['tagline'].toString().trim(),
+          : json['tagLine'].toString().trim(),
       rankedRating: includeStats ? json['rankedRating'] ?? 0 : null,
       numberOfWins: includeStats ? json['numberOfWins'] ?? 0 : null,
       cheaterReports: json['cheater_reported'] ?? 0,
@@ -59,9 +59,9 @@ class LeaderboardModel {
 
   Map<String, dynamic> toJson() {
     return {
-      'leaderboardNumber': leaderboardNumber,
-      'username': username, // ✅ Ensure always using `username`
-      'tagline': tagline, // ✅ Ensure always using `tagline`
+      'leaderboardRank': leaderboardRank,
+      'gameName': gameName, // ✅ Ensure always using `username`
+      'tagLine': tagLine, // ✅ Ensure always using `tagline`
       'cheater_reported': cheaterReports,
       'toxicity_reported': toxicityReports,
       'page_views': pageViews,
@@ -71,9 +71,9 @@ class LeaderboardModel {
   }
 
   LeaderboardModel copyWith({
-    int? leaderboardNumber,
-    String? username,
-    String? tagline,
+    int? leaderboardRank,
+    String? gameName,
+    String? tagLine,
     int? cheaterReports,
     int? toxicityReports,
     int? pageViews,
@@ -83,9 +83,9 @@ class LeaderboardModel {
     int? numberOfWins,
   }) {
     return LeaderboardModel(
-      leaderboardNumber: leaderboardNumber ?? this.leaderboardNumber,
-      username: username ?? this.username,
-      tagline: tagline ?? this.tagline,
+      leaderboardRank: leaderboardRank ?? this.leaderboardRank,
+      gameName: gameName ?? this.gameName,
+      tagLine: tagLine ?? this.tagLine,
       cheaterReports: cheaterReports ?? this.cheaterReports,
       toxicityReports: toxicityReports ?? this.toxicityReports,
       pageViews: pageViews ?? this.pageViews,

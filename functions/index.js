@@ -102,8 +102,8 @@ async function storeLeaderboardInBatches() {
 
     // Wait 20 seconds before starting the next batch (if any).
     if (batchIndex < totalBatches - 1) {
-      console.log(`⏳ Waiting 20 seconds before fetching batch ${batchIndex + 1}...`);
-      await delay(10000);
+      console.log(`⏳ Waiting 7 seconds before fetching batch ${batchIndex + 1}...`);
+      await delay(7000);
     }
   }
 
@@ -113,7 +113,8 @@ async function storeLeaderboardInBatches() {
 // HTTP Cloud Function that triggers the leaderboard update.
 exports.updateLeaderboard = onRequest({
   region: "europe-west1",
-}, async (_req, res) => {
+  timeoutSeconds: 540,
+}, async (req, res) => {
   try {
     console.log("Starting leaderboard update...");
     await storeLeaderboardInBatches();
@@ -125,18 +126,17 @@ exports.updateLeaderboard = onRequest({
   }
 });
 
-// Scheduled Cloud Function that triggers the HTTP function every 60 minutes.
-exports.scheduledLeaderboardUpdate1 = schedule(
-    {schedule: "every 60 minutes", region: "europe-west1", timeZone: "Etc/UTC"},
-    async (_context) => {
-      try {
-        const YOUR_FUNCTION_URL =
-        "https://europe-west1-flutterval-6f667.cloudfunctions.net/updateLeaderboard";
-        const response = await axios.get(YOUR_FUNCTION_URL);
-        console.log("Scheduled update response:", response.data);
-      } catch (error) {
-        console.error("Error during scheduled leaderboard update:", error);
-      }
-      return null;
-    },
-);
+exports.ScheduledLeaderboardUpdate = schedule({
+  region: "europe-west1",
+  timeoutSeconds: 540, // Increase timeout
+}, async (_req, res) => {
+  try {
+    console.log("Starting leaderboard update...");
+    await storeLeaderboardInBatches();
+    console.log("Leaderboard updated successfully!");
+    res.status(200).send("Leaderboard updated successfully!");
+  } catch (error) {
+    console.error("Error updating leaderboard:", error);
+    res.status(500).send("Failed to update leaderboard.");
+  }
+});

@@ -21,8 +21,8 @@ Future<void> updateDodgeListStorage(String username, String tagline) async {
 
   // Check if the user already exists in the dodge list
   bool userExists = dodgeList.any((user) =>
-      user.username.toLowerCase() == username.toLowerCase() &&
-      user.tagline.toLowerCase() == tagline.toLowerCase());
+      user.gameName.toLowerCase() == username.toLowerCase() &&
+      user.tagLine.toLowerCase() == tagline.toLowerCase());
 
   if (!userExists) {
     print("🟢 Adding $username#$tagline to stored Dodge List...");
@@ -33,8 +33,8 @@ Future<void> updateDodgeListStorage(String username, String tagline) async {
         await userRepository.firestoreGetLeaderboard();
 
     LeaderboardModel? reportedUser = data.firstWhereOrNull((user) =>
-        user.username.toLowerCase() == username.toLowerCase() &&
-        user.tagline.toLowerCase() == tagline.toLowerCase());
+        user.gameName.toLowerCase() == username.toLowerCase() &&
+        user.tagLine.toLowerCase() == tagline.toLowerCase());
 
     if (reportedUser != null) {
       dodgeList.add(reportedUser);

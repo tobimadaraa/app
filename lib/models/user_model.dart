@@ -1,26 +1,26 @@
 class UserModel {
-  final String userId;
-  final String tagline;
+  final String gameName;
+  final String tagLine;
   // final DateTime lastReported;
 
   const UserModel({
-    required this.userId,
-    required this.tagline,
+    required this.gameName,
+    required this.tagLine,
     // required this.lastReported,
   });
 
   Map<String, dynamic> toJson() {
     return {
-      'username': userId,
-      'tagline': tagline,
+      'gameName': gameName,
+      'tagLine': tagLine,
       // 'last_reported': lastReported.toIso8601String(),
     };
   }
 
   factory UserModel.fromJson(Map<String, dynamic> json) {
     return UserModel(
-      userId: json['username'] ?? '',
-      tagline: json['tagline'] ?? '',
+      gameName: json['gameName'] ?? '',
+      tagLine: json['tagLine'] ?? '',
       // lastReported:
       //     json['last_reported'] != null
       //         ? DateTime.parse(json['last_reported'])
@@ -29,13 +29,13 @@ class UserModel {
   }
 
   UserModel copyWith({
-    String? userId,
-    String? tagline,
+    String? gameName,
+    String? tagLine,
     DateTime? lastReported,
   }) {
     return UserModel(
-      userId: userId ?? this.userId,
-      tagline: tagline ?? this.tagline,
+      gameName: gameName ?? this.gameName,
+      tagLine: tagLine ?? this.tagLine,
       // lastReported: lastReported ?? this.lastReported,
     );
   }

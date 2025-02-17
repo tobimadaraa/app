@@ -33,7 +33,7 @@ class UserRepository extends GetxController {
   /// This scans through the stored leaderboard docs to see if the user exists.
   /// Returns a LeaderboardModel if found, otherwise null.
   Future<LeaderboardModel?> checkFirebaseStoredLeaderboard(
-      String username, String tagline) async {
+      String gameName, String tagLine) async {
     final FirebaseFirestore firestore = FirebaseFirestore.instance;
     final CollectionReference leaderboardRef =
         firestore.collection("LeaderboardDoc");
@@ -48,25 +48,25 @@ class UserRepository extends GetxController {
             List<dynamic> players = data["players"];
             for (var playerMap in players) {
               if (playerMap is Map<String, dynamic>) {
-                String storedUser = normalize(playerMap["username"] ?? "");
-                String storedTag = normalize(playerMap["tagline"] ?? "");
-                if (storedUser == normalize(username) &&
-                    storedTag == normalize(tagline)) {
+                String storedUser = normalize(playerMap["gameName"] ?? "");
+                String storedTag = normalize(playerMap["tagLine"] ?? "");
+                if (storedUser == normalize(gameName) &&
+                    storedTag == normalize(tagLine)) {
                   print(
                       "DEBUG: Found user in stored leaderboard in batch_$batchIndex");
 
                   // Convert the batch data to a LeaderboardModel
-                  int rank = 0;
-                  if (playerMap["leaderboardNumber"] is int) {
-                    rank = playerMap["leaderboardNumber"];
+                  int leaderboardRank = 0;
+                  if (playerMap["leaderboardRank"] is int) {
+                    leaderboardRank = playerMap["leaderboardRank"];
                   }
                   // Or parse if it's stored as a string:
-                  // int rank = int.tryParse(playerMap["leaderboardNumber"]?.toString() ?? "0") ?? 0;
+                  // int leaderboardRank = int.tryParse(playerMap["leaderboardRank"]?.toString() ?? "0") ?? 0;
 
                   return LeaderboardModel(
-                    leaderboardNumber: rank,
-                    username: playerMap["username"] ?? "",
-                    tagline: playerMap["tagline"] ?? "",
+                    leaderboardRank: leaderboardRank,
+                    gameName: playerMap["gameName"] ?? "",
+                    tagLine: playerMap["tagLine"] ?? "",
                     cheaterReports: playerMap["cheater_reported"] ?? 0,
                     toxicityReports: playerMap["toxicity_reported"] ?? 0,
                     pageViews: playerMap["page_views"] ?? 0,
@@ -94,22 +94,22 @@ class UserRepository extends GetxController {
   }
 
   Future<bool> reportPlayer({
-    required String username,
-    required String tagline,
+    required String gameName,
+    required String tagLine,
     required bool isToxicityReport,
   }) async {
     print(
-        "DEBUG: reportPlayer() called for $username#$tagline at ${DateTime.now().toIso8601String()}");
+        "DEBUG: reportPlayer() called for $gameName#$tagLine at ${DateTime.now().toIso8601String()}");
 
     try {
       String newReportTime = DateTime.now().toIso8601String();
 
       // 1️⃣ Check Firestore first to see if the user already exists.
-      print("DEBUG: Searching Firestore for player: $username#$tagline");
+      print("DEBUG: Searching Firestore for player: $gameName#$tagLine");
       final query = await _db
           .collection("Users")
-          .where('username', isEqualTo: normalize(username))
-          .where('tagline', isEqualTo: normalize(tagline))
+          .where('gameName', isEqualTo: normalize(gameName))
+          .where('tagLine', isEqualTo: normalize(tagLine))
           .get();
 
       print(
@@ -135,7 +135,7 @@ class UserRepository extends GetxController {
       print(
           "DEBUG: Player not found in Firestore. Checking stored leaderboard in Firebase...");
       final LeaderboardModel? storedPlayerModel =
-          await checkFirebaseStoredLeaderboard(username, tagline);
+          await checkFirebaseStoredLeaderboard(gameName, tagLine);
       if (storedPlayerModel == null) {
         print("ERROR: User not found in Riot API or stored leaderboard.");
         return false;
@@ -145,10 +145,10 @@ class UserRepository extends GetxController {
       print(
           "DEBUG: User verified from stored leaderboard. Adding new player to Firestore...");
       await _db.collection("Users").add({
-        'leaderboardNumber': storedPlayerModel.leaderboardNumber,
-        'username': normalize(username),
-        'tagline': normalize(tagline),
-        // store the rank
+        'leaderboardRank': storedPlayerModel.leaderboardRank,
+        'gameName': normalize(gameName),
+        'tagLine': normalize(tagLine),
+        // store the leaderboardRank
         'cheater_reported': isToxicityReport ? 0 : 1,
         'toxicity_reported': isToxicityReport ? 1 : 0,
         'last_cheater_reported': isToxicityReport ? [] : [newReportTime],
@@ -172,10 +172,10 @@ class UserRepository extends GetxController {
       List<LeaderboardModel> reportedUsers = snapshot.docs.map((doc) {
         final data = doc.data() as Map<String, dynamic>;
         return LeaderboardModel(
-          leaderboardNumber: data['leaderboardNumber'] ?? 0,
-          username: data['username'] ??
+          leaderboardRank: data['leaderboardRank'] ?? 0,
+          gameName: data['gameName'] ??
               "", // Ensure you're using consistent field names!
-          tagline: data['tagline'] ?? "",
+          tagLine: data['tagLine'] ?? "",
           cheaterReports: data['cheater_reported'] ?? 0,
           toxicityReports: data['toxicity_reported'] ?? 0,
           pageViews: data['page_views'] ?? 0,
@@ -222,20 +222,20 @@ class UserRepository extends GetxController {
 
       for (var doc in snapshot.docs) {
         final data = doc.data();
-        String username = normalize(data['username'] ?? '');
-        String tagline = normalize(data['tagline'] ?? '');
-        firestoreUsers["$username#$tagline"] = data;
+        String gameName = normalize(data['gameName'] ?? '');
+        String tagLine = normalize(data['tagLine'] ?? '');
+        firestoreUsers["$gameName#$tagLine"] = data;
       }
 
       List<LeaderboardModel> mergedLeaderboard = riotLeaderboard.map((player) {
-        String fullUsername = normalize("${player.username}#${player.tagline}");
+        String fullgameName = normalize("${player.gameName}#${player.tagLine}");
 
-        if (firestoreUsers.containsKey(fullUsername)) {
-          final firestoreData = firestoreUsers[fullUsername]!;
+        if (firestoreUsers.containsKey(fullgameName)) {
+          final firestoreData = firestoreUsers[fullgameName]!;
           return LeaderboardModel(
-            leaderboardNumber: player.leaderboardNumber,
-            username: player.username,
-            tagline: player.tagline,
+            leaderboardRank: player.leaderboardRank,
+            gameName: player.tagLine,
+            tagLine: player.tagLine,
             cheaterReports: firestoreData['cheater_reported'] ?? 0,
             toxicityReports: firestoreData['toxicity_reported'] ?? 0,
             pageViews: firestoreData['page_views'] ?? 0,
@@ -254,7 +254,7 @@ class UserRepository extends GetxController {
 
       Map<String, LeaderboardModel> uniquePlayers = {};
       for (var player in mergedLeaderboard) {
-        String key = normalize("${player.username}#${player.tagline}");
+        String key = normalize("${player.gameName}#${player.tagLine}");
         uniquePlayers[key] = player;
       }
 
@@ -277,9 +277,9 @@ class UserRepository extends GetxController {
       return snapshot.docs.map((doc) {
         final data = doc.data();
         return LeaderboardModel(
-          leaderboardNumber: -1,
-          username: data['username'] ?? '',
-          tagline: data['tagline'] ?? '',
+          leaderboardRank: -1,
+          gameName: data['gameName'] ?? '',
+          tagLine: data['tagLine'] ?? '',
           cheaterReports: data['cheater_reported'] ?? 0,
           toxicityReports: data['toxicity_reported'] ?? 0,
           pageViews: data['page_views'] ?? 0,
@@ -302,10 +302,10 @@ class UserRepository extends GetxController {
     try {
       await _db
           .collection("DodgeList")
-          .doc("${user.username}#${user.tagline}")
+          .doc("${user.gameName}#${user.tagLine}")
           .set({
-        "username": user.username,
-        "tagline": user.tagline,
+        "gameName": user.gameName,
+        "tagLine": user.tagLine,
         "cheater_reported": user.cheaterReports,
         "toxicity_reported": user.toxicityReports,
         "page_views": user.pageViews,
@@ -313,7 +313,7 @@ class UserRepository extends GetxController {
         "last_toxicity_reported": user.lastToxicityReported,
       });
       print(
-          "DEBUG: User added to Dodge List -> ${user.username}#${user.tagline}");
+          "DEBUG: User added to Dodge List -> ${user.gameName}#${user.tagLine}");
     } catch (error) {
       print("ERROR: Adding user to Dodge List failed: $error");
     }
@@ -324,22 +324,22 @@ class UserRepository extends GetxController {
     try {
       await _db
           .collection("DodgeList")
-          .doc("${user.username}#${user.tagline}")
+          .doc("${user.gameName}#${user.tagLine}")
           .delete();
       print(
-          "DEBUG: User removed from Dodge List -> ${user.username}#${user.tagline}");
+          "DEBUG: User removed from Dodge List -> ${user.gameName}#${user.tagLine}");
     } catch (error) {
       print("ERROR: Removing user from Dodge List failed: $error");
     }
   }
 
   /// Increment Page Views for a Player
-  Future<void> incrementPageViews(String username, String tagline) async {
+  Future<void> incrementPageViews(String gameName, String tagLine) async {
     try {
       final query = await _db
           .collection("Users")
-          .where('username', isEqualTo: username)
-          .where('tagline', isEqualTo: tagline)
+          .where('gameName', isEqualTo: gameName)
+          .where('tagLine', isEqualTo: tagLine)
           .get();
 
       if (query.docs.isNotEmpty) {

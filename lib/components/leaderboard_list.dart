@@ -44,7 +44,7 @@ class LeaderboardList extends StatelessWidget {
           } else if (selectedLeaderboard == LeaderboardType.cheater) {
             return b.cheaterReports.compareTo(a.cheaterReports);
           } else {
-            return a.leaderboardNumber.compareTo(b.leaderboardNumber);
+            return a.leaderboardRank.compareTo(b.leaderboardRank);
           }
         });
 
@@ -54,10 +54,10 @@ class LeaderboardList extends StatelessWidget {
           itemCount: leaderboard.length,
           itemBuilder: (context, index) {
             final model = leaderboard[index];
-            final rank = index + 1;
+            final leaderboardRank = index + 1;
             if (selectedLeaderboard == LeaderboardType.ranked) {
               print(
-                  "DEBUG: Rank: $rank, Player: ${model.username}, Rating: ${model.rankedRating}, Wins: ${model.numberOfWins}");
+                  "DEBUG: LeaderboardRank: $leaderboardRank, Player: ${model.gameName}, Rating: ${model.rankedRating}, Wins: ${model.numberOfWins}");
             }
             // ✅ DEBUG  - Verify if data is correct
 
@@ -88,11 +88,11 @@ class LeaderboardList extends StatelessWidget {
                     : 'Ranked Stats';
 
             return LeadCard(
-              key: ValueKey(model.username), // 🔥 Ensures individual updates
-              text: rank.toString(), // Rank number
+              key: ValueKey(model.gameName), // 🔥 Ensures individual updates
+              text: leaderboardRank.toString(), // LeaderboardRank number
 
               leaderboardname:
-                  '${model.username.toLowerCase()}#${model.tagline.toLowerCase()}',
+                  '${model.gameName.toLowerCase()}#${model.tagLine.toLowerCase()}',
               reportLabel: reportLabel,
               rating: selectedLeaderboard == LeaderboardType.ranked
                   ? (model.rankedRating != null

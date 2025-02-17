@@ -342,13 +342,13 @@ class _LeaderBoardState extends State<LeaderBoard> {
                                 selectedLeaderboard == LeaderboardType.toxicity;
 
                         return ListTile(
-                          title: Text('${user.username}#${user.tagline}'),
+                          title: Text('${user.gameName}#${user.tagLine}'),
                           subtitle: Text(
                             selectedLeaderboard == LeaderboardType.ranked
-                                ? 'Rank: ${user.leaderboardNumber} | Rating: ${user.rankedRating ?? "N/A"} | Wins: ${user.numberOfWins ?? "N/A"}'
+                                ? 'Rank: ${user.leaderboardRank} | Rating: ${user.rankedRating ?? "N/A"} | Wins: ${user.numberOfWins ?? "N/A"}'
                                 : selectedLeaderboard == LeaderboardType.cheater
-                                    ? 'Rank: ${user.leaderboardNumber} | Cheater Reports: ${user.cheaterReports}'
-                                    : 'Rank: ${user.leaderboardNumber} | Toxicity Reports: ${user.toxicityReports}',
+                                    ? 'Rank: ${user.leaderboardRank} | Cheater Reports: ${user.cheaterReports}'
+                                    : 'Rank: ${user.leaderboardRank} | Toxicity Reports: ${user.toxicityReports}',
                           ),
                           onTap: isClickable
                               ? () {
