@@ -214,53 +214,36 @@ class UserRepository extends GetxController {
   /// **Get Leaderboard from Firestore**
   Future<List<LeaderboardModel>> firestoreGetLeaderboard() async {
     try {
-      List<LeaderboardModel> riotLeaderboard =
-          await riotApiService.getLeaderboard(startIndex: 0, size: 200);
-
+      // Fetch the leaderboard data from Firestore
       final snapshot = await _db.collection("Users").get();
-      Map<String, Map<String, dynamic>> firestoreUsers = {};
+      List<LeaderboardModel> firestoreLeaderboard = [];
 
       for (var doc in snapshot.docs) {
         final data = doc.data();
         String gameName = normalize(data['gameName'] ?? '');
         String tagLine = normalize(data['tagLine'] ?? '');
-        firestoreUsers["$gameName#$tagLine"] = data;
+
+        // Create LeaderboardModel from Firestore data
+        firestoreLeaderboard.add(LeaderboardModel(
+          leaderboardRank: data['rank'] ?? 0, // Assuming 'rank' is in Firestore
+          gameName: gameName,
+          tagLine: tagLine,
+          cheaterReports: data['cheater_reported'] ?? 0,
+          toxicityReports: data['toxicity_reported'] ?? 0,
+          pageViews: data['page_views'] ?? 0,
+          lastCheaterReported: data['last_cheater_reported'] is List
+              ? List<String>.from(data['last_cheater_reported'])
+              : [],
+          lastToxicityReported: data['last_toxicity_reported'] is List
+              ? List<String>.from(data['last_toxicity_reported'])
+              : [],
+        ));
       }
 
-      List<LeaderboardModel> mergedLeaderboard = riotLeaderboard.map((player) {
-        String fullgameName = normalize("${player.gameName}#${player.tagLine}");
-
-        if (firestoreUsers.containsKey(fullgameName)) {
-          final firestoreData = firestoreUsers[fullgameName]!;
-          return LeaderboardModel(
-            leaderboardRank: player.leaderboardRank,
-            gameName: player.tagLine,
-            tagLine: player.tagLine,
-            cheaterReports: firestoreData['cheater_reported'] ?? 0,
-            toxicityReports: firestoreData['toxicity_reported'] ?? 0,
-            pageViews: firestoreData['page_views'] ?? 0,
-            lastCheaterReported: firestoreData['last_cheater_reported'] is List
-                ? List<String>.from(firestoreData['last_cheater_reported'])
-                : [],
-            lastToxicityReported:
-                firestoreData['last_toxicity_reported'] is List
-                    ? List<String>.from(firestoreData['last_toxicity_reported'])
-                    : [],
-          );
-        } else {
-          return player;
-        }
-      }).toList();
-
-      Map<String, LeaderboardModel> uniquePlayers = {};
-      for (var player in mergedLeaderboard) {
-        String key = normalize("${player.gameName}#${player.tagLine}");
-        uniquePlayers[key] = player;
-      }
-
-      return uniquePlayers.values.toList();
+      // Return the list of leaderboard data fetched from Firestore
+      return firestoreLeaderboard;
     } catch (error) {
-      print("ERROR: Fetching merged leaderboard failed: $error");
+      print("ERROR: Fetching Firestore leaderboard failed: $error");
       return [];
     }
   }
@@ -298,26 +281,26 @@ class UserRepository extends GetxController {
   }
 
   /// Add to Dodge List
-  Future<void> addToDodgeList(LeaderboardModel user) async {
-    try {
-      await _db
-          .collection("DodgeList")
-          .doc("${user.gameName}#${user.tagLine}")
-          .set({
-        "gameName": user.gameName,
-        "tagLine": user.tagLine,
-        "cheater_reported": user.cheaterReports,
-        "toxicity_reported": user.toxicityReports,
-        "page_views": user.pageViews,
-        "last_cheater_reported": user.lastCheaterReported,
-        "last_toxicity_reported": user.lastToxicityReported,
-      });
-      print(
-          "DEBUG: User added to Dodge List -> ${user.gameName}#${user.tagLine}");
-    } catch (error) {
-      print("ERROR: Adding user to Dodge List failed: $error");
-    }
-  }
+  // Future<void> addToDodgeList(LeaderboardModel user) async {
+  //   try {
+  //     await _db
+  //         .collection("DodgeList")
+  //         .doc("${user.gameName}#${user.tagLine}")
+  //         .set({
+  //       "gameName": user.gameName,
+  //       "tagLine": user.tagLine,
+  //       "cheater_reported": user.cheaterReports,
+  //       "toxicity_reported": user.toxicityReports,
+  //       "page_views": user.pageViews,
+  //       "last_cheater_reported": user.lastCheaterReported,
+  //       "last_toxicity_reported": user.lastToxicityReported,
+  //     });
+  //     print(
+  //         "DEBUG: User added to Dodge List -> ${user.gameName}#${user.tagLine}");
+  //   } catch (error) {
+  //     print("ERROR: Adding user to Dodge List failed: $error");
+  //   }
+  // }
 
   /// Remove from Dodge List
   Future<void> removeFromDodgeList(LeaderboardModel user) async {

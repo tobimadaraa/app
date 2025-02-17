@@ -79,37 +79,53 @@ class DodgeListState extends State<DodgeList> {
 
   Future<void> _addUserToDodgeList() async {
     try {
-      // ✅ Fetch the full leaderboard
+      // First, check in Firestore Users collection
       List<LeaderboardModel> data =
           await userRepository.firestoreGetLeaderboard();
 
-      // ✅ Find the user in the leaderboard
       LeaderboardModel? userFound = data.firstWhere(
         (user) =>
             user.gameName.toLowerCase() == newUserId.toLowerCase() &&
             user.tagLine.toLowerCase() == newTagLine.toLowerCase(),
         orElse: () => LeaderboardModel(
-            leaderboardRank: -1,
-            gameName: "",
-            tagLine: "",
-            cheaterReports: 0,
-            toxicityReports: 0,
-            pageViews: 0,
-            lastCheaterReported: [],
-            lastToxicityReported: []),
+          leaderboardRank: -1,
+          gameName: "",
+          tagLine: "",
+          cheaterReports: 0,
+          toxicityReports: 0,
+          pageViews: 0,
+          lastCheaterReported: [],
+          lastToxicityReported: [],
+        ),
       );
 
+      // If the user is found in Firestore
       if (userFound.gameName.isNotEmpty) {
-        // ✅ Store the user locally
         dodgeList.add(userFound);
         await _saveDodgeListToLocalStorage();
+        setState(() {});
 
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("User added to Dodge List")),
+        );
+        return;
+      }
+
+      // If the user is not found in Firestore, check in the custom leaderboard batches
+      LeaderboardModel? userFromBatches = await userRepository
+          .checkFirebaseStoredLeaderboard(newUserId, newTagLine);
+
+      if (userFromBatches != null) {
+        // User found in the custom leaderboard
+        dodgeList.add(userFromBatches);
+        await _saveDodgeListToLocalStorage();
         setState(() {});
 
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text("User added to Dodge List")),
         );
       } else {
+        // User not found in Firestore or custom leaderboards
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text("User not found in leaderboard")),
         );

@@ -27,6 +27,7 @@ class ReportButtonState extends State<ReportButton> {
 
   Future<void> _handleReport() async {
     // Log the button press.
+    // ignore: avoid_print
     print(
         "DEBUG: Report button pressed for ${widget.newUserId}#${widget.newTagLine}");
 
