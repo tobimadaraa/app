@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_application_2/repository/user_repository.dart';
+import 'package:flutter_application_2/utils/validators.dart'; // <-- Import the validators.
 import 'package:get/get.dart';
 
 class ReportButton extends StatefulWidget {
@@ -27,7 +28,6 @@ class ReportButtonState extends State<ReportButton> {
 
   Future<void> _handleReport() async {
     // Log the button press.
-    // ignore: avoid_print
     print(
         "DEBUG: Report button pressed for ${widget.newUserId}#${widget.newTagLine}");
 
@@ -96,8 +96,12 @@ class ReportButtonState extends State<ReportButton> {
 
   @override
   Widget build(BuildContext context) {
+    // Check if the inputs are valid using your Validator class.
+    final bool isValid = Validator.validateUsername(widget.newUserId) == null &&
+        Validator.validateTagline(widget.newTagLine) == null;
+
     return TextButton(
-      onPressed: _handleReport,
+      onPressed: isValid ? _handleReport : null, // Disable button if invalid.
       child: Text(widget.buttonText),
     );
   }
