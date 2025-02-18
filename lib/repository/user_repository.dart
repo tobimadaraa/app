@@ -165,9 +165,7 @@ class UserRepository extends GetxController {
         'leaderboardRank': storedPlayerModel.leaderboardRank,
         'gameName': normalize(gameName),
         'tagLine': normalize(tagLine),
-        'times_honoured': isHonourReport
-            ? 1
-            : storedPlayerModel.honourReports, // ✅ Fix Honour Report issue
+        'times_honoured': isHonourReport ? 1 : storedPlayerModel.honourReports,
         'cheater_reported': isHonourReport
             ? 0
             : isToxicityReport
@@ -188,7 +186,9 @@ class UserRepository extends GetxController {
             : isToxicityReport
                 ? [newReportTime]
                 : [],
-        'last_time_honoured': isHonourReport ? [newReportTime] : [],
+        'last_time_honoured': isHonourReport
+            ? [newReportTime]
+            : storedPlayerModel.lastHonourReported,
         'page_views': 0,
       });
 

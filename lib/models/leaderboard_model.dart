@@ -49,7 +49,9 @@ class LeaderboardModel {
       numberOfWins: includeStats ? json['numberOfWins'] ?? 0 : null,
       cheaterReports: json['cheater_reported'] ?? 0,
       toxicityReports: json['toxicity_reported'] ?? 0,
-      honourReports: json['times_honoured'] ?? 0,
+      honourReports:
+          json.containsKey('times_honoured') ? json['times_honoured'] ?? 0 : 0,
+
       pageViews: json['page_views'] ?? 0,
       lastCheaterReported: json['last_cheater_reported'] is List
           ? List<String>.from(json['last_cheater_reported'])
@@ -57,8 +59,9 @@ class LeaderboardModel {
       lastToxicityReported: json['last_toxicity_reported'] is List
           ? List<String>.from(json['last_toxicity_reported'])
           : [],
-      lastHonourReported:
-          (json['last_time_honoured'] as List?)?.cast<String>() ?? [],
+      lastHonourReported: json['last_time_honoured'] is List
+          ? List<String>.from(json['last_time_honoured'])
+          : [],
     );
   }
 
@@ -75,6 +78,7 @@ class LeaderboardModel {
       'page_views': pageViews,
       'last_cheater_reported': lastCheaterReported,
       'last_toxicity_reported': lastToxicityReported,
+      'last_time_honoured': lastHonourReported, // ✅ Fix: Add missing field
     };
   }
 

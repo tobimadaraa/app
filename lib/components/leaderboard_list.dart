@@ -34,30 +34,16 @@ class LeaderboardList extends StatelessWidget {
         }
 
         final List<LeaderboardModel> leaderboard = List.from(snapshot.data!);
-
-// ✅ **Step 3: Filter out users who shouldn't be in a leaderboard*
-
-// 🔥 **Step 4: Sorting logic based on leaderboard type**
-        // leaderboard.sort((a, b) {
-        //   if (selectedLeaderboard == LeaderboardType.cheater) {
-        //     return b.cheaterReports.compareTo(a.cheaterReports);
-        //   } else if (selectedLeaderboard == LeaderboardType.toxicity) {
-        //     return b.toxicityReports.compareTo(a.toxicityReports);
-        //   } else if (selectedLeaderboard == LeaderboardType.honour) {
-        //     return b.honourReports.compareTo(a.honourReports);
-        //   } else if (selectedLeaderboard == LeaderboardType.ranked) {
-        //     return a.leaderboardRank.compareTo(b.leaderboardRank);
-        //   } else {
-        //     return 0;
-        //   }
-        // });
-
+        print(
+            "✅ UI received ${leaderboard.length} players for ${selectedLeaderboard.toString()}");
         return ListView.builder(
           key: ValueKey(
               selectedLeaderboard), // 🔥 Force UI Refresh when switching
           itemCount: leaderboard.length,
           itemBuilder: (context, index) {
             final model = leaderboard[index];
+            print(
+                "DEBUG: ${model.gameName}#${model.tagLine} | Rank: ${model.leaderboardRank} | Rating: ${model.rankedRating} | Wins: ${model.numberOfWins}");
             final leaderboardRank = index + 1;
             if (selectedLeaderboard == LeaderboardType.ranked) {
               print(

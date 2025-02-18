@@ -115,6 +115,7 @@ class _LeaderBoardState extends State<LeaderBoard> {
           size: _pageSize,
           forceRefresh: forceRefresh,
         );
+
         print("✅ Ranked leaderboard received for request ID $requestId");
       } else {
         // For cheater or toxicity, fetch from your "Users" collection only.
@@ -365,7 +366,10 @@ class _LeaderBoardState extends State<LeaderBoard> {
                                     : selectedLeaderboard ==
                                             LeaderboardType.honour
                                         ? 'Rank: ${user.leaderboardRank} | Honour Reports: ${user.honourReports}'
-                                        : '',
+                                        : selectedLeaderboard ==
+                                                LeaderboardType.ranked
+                                            ? 'Rank: ${user.leaderboardRank} | Rating: ${user.rankedRating ?? "N/A"} | Wins: ${user.numberOfWins ?? "N/A"}'
+                                            : '',
                           ),
                           onTap: isClickable
                               ? () {
