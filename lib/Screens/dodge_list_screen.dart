@@ -88,15 +88,16 @@ class DodgeListState extends State<DodgeList> {
             user.gameName.toLowerCase() == newUserId.toLowerCase() &&
             user.tagLine.toLowerCase() == newTagLine.toLowerCase(),
         orElse: () => LeaderboardModel(
-          leaderboardRank: -1,
-          gameName: "",
-          tagLine: "",
-          cheaterReports: 0,
-          toxicityReports: 0,
-          pageViews: 0,
-          lastCheaterReported: [],
-          lastToxicityReported: [],
-        ),
+            leaderboardRank: -1,
+            gameName: "",
+            tagLine: "",
+            cheaterReports: 0,
+            toxicityReports: 0,
+            honourReports: 0,
+            pageViews: 0,
+            lastCheaterReported: [],
+            lastToxicityReported: [],
+            lastHonourReported: []),
       );
 
       // If the user is found in Firestore

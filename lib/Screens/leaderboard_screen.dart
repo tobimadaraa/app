@@ -27,6 +27,8 @@ class LeaderBoard extends StatefulWidget {
 class _LeaderBoardState extends State<LeaderBoard> {
   final RiotApiService riotApiService = RiotApiService();
   final UserRepository userRepository = Get.find<UserRepository>();
+  bool isCheaterSelected =
+      true; // 🚨 Default to "Cheater" when Reports is selected
 
   final ScrollController _scrollController = ScrollController();
   final List<LeaderboardModel> _loadedUsers = []; // List to store fetched users
@@ -119,12 +121,12 @@ class _LeaderBoardState extends State<LeaderBoard> {
         print("⏳ Fetching Firebase leaderboard for reported users...");
 
         // Decide if it's toxicity or cheater
-        bool forToxic = (selectedLeaderboard == LeaderboardType.toxicity);
+        // bool forToxic = (selectedLeaderboard == LeaderboardType.toxicity &&
+        //     !isCheaterSelected);
 
         // Call your custom function
         List<LeaderboardModel> allUsers =
             await userRepository.getReportedUsersFromFirebase(
-          forToxicity: forToxic,
           leaderboardType: selectedLeaderboard,
         );
 
@@ -257,7 +259,8 @@ class _LeaderBoardState extends State<LeaderBoard> {
         backgroundColor: Colors.blue[200],
         body: Column(children: [
           if (selectedLeaderboard == LeaderboardType.cheater ||
-              selectedLeaderboard == LeaderboardType.toxicity) ...[
+              selectedLeaderboard == LeaderboardType.toxicity ||
+              selectedLeaderboard == LeaderboardType.honour) ...[
             LeaderboardInputFields(
               usernameError: usernameError,
               taglineError: taglineError,
@@ -284,39 +287,42 @@ class _LeaderBoardState extends State<LeaderBoard> {
                   _hasMoreData = true; // Allow new fetch
                 });
 
-                // 🔄 Update the stored dodge list data immediately
-                // await updateDodgeListStorage(newUserId, newTagLine);
-                (newUserId, newTagLine);
-
                 // 🔔 Notify DodgeListScreen if it's open
                 dodgeListEventNotifier.triggerUpdate();
 
                 await _loadLeaderboard(); // ✅ Refresh leaderboard, but DON'T report again
               },
-              buttonText: selectedLeaderboard == LeaderboardType.toxicity
-                  ? 'Report for Toxicity'
-                  : 'Report Cheater',
-              isToxicity: selectedLeaderboard == LeaderboardType.toxicity,
+              buttonText: selectedLeaderboard == LeaderboardType.cheater
+                  ? 'Report Cheater'
+                  : selectedLeaderboard == LeaderboardType.toxicity
+                      ? 'Report for Toxicity'
+                      : 'Honour Player', // ✅ Correct Honour label
+
+              isToxicity: selectedLeaderboard ==
+                  LeaderboardType.toxicity, // ✅ Ensure correct flag
+              isHonour: selectedLeaderboard ==
+                  LeaderboardType.honour, // ✅ New Honour flag added
             ),
           ],
-          LeaderboardToggle(
-            selectedLeaderboard: selectedLeaderboard,
-            onSelectLeaderboard: (LeaderboardType type) {
-              if (type != selectedLeaderboard) {
-                setState(() {
-                  selectedLeaderboard = type;
-                  _loadedUsers.clear();
-                  _currentStartIndex = 0;
-                  _hasMoreData = true;
-                  _latestRequestId++; // 🔥 Cancel previous requests
-                  _isLoadingMore =
-                      false; // ✅ Ensure loading resets when switching
-                  _isActiveLoading = false; // ✅ Prevent the infinite loop
-                });
+          Column(
+            children: [
+              LeaderboardToggle(
+                selectedLeaderboard: selectedLeaderboard,
+                onSelectLeaderboard: (LeaderboardType type) {
+                  setState(() {
+                    selectedLeaderboard = type;
+                    _loadedUsers.clear();
+                    _currentStartIndex = 0;
+                    _hasMoreData = true;
+                    _latestRequestId++; // 🔥 Cancel previous requests
+                    _isLoadingMore = false;
+                    _isActiveLoading = false;
+                  });
 
-                _loadLeaderboard();
-              }
-            },
+                  _loadLeaderboard();
+                },
+              ),
+            ],
           ),
           Expanded(
             child: _isInitialLoading
@@ -337,18 +343,23 @@ class _LeaderBoardState extends State<LeaderBoard> {
                         }
 
                         final user = _loadedUsers[index];
-                        final bool isClickable =
-                            selectedLeaderboard == LeaderboardType.cheater ||
-                                selectedLeaderboard == LeaderboardType.toxicity;
+                        final bool isClickable = selectedLeaderboard ==
+                                LeaderboardType.cheater ||
+                            selectedLeaderboard == LeaderboardType.toxicity ||
+                            selectedLeaderboard == LeaderboardType.honour;
 
                         return ListTile(
                           title: Text('${user.gameName}#${user.tagLine}'),
                           subtitle: Text(
-                            selectedLeaderboard == LeaderboardType.ranked
-                                ? 'Rank: ${user.leaderboardRank} | Rating: ${user.rankedRating ?? "N/A"} | Wins: ${user.numberOfWins ?? "N/A"}'
-                                : selectedLeaderboard == LeaderboardType.cheater
-                                    ? 'Rank: ${user.leaderboardRank} | Cheater Reports: ${user.cheaterReports}'
-                                    : 'Rank: ${user.leaderboardRank} | Toxicity Reports: ${user.toxicityReports}',
+                            selectedLeaderboard == LeaderboardType.cheater
+                                ? 'Rank: ${user.leaderboardRank} | Cheater Reports: ${user.cheaterReports}'
+                                : selectedLeaderboard ==
+                                        LeaderboardType.toxicity
+                                    ? 'Rank: ${user.leaderboardRank} | Toxicity Reports: ${user.toxicityReports}'
+                                    : selectedLeaderboard ==
+                                            LeaderboardType.honour
+                                        ? 'Rank: ${user.leaderboardRank} | Honour Reports: ${user.honourReports}'
+                                        : '',
                           ),
                           onTap: isClickable
                               ? () {

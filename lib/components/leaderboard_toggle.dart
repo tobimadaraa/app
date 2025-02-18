@@ -13,41 +13,39 @@ class LeaderboardToggle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          ElevatedButton(
-            onPressed: () => onSelectLeaderboard(LeaderboardType.ranked),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: selectedLeaderboard == LeaderboardType.ranked
-                  ? Colors.blue
-                  : Colors.grey,
-            ),
-            child: const Text('Ranked'),
-          ),
-          const SizedBox(width: 10),
-          ElevatedButton(
-            onPressed: () => onSelectLeaderboard(LeaderboardType.cheater),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: selectedLeaderboard == LeaderboardType.cheater
-                  ? Colors.blue
-                  : Colors.grey,
-            ),
-            child: const Text('Cheater'),
-          ),
-          const SizedBox(width: 10),
-          ElevatedButton(
-            onPressed: () => onSelectLeaderboard(LeaderboardType.toxicity),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: selectedLeaderboard == LeaderboardType.toxicity
-                  ? Colors.blue
-                  : Colors.grey,
-            ),
-            child: const Text('Toxicity'),
-          ),
-        ],
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        _buildToggleButton("Ranked", LeaderboardType.ranked),
+        const SizedBox(width: 12), // ✅ Spacing
+        _buildToggleButton("Cheater", LeaderboardType.cheater),
+        const SizedBox(width: 12),
+        _buildToggleButton("Toxicity", LeaderboardType.toxicity),
+        const SizedBox(width: 12),
+        _buildToggleButton(
+            "Honours", LeaderboardType.honour), // ✅ New Honours Button
+      ],
+    );
+  }
+
+  /// **🔥 Dynamic Toggle Button**
+  Widget _buildToggleButton(String text, LeaderboardType type) {
+    final bool isSelected = type == selectedLeaderboard;
+
+    return ElevatedButton(
+      onPressed: () => onSelectLeaderboard(type),
+      style: ElevatedButton.styleFrom(
+        backgroundColor: isSelected ? Colors.blue : Colors.grey,
+        foregroundColor: Colors.white,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(10), // ✅ Rounded corners
+        ),
+        padding: const EdgeInsets.symmetric(
+            horizontal: 18, vertical: 12), // ✅ Good button size
+      ),
+      child: Text(
+        text,
+        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
       ),
     );
   }

@@ -13,4 +13,4 @@ final UserRepository userRepository = Get.put(
   UserRepository(),
 ); // Dependency injection
 
-enum LeaderboardType { ranked, cheater, toxicity }
+enum LeaderboardType { ranked, cheater, toxicity, honour }

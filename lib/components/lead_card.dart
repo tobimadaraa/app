@@ -26,6 +26,7 @@ class LeadCard extends StatefulWidget {
     required this.backgroundColor,
     required this.isFamous,
     required this.lastReported,
+    required String honourReports,
   });
 
   @override

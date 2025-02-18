@@ -8,14 +8,16 @@ class ReportButton extends StatefulWidget {
   final String newTagLine;
   final Future<void> Function() onSuccess;
   final String buttonText;
-  final bool isToxicity; // ✅ Ensure this is correctly passed
+  final bool isToxicity;
+  final bool isHonour; // ✅ New Honour flag added
 
   const ReportButton({
     super.key,
     required this.newUserId,
     required this.newTagLine,
     required this.onSuccess,
-    required this.isToxicity, // ✅ Now it's always required
+    required this.isToxicity,
+    required this.isHonour, // ✅ Now it's always required
     required this.buttonText,
   });
 
@@ -27,13 +29,10 @@ class ReportButtonState extends State<ReportButton> {
   final UserRepository _userRepository = UserRepository();
 
   Future<void> _handleReport() async {
-    // Log the button press.
     print(
         "DEBUG: Report button pressed for ${widget.newUserId}#${widget.newTagLine}");
 
-    // Validate inputs.
     if (widget.newUserId.isEmpty || widget.newTagLine.isEmpty) {
-      // Delay the snackbar until after the current frame.
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted && Get.context != null) {
           Get.snackbar(
@@ -49,21 +48,37 @@ class ReportButtonState extends State<ReportButton> {
     }
 
     try {
-      // Report the player.
-      await _userRepository.reportPlayer(
+      bool reportResult = await _userRepository.reportPlayer(
         gameName: widget.newUserId.toLowerCase(),
         tagLine: widget.newTagLine.toLowerCase(),
         isToxicityReport: widget.isToxicity,
+        isHonourReport: widget.isHonour, // ✅ Ensure Honour Report is passed
       );
 
-      // Delay the success snackbar until after the current frame.
+      if (!reportResult) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted && Get.context != null) {
+            Get.snackbar(
+              "Error",
+              "User not found.",
+              snackPosition: SnackPosition.BOTTOM,
+              backgroundColor: Colors.red,
+              colorText: Colors.white,
+            );
+          }
+        });
+        return;
+      }
+
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted && Get.context != null) {
           Get.snackbar(
             "Success",
-            widget.isToxicity
-                ? "Player successfully reported as toxic!"
-                : "Player successfully reported as a cheater!",
+            widget.isHonour
+                ? "Player successfully honoured!"
+                : widget.isToxicity
+                    ? "Player successfully reported as toxic!"
+                    : "Player successfully reported as a cheater!",
             snackPosition: SnackPosition.BOTTOM,
             backgroundColor: Colors.green,
             colorText: Colors.white,
@@ -71,15 +86,12 @@ class ReportButtonState extends State<ReportButton> {
         }
       });
 
-      // Call the onSuccess callback to refresh data.
       await widget.onSuccess();
 
-      // Safely update the UI.
       if (mounted) {
         setState(() {});
       }
     } catch (error) {
-      // Delay the error snackbar until after the current frame.
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted && Get.context != null) {
           Get.snackbar(
@@ -96,13 +108,20 @@ class ReportButtonState extends State<ReportButton> {
 
   @override
   Widget build(BuildContext context) {
-    // Check if the inputs are valid using your Validator class.
+    // ✅ Reintroducing input validation using Validator class
     final bool isValid = Validator.validateUsername(widget.newUserId) == null &&
         Validator.validateTagline(widget.newTagLine) == null;
 
     return TextButton(
-      onPressed: isValid ? _handleReport : null, // Disable button if invalid.
-      child: Text(widget.buttonText),
+      onPressed: isValid ? _handleReport : null, // ✅ Button disabled if invalid
+      style: TextButton.styleFrom(
+        backgroundColor: isValid
+            ? Colors.blue
+            : Colors.grey, // ✅ Show different colors when disabled
+        foregroundColor: Colors.white,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      ),
+      child: Text(widget.buttonText, style: const TextStyle(fontSize: 16)),
     );
   }
 }

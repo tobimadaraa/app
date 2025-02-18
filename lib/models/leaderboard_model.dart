@@ -4,9 +4,11 @@ class LeaderboardModel {
   final String tagLine;
   int cheaterReports;
   int toxicityReports;
+  int honourReports;
   final int pageViews;
   final List<String> lastCheaterReported;
   final List<String> lastToxicityReported;
+  final List<String> lastHonourReported; // ✅ Ensure this exists
   final int? rankedRating;
   final int? numberOfWins;
   LeaderboardModel({
@@ -15,8 +17,10 @@ class LeaderboardModel {
     required this.tagLine,
     required this.cheaterReports,
     required this.toxicityReports,
+    this.honourReports = 0,
     required this.pageViews,
     required this.lastCheaterReported,
+    required this.lastHonourReported,
     this.rankedRating,
     this.numberOfWins,
     required this.lastToxicityReported,
@@ -45,6 +49,7 @@ class LeaderboardModel {
       numberOfWins: includeStats ? json['numberOfWins'] ?? 0 : null,
       cheaterReports: json['cheater_reported'] ?? 0,
       toxicityReports: json['toxicity_reported'] ?? 0,
+      honourReports: json['times_honoured'] ?? 0,
       pageViews: json['page_views'] ?? 0,
       lastCheaterReported: json['last_cheater_reported'] is List
           ? List<String>.from(json['last_cheater_reported'])
@@ -52,6 +57,8 @@ class LeaderboardModel {
       lastToxicityReported: json['last_toxicity_reported'] is List
           ? List<String>.from(json['last_toxicity_reported'])
           : [],
+      lastHonourReported:
+          (json['last_time_honoured'] as List?)?.cast<String>() ?? [],
     );
   }
 
@@ -64,6 +71,7 @@ class LeaderboardModel {
       'tagLine': tagLine, // ✅ Ensure always using `tagline`
       'cheater_reported': cheaterReports,
       'toxicity_reported': toxicityReports,
+      'times_honoured': honourReports,
       'page_views': pageViews,
       'last_cheater_reported': lastCheaterReported,
       'last_toxicity_reported': lastToxicityReported,
@@ -88,9 +96,11 @@ class LeaderboardModel {
       tagLine: tagLine ?? this.tagLine,
       cheaterReports: cheaterReports ?? this.cheaterReports,
       toxicityReports: toxicityReports ?? this.toxicityReports,
+      honourReports: honourReports,
       pageViews: pageViews ?? this.pageViews,
       lastCheaterReported: lastCheaterReported ?? this.lastCheaterReported,
       lastToxicityReported: lastToxicityReported ?? this.lastToxicityReported,
+      lastHonourReported: lastHonourReported,
       rankedRating: rankedRating ?? this.rankedRating,
       numberOfWins: numberOfWins ?? this.numberOfWins,
     );

@@ -64,21 +64,26 @@ class UserRepository extends GetxController {
                   // int leaderboardRank = int.tryParse(playerMap["leaderboardRank"]?.toString() ?? "0") ?? 0;
 
                   return LeaderboardModel(
-                    leaderboardRank: leaderboardRank,
-                    gameName: playerMap["gameName"] ?? "",
-                    tagLine: playerMap["tagLine"] ?? "",
-                    cheaterReports: playerMap["cheater_reported"] ?? 0,
-                    toxicityReports: playerMap["toxicity_reported"] ?? 0,
-                    pageViews: playerMap["page_views"] ?? 0,
-                    lastCheaterReported: playerMap["last_cheater_reported"]
-                            is List
-                        ? List<String>.from(playerMap["last_cheater_reported"])
-                        : [],
-                    lastToxicityReported: playerMap["last_toxicity_reported"]
-                            is List
-                        ? List<String>.from(playerMap["last_toxicity_reported"])
-                        : [],
-                  );
+                      leaderboardRank: leaderboardRank,
+                      gameName: playerMap["gameName"] ?? "",
+                      tagLine: playerMap["tagLine"] ?? "",
+                      cheaterReports: playerMap["cheater_reported"] ?? 0,
+                      toxicityReports: playerMap["toxicity_reported"] ?? 0,
+                      honourReports: data['times_honoured'] ?? 0,
+                      pageViews: playerMap["page_views"] ?? 0,
+                      lastCheaterReported:
+                          playerMap["last_cheater_reported"] is List
+                              ? List<String>.from(
+                                  playerMap["last_cheater_reported"])
+                              : [],
+                      lastToxicityReported:
+                          playerMap["last_toxicity_reported"] is List
+                              ? List<String>.from(
+                                  playerMap["last_toxicity_reported"])
+                              : [],
+                      lastHonourReported: data['last_time_honoured'] is List
+                          ? List<String>.from(data['last_time_honoured'])
+                          : []);
                 }
               }
             }
@@ -97,6 +102,7 @@ class UserRepository extends GetxController {
     required String gameName,
     required String tagLine,
     required bool isToxicityReport,
+    required bool isHonourReport, // ✅ New Honour flag added
   }) async {
     print(
         "DEBUG: reportPlayer() called for $gameName#$tagLine at ${DateTime.now().toIso8601String()}");
@@ -116,17 +122,26 @@ class UserRepository extends GetxController {
           "DEBUG: Firestore query result: Found ${query.docs.length} documents.");
 
       if (query.docs.isNotEmpty) {
-        // User exists in Firestore → update their report counts.
+        // ✅ User exists in Firestore → Update their report counts.
         final docRef = query.docs.first.reference;
         print("DEBUG: Updating Firestore document: ${docRef.id}");
+
         await docRef.update({
           if (isToxicityReport) 'toxicity_reported': FieldValue.increment(1),
-          if (!isToxicityReport) 'cheater_reported': FieldValue.increment(1),
+          if (!isToxicityReport && !isHonourReport)
+            'cheater_reported': FieldValue.increment(1),
+          if (isHonourReport)
+            'times_honoured':
+                FieldValue.increment(1), // ✅ Increment Honour Reports
           if (isToxicityReport)
             'last_toxicity_reported': FieldValue.arrayUnion([newReportTime]),
-          if (!isToxicityReport)
+          if (!isToxicityReport && !isHonourReport)
             'last_cheater_reported': FieldValue.arrayUnion([newReportTime]),
+          if (isHonourReport)
+            'last_time_honoured':
+                FieldValue.arrayUnion([newReportTime]), // ✅ Honour timestamps
         });
+
         print("DEBUG: Successfully updated player reports in Firestore.");
         return true;
       }
@@ -136,6 +151,7 @@ class UserRepository extends GetxController {
           "DEBUG: Player not found in Firestore. Checking stored leaderboard in Firebase...");
       final LeaderboardModel? storedPlayerModel =
           await checkFirebaseStoredLeaderboard(gameName, tagLine);
+
       if (storedPlayerModel == null) {
         print("ERROR: User not found in Riot API or stored leaderboard.");
         return false;
@@ -144,17 +160,38 @@ class UserRepository extends GetxController {
       // 3️⃣ If found, add the new player to Firestore.
       print(
           "DEBUG: User verified from stored leaderboard. Adding new player to Firestore...");
+
       await _db.collection("Users").add({
         'leaderboardRank': storedPlayerModel.leaderboardRank,
         'gameName': normalize(gameName),
         'tagLine': normalize(tagLine),
-        // store the leaderboardRank
-        'cheater_reported': isToxicityReport ? 0 : 1,
-        'toxicity_reported': isToxicityReport ? 1 : 0,
-        'last_cheater_reported': isToxicityReport ? [] : [newReportTime],
-        'last_toxicity_reported': isToxicityReport ? [newReportTime] : [],
+        'times_honoured': isHonourReport
+            ? 1
+            : storedPlayerModel.honourReports, // ✅ Fix Honour Report issue
+        'cheater_reported': isHonourReport
+            ? 0
+            : isToxicityReport
+                ? 0
+                : 1,
+        'toxicity_reported': isHonourReport
+            ? 0
+            : isToxicityReport
+                ? 1
+                : 0,
+        'last_cheater_reported': isHonourReport
+            ? []
+            : isToxicityReport
+                ? []
+                : [newReportTime],
+        'last_toxicity_reported': isHonourReport
+            ? []
+            : isToxicityReport
+                ? [newReportTime]
+                : [],
+        'last_time_honoured': isHonourReport ? [newReportTime] : [],
         'page_views': 0,
       });
+
       print("DEBUG: Successfully added new player.");
       return true;
     } catch (error) {
@@ -164,49 +201,52 @@ class UserRepository extends GetxController {
   }
 
   Future<List<LeaderboardModel>> getReportedUsersFromFirebase(
-      {required bool forToxicity,
-      required LeaderboardType leaderboardType}) async {
+      {required LeaderboardType leaderboardType}) async {
     try {
       // Fetch all reported users from the "Users" collection.
       QuerySnapshot snapshot = await _db.collection("Users").get();
       List<LeaderboardModel> reportedUsers = snapshot.docs.map((doc) {
         final data = doc.data() as Map<String, dynamic>;
         return LeaderboardModel(
-          leaderboardRank: data['leaderboardRank'] ?? 0,
-          gameName: data['gameName'] ??
-              "", // Ensure you're using consistent field names!
-          tagLine: data['tagLine'] ?? "",
-          cheaterReports: data['cheater_reported'] ?? 0,
-          toxicityReports: data['toxicity_reported'] ?? 0,
-          pageViews: data['page_views'] ?? 0,
-          lastCheaterReported: data['last_cheater_reported'] is List
-              ? List<String>.from(data['last_cheater_reported'])
-              : [],
-          lastToxicityReported: data['last_toxicity_reported'] is List
-              ? List<String>.from(data['last_toxicity_reported'])
-              : [],
-        );
+            leaderboardRank: data['leaderboardRank'] ?? 0,
+            gameName: data['gameName'] ?? "",
+            tagLine: data['tagLine'] ?? "",
+            cheaterReports: data['cheater_reported'] ?? 0,
+            toxicityReports: data['toxicity_reported'] ?? 0,
+            honourReports: data['times_honoured'] ?? 0,
+            pageViews: data['page_views'] ?? 0,
+            lastCheaterReported: data['last_cheater_reported'] is List
+                ? List<String>.from(data['last_cheater_reported'])
+                : [],
+            lastToxicityReported: data['last_toxicity_reported'] is List
+                ? List<String>.from(data['last_toxicity_reported'])
+                : [],
+            lastHonourReported: data['last_time_honoured'] is List
+                ? List<String>.from(data['last_time_honoured'])
+                : []);
       }).toList();
 
-      // Filter based on the leaderboard type.
-      if (forToxicity) {
-        // Only include users with toxicity reports > 0.
+      // **Filter based on the leaderboard type**
+      if (leaderboardType == LeaderboardType.toxicity) {
         reportedUsers =
             reportedUsers.where((user) => user.toxicityReports > 0).toList();
-        // Optionally sort by toxicityReports descending.
         reportedUsers
             .sort((a, b) => b.toxicityReports.compareTo(a.toxicityReports));
-      } else {
-        // For cheater leaderboard.
+      } else if (leaderboardType == LeaderboardType.cheater) {
         reportedUsers =
             reportedUsers.where((user) => user.cheaterReports > 0).toList();
         reportedUsers
             .sort((a, b) => b.cheaterReports.compareTo(a.cheaterReports));
+      } else if (leaderboardType == LeaderboardType.honour) {
+        reportedUsers =
+            reportedUsers.where((user) => user.honourReports > 0).toList();
+        reportedUsers
+            .sort((a, b) => b.honourReports.compareTo(a.honourReports));
       }
 
       return reportedUsers;
     } catch (e) {
-      print("Error fetching reported users from Firebase: $e");
+      print("❌ Error fetching reported users from Firebase: $e");
       return [];
     }
   }
@@ -225,19 +265,23 @@ class UserRepository extends GetxController {
 
         // Create LeaderboardModel from Firestore data
         firestoreLeaderboard.add(LeaderboardModel(
-          leaderboardRank: data['rank'] ?? 0, // Assuming 'rank' is in Firestore
-          gameName: gameName,
-          tagLine: tagLine,
-          cheaterReports: data['cheater_reported'] ?? 0,
-          toxicityReports: data['toxicity_reported'] ?? 0,
-          pageViews: data['page_views'] ?? 0,
-          lastCheaterReported: data['last_cheater_reported'] is List
-              ? List<String>.from(data['last_cheater_reported'])
-              : [],
-          lastToxicityReported: data['last_toxicity_reported'] is List
-              ? List<String>.from(data['last_toxicity_reported'])
-              : [],
-        ));
+            leaderboardRank:
+                data['rank'] ?? 0, // Assuming 'rank' is in Firestore
+            gameName: gameName,
+            tagLine: tagLine,
+            cheaterReports: data['cheater_reported'] ?? 0,
+            toxicityReports: data['toxicity_reported'] ?? 0,
+            honourReports: data['times_honoured'] ?? 0,
+            pageViews: data['page_views'] ?? 0,
+            lastCheaterReported: data['last_cheater_reported'] is List
+                ? List<String>.from(data['last_cheater_reported'])
+                : [],
+            lastToxicityReported: data['last_toxicity_reported'] is List
+                ? List<String>.from(data['last_toxicity_reported'])
+                : [],
+            lastHonourReported: data['last_time_honoured'] is List
+                ? List<String>.from(data['last_time_honoured'])
+                : []));
       }
 
       // Return the list of leaderboard data fetched from Firestore
@@ -260,19 +304,22 @@ class UserRepository extends GetxController {
       return snapshot.docs.map((doc) {
         final data = doc.data();
         return LeaderboardModel(
-          leaderboardRank: -1,
-          gameName: data['gameName'] ?? '',
-          tagLine: data['tagLine'] ?? '',
-          cheaterReports: data['cheater_reported'] ?? 0,
-          toxicityReports: data['toxicity_reported'] ?? 0,
-          pageViews: data['page_views'] ?? 0,
-          lastCheaterReported: data['last_cheater_reported'] is List
-              ? List<String>.from(data['last_cheater_reported'])
-              : [],
-          lastToxicityReported: data['last_toxicity_reported'] is List
-              ? List<String>.from(data['last_toxicity_reported'])
-              : [],
-        );
+            leaderboardRank: -1,
+            gameName: data['gameName'] ?? '',
+            tagLine: data['tagLine'] ?? '',
+            cheaterReports: data['cheater_reported'] ?? 0,
+            toxicityReports: data['toxicity_reported'] ?? 0,
+            honourReports: data['times_honoured'] ?? 0,
+            pageViews: data['page_views'] ?? 0,
+            lastCheaterReported: data['last_cheater_reported'] is List
+                ? List<String>.from(data['last_cheater_reported'])
+                : [],
+            lastToxicityReported: data['last_toxicity_reported'] is List
+                ? List<String>.from(data['last_toxicity_reported'])
+                : [],
+            lastHonourReported: data['last_time_honoured'] is List
+                ? List<String>.from(data['last_time_honoured'])
+                : []);
       }).toList();
     } catch (error) {
       print("ERROR: Fetching Dodge List failed: $error");
