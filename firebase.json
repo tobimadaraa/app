@@ -21,14 +21,25 @@
   },
   "functions": {
     "runtime": "nodejs18",
-      "source": "functions",
-      "codebase": "default",
-      "ignore": [
-        "node_modules",
-        ".git",
-        "firebase-debug.log",
-        "firebase-debug.*.log",
-        "*.local"
-      ]
+    "source": "functions",
+    "codebase": "default",
+    "timeoutSeconds": 540,
+    "region": "europe-west1",
+    "memory": "512MB",
+    "ignore": [
+      "node_modules",
+      ".git",
+      "firebase-debug.log",
+      "firebase-debug.*.log",
+      "*.local"
+    ]
+  },
+  "emulators": {
+    "functions": {
+      "port": 5001
+    },
+    "pubsub": {
+      "port": 8085
     }
+  }
 }
