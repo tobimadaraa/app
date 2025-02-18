@@ -307,21 +307,27 @@ class _LeaderBoardState extends State<LeaderBoard> {
           Column(
             children: [
               LeaderboardToggle(
-                selectedLeaderboard: selectedLeaderboard,
-                onSelectLeaderboard: (LeaderboardType type) {
-                  setState(() {
-                    selectedLeaderboard = type;
-                    _loadedUsers.clear();
-                    _currentStartIndex = 0;
-                    _hasMoreData = true;
-                    _latestRequestId++; // 🔥 Cancel previous requests
-                    _isLoadingMore = false;
-                    _isActiveLoading = false;
-                  });
+                  selectedLeaderboard: selectedLeaderboard,
+                  onSelectLeaderboard: (LeaderboardType type) {
+                    setState(() {
+                      selectedLeaderboard = type;
 
-                  _loadLeaderboard();
-                },
-              ),
+                      // ✅ Reset inputs when switching away from Honour/Cheater/Toxicity
+                      if (type == LeaderboardType.ranked) {
+                        newUserId = "";
+                        newTagLine = "";
+                      }
+
+                      _loadedUsers.clear();
+                      _currentStartIndex = 0;
+                      _hasMoreData = true;
+                      _latestRequestId++; // 🔥 Cancel previous requests
+                      _isLoadingMore = false;
+                      _isActiveLoading = false;
+                    });
+
+                    _loadLeaderboard();
+                  }),
             ],
           ),
           Expanded(
