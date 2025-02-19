@@ -5,10 +5,20 @@ import 'package:flutter_application_2/shared/classes/shared_components.dart';
 import 'package:get/get.dart';
 import 'package:flutter_application_2/repository/user_repository.dart';
 
-class MySearchDelegate extends SearchDelegate {
-  final List<LeaderboardModel> leaderboard;
+class FirestoreSearchDelegate extends SearchDelegate {
   final LeaderboardType leaderboardType;
-  MySearchDelegate(this.leaderboard, this.leaderboardType);
+  FirestoreSearchDelegate(this.leaderboardType);
+
+  /// Chooses which search method to use based on the leaderboard type.
+  Future<List<LeaderboardModel>> _performSearch(String queryText) {
+    // For ranked leaderboards, use the existing searchPlayersInBatches method.
+    if (leaderboardType == LeaderboardType.ranked) {
+      return Get.find<UserRepository>().searchPlayersInBatches(queryText);
+    } else {
+      // For honours, cheaters, toxicity, etc. use the searchUsers method that queries the Users doc.
+      return Get.find<UserRepository>().searchUsers(queryText.toLowerCase());
+    }
+  }
 
   @override
   Widget? buildLeading(BuildContext context) => IconButton(
@@ -25,6 +35,7 @@ class MySearchDelegate extends SearchDelegate {
               close(context, null);
             } else {
               query = '';
+              showSuggestions(context);
             }
           },
         ),
@@ -32,43 +43,35 @@ class MySearchDelegate extends SearchDelegate {
 
   @override
   Widget buildResults(BuildContext context) {
-    // Filter the leaderboard based on the query
-    final matchQuery = leaderboard.where((user) {
-      final fullName = '${user.gameName}#${user.tagLine}'.toLowerCase();
-      return fullName.contains(query.toLowerCase());
-    }).toList();
-
-    // Display "no results" message if the filtered list is empty
-    if (matchQuery.isEmpty) {
-      return const Center(
-        child: Text('No results found'),
-      );
-    }
-
-    // Build the filtered list of results
-    return ListView.builder(
-      itemCount: matchQuery.length,
-      itemBuilder: (context, index) {
-        final result = matchQuery[index];
-
-        return ListTile(
-          title: Text('${result.gameName}#${result.tagLine}'),
-          onTap: () {
-            // Increment page views before navigating
-            Get.find<UserRepository>().incrementPageViews(
-              result.gameName,
-              result.tagLine,
-            );
-
-            // Navigate to the user detail page
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => UserDetailPage(
-                  user: result,
-                  leaderboardType: leaderboardType,
-                ),
-              ),
+    return FutureBuilder<List<LeaderboardModel>>(
+      future: _performSearch(query),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        if (!snapshot.hasData || snapshot.data!.isEmpty) {
+          return const Center(child: Text('No results found'));
+        }
+        final results = snapshot.data!;
+        return ListView.builder(
+          itemCount: results.length,
+          itemBuilder: (context, index) {
+            final suggestion = results[index];
+            return ListTile(
+              title: Text('${suggestion.gameName}#${suggestion.tagLine}'),
+              onTap: () {
+                // Directly navigate to the detail page.
+                close(context, suggestion);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => UserDetailPage(
+                      user: suggestion,
+                      leaderboardType: leaderboardType,
+                    ),
+                  ),
+                );
+              },
             );
           },
         );
@@ -78,35 +81,34 @@ class MySearchDelegate extends SearchDelegate {
 
   @override
   Widget buildSuggestions(BuildContext context) {
-    // Suggest matching results as the user types
-    final matchQuery = leaderboard.where((user) {
-      final fullName = '${user.gameName}#${user.tagLine}'.toLowerCase();
-      return fullName.startsWith(query.toLowerCase());
-    }).toList();
-
-    return ListView.builder(
-      itemCount: matchQuery.length,
-      itemBuilder: (context, index) {
-        final result = matchQuery[index];
-
-        return ListTile(
-          title: Text('${result.gameName}#${result.tagLine}'),
-          onTap: () {
-            // Increment page views before navigating
-            Get.find<UserRepository>().incrementPageViews(
-              result.gameName,
-              result.tagLine,
-            );
-
-            // Navigate to the user detail page
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => UserDetailPage(
-                  user: result,
-                  leaderboardType: leaderboardType,
-                ),
-              ),
+    return FutureBuilder<List<LeaderboardModel>>(
+      future: _performSearch(query),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        if (!snapshot.hasData || snapshot.data!.isEmpty) {
+          return const Center(child: Text('No suggestions'));
+        }
+        final suggestions = snapshot.data!;
+        return ListView.builder(
+          itemCount: suggestions.length,
+          itemBuilder: (context, index) {
+            final suggestion = suggestions[index];
+            return ListTile(
+              title: Text('${suggestion.gameName}#${suggestion.tagLine}'),
+              onTap: () {
+                close(context, suggestion);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => UserDetailPage(
+                      user: suggestion,
+                      leaderboardType: leaderboardType,
+                    ),
+                  ),
+                );
+              },
             );
           },
         );

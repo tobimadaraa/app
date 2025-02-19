@@ -93,13 +93,21 @@ async function storeLeaderboardInBatches() {
         break;
       }
     }
-
+    allPlayers = allPlayers.map((player) => {
+      const gameNameLower = (player.gameName || "").toLowerCase();
+      const tagLineLower = (player.tagLine || "").toLowerCase();
+      return {
+        ...player,
+        // e.g., "wylde frac#ssj"
+        searchKey: `${gameNameLower}#${tagLineLower}`,
+      };
+    });
     const docRef = leaderboardRef.doc(`batch_${batchIndex}`);
     await docRef.set({players: allPlayers});
     console.log(`✅ Stored ${allPlayers.length} players in document batch_${batchIndex}`);
 
     if (batchIndex < totalBatches - 1) {
-      console.log(`⏳ Waiting 7 seconds before fetching batch ${batchIndex + 1}...`);
+      console.log(`⏳ Waiting 10 seconds before fetching batch ${batchIndex + 1}...`);
       await delay(10000);
     }
   }

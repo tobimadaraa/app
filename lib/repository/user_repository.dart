@@ -11,7 +11,7 @@ class UserRepository extends GetxController {
   final RiotApiService riotApiService = RiotApiService();
   List<LeaderboardModel> _fullLeaderboard = [];
 
-  Future<void> loadFullLeaderboard() async {
+  Future<List<LeaderboardModel>> loadFullLeaderboard() async {
     try {
       print("DEBUG: Sending request to Riot API...");
       List<LeaderboardModel> riotLeaderboard =
@@ -19,8 +19,10 @@ class UserRepository extends GetxController {
       _fullLeaderboard = riotLeaderboard;
       print(
           "DEBUG: Loaded full leaderboard with ${_fullLeaderboard.length} players.");
+      return _fullLeaderboard;
     } catch (error) {
       print("ERROR: Failed to fetch full leaderboard - $error");
+      return [];
     }
   }
 
@@ -165,6 +167,8 @@ class UserRepository extends GetxController {
         'leaderboardRank': storedPlayerModel.leaderboardRank,
         'gameName': normalize(gameName),
         'tagLine': normalize(tagLine),
+        'searchKey':
+            ('${normalize(gameName)}#${normalize(tagLine)}').toLowerCase(),
         'times_honoured': isHonourReport ? 1 : storedPlayerModel.honourReports,
         'cheater_reported': isHonourReport
             ? 0
@@ -191,7 +195,6 @@ class UserRepository extends GetxController {
             : storedPlayerModel.lastHonourReported,
         'page_views': 0,
       });
-
       print("DEBUG: Successfully added new player.");
       return true;
     } catch (error) {
@@ -247,6 +250,54 @@ class UserRepository extends GetxController {
       return reportedUsers;
     } catch (e) {
       print("❌ Error fetching reported users from Firebase: $e");
+      return [];
+    }
+  }
+
+  Future<List<LeaderboardModel>> searchPlayersInBatches(
+      String queryText) async {
+    if (queryText.isEmpty) return [];
+
+    final lowercaseQuery = queryText.toLowerCase();
+    final List<LeaderboardModel> results = [];
+    final Set<String> uniqueKeys = {}; // Track duplicates here
+
+    try {
+      // Suppose you have 8 batch documents: batch_0 to batch_7.
+      for (int i = 0; i < 8; i++) {
+        final docSnapshot =
+            await _db.collection("LeaderboardDoc").doc("batch_$i").get();
+
+        if (docSnapshot.exists) {
+          final data = docSnapshot.data() as Map<String, dynamic>;
+          final players = data["players"] as List<dynamic>;
+
+          // Filter locally using searchKey.
+          final filteredPlayers = players.where((player) {
+            final searchKey = (player["searchKey"] ?? "").toString();
+            return searchKey.startsWith(lowercaseQuery);
+          }).toList();
+
+          // Convert to LeaderboardModel but only add if not already in uniqueKeys
+          for (var playerData in filteredPlayers) {
+            final mapData = playerData as Map<String, dynamic>;
+            final user = LeaderboardModel.fromJson(mapData);
+
+            // Build a unique key for the user
+            final uniqueKey =
+                '${user.gameName.toLowerCase()}#${user.tagLine.toLowerCase()}';
+
+            // If we haven't seen this user before, add them
+            if (!uniqueKeys.contains(uniqueKey)) {
+              uniqueKeys.add(uniqueKey);
+              results.add(user);
+            }
+          }
+        }
+      }
+      return results;
+    } catch (error) {
+      print("Error searching players in batches: $error");
       return [];
     }
   }
@@ -379,5 +430,18 @@ class UserRepository extends GetxController {
     } catch (error) {
       print("ERROR: Failed to increment page views: $error");
     }
+  }
+
+  Future<List<LeaderboardModel>> searchUsers(String queryText) async {
+    String lowerQuery = queryText.toLowerCase();
+    QuerySnapshot snapshot = await _db
+        .collection('Users')
+        .where('searchKey', isGreaterThanOrEqualTo: lowerQuery)
+        .where('searchKey', isLessThanOrEqualTo: '$lowerQuery\uf8ff')
+        .get();
+
+    return snapshot.docs.map((doc) {
+      return LeaderboardModel.fromJson(doc.data() as Map<String, dynamic>);
+    }).toList();
   }
 }

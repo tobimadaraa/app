@@ -5,25 +5,70 @@ import 'package:flutter_application_2/utils/date_formatter.dart';
 
 class UserDetailPage extends StatelessWidget {
   final LeaderboardModel user;
-  final LeaderboardType leaderboardType; // ✅ Add this parameter
+  final LeaderboardType leaderboardType; // e.g. ranked, honours, etc.
 
-  const UserDetailPage(
-      {super.key,
-      required this.user,
-      required this.leaderboardType}); // ✅ Ensure it's required
+  const UserDetailPage({
+    super.key,
+    required this.user,
+    required this.leaderboardType,
+  });
 
   @override
   Widget build(BuildContext context) {
-    final bool isRanked =
-        leaderboardType == LeaderboardType.ranked; // ✅ Check if it's ranked
+    final bool isRanked = leaderboardType == LeaderboardType.ranked;
+    final bool isHonours = leaderboardType == LeaderboardType.honour;
 
     return Scaffold(
       appBar: AppBar(title: Text('${user.gameName}#${user.tagLine}')),
       body: SingleChildScrollView(
-          padding: const EdgeInsets.all(16.0),
-          child:
-              Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            if (!isRanked) // ✅ Only show reports for Cheater/Toxicity leaderboards
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (isHonours)
+              // ONLY show honours details for honours tabs:
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Honours:',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Times Honoured: ${user.honourReports}',
+                    style: const TextStyle(fontSize: 16),
+                  ),
+                  const SizedBox(height: 16),
+                  const Text(
+                    'Last Time Honoured:',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 8),
+                  user.lastHonourReported.isNotEmpty
+                      ? Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: user.lastHonourReported.map((timestamp) {
+                            String formattedDate =
+                                DateFormatter.formatDate(timestamp);
+                            return Padding(
+                              padding:
+                                  const EdgeInsets.symmetric(vertical: 2.0),
+                              child: Text(
+                                formattedDate,
+                                style: const TextStyle(fontSize: 16),
+                              ),
+                            );
+                          }).toList(),
+                        )
+                      : const Text(
+                          'No honours yet.',
+                          style: TextStyle(fontSize: 16),
+                        ),
+                ],
+              )
+            else if (!isRanked)
+              // For non-ranked non-honours (e.g., cheater/toxic types)
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -86,22 +131,25 @@ class UserDetailPage extends StatelessWidget {
                 ],
               )
             else
+              // For ranked leaderboards:
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    '${user.rankedRating.toString()} RR',
+                    '${user.rankedRating} RR',
                     style: const TextStyle(fontSize: 18),
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    '${user.numberOfWins.toString()} wins',
-                    style: TextStyle(fontSize: 18),
+                    '${user.numberOfWins} wins',
+                    style: const TextStyle(fontSize: 18),
                   ),
                   const SizedBox(height: 8),
                 ],
               ),
-          ])),
+          ],
+        ),
+      ),
     );
   }
 }

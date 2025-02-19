@@ -231,10 +231,10 @@ class _LeaderBoardState extends State<LeaderBoard> {
           actions: [
             IconButton(
               icon: const Icon(Icons.search, color: Colors.black),
-              onPressed: () {
+              onPressed: () async {
                 showSearch(
                   context: context,
-                  delegate: MySearchDelegate(_loadedUsers, selectedLeaderboard),
+                  delegate: FirestoreSearchDelegate(selectedLeaderboard),
                 );
               },
             ),
