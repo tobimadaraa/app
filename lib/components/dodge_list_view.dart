@@ -13,11 +13,14 @@ class DodgeListView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ListView.builder(
+    return ListView.separated(
       itemCount: dodgeList.length,
+      separatorBuilder: (context, index) => const Divider(
+        color: Colors.grey,
+        thickness: 0.5,
+      ),
       itemBuilder: (context, index) {
         final user = dodgeList[index];
-
         return ListTile(
           title: Text('${user.gameName}#${user.tagLine}'),
           subtitle: Column(
@@ -29,9 +32,7 @@ class DodgeListView extends StatelessWidget {
           ),
           trailing: IconButton(
             icon: const Icon(Icons.delete, color: Colors.red),
-            onPressed: () {
-              onRemoveUser(user); // ✅ Show confirmation before deleting
-            },
+            onPressed: () => onRemoveUser(user),
           ),
         );
       },

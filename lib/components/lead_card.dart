@@ -50,8 +50,10 @@ class LeadCardState extends State<LeadCard> {
   Widget build(BuildContext context) {
     return Card(
       margin: EdgeInsets.zero,
+      clipBehavior: Clip.antiAlias, // ✅ Removes extra spacing
       color: widget.backgroundColor,
       child: Column(
+        mainAxisAlignment: MainAxisAlignment.center, //
         children: [
           InkWell(
             onTap: () {
@@ -132,7 +134,7 @@ class LeadCardState extends State<LeadCard> {
                           textAlign: TextAlign.right,
                           overflow: TextOverflow.ellipsis,
                         ),
-                        const SizedBox(height: 4),
+                        //    const SizedBox(height: 4),
                         Text(
                             'Wins: ${widget.numberOfWins ?? "N/A"}', // ✅ Fixed string formatting
                             style: TextStyle(

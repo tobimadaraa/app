@@ -31,7 +31,7 @@ class _HomePageState extends State<HomePage> {
       bottomNavigationBar: BottomNavigationBar(
         type: BottomNavigationBarType.fixed,
         iconSize: 42,
-        backgroundColor: Colors.grey[800],
+        backgroundColor: Colors.white,
         items: [
           BottomNavigationBarItem(
             icon: SizedBox(
@@ -46,10 +46,11 @@ class _HomePageState extends State<HomePage> {
             label: 'You',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.leaderboard),
+            icon: Icon(Icons.show_chart),
             label: 'leaderboard',
           ),
-          BottomNavigationBarItem(icon: Icon(Icons.square), label: 'dodgelist'),
+          BottomNavigationBarItem(
+              icon: Icon(Icons.person_off), label: 'dodgelist'),
         ],
         onTap: _onItemTapped,
       ),

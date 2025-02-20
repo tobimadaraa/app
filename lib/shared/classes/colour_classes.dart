@@ -19,6 +19,7 @@ class CustomColours {
   static const Color greyDiscordText = Colors.grey;
   static const Color logoutButtonColour = Colors.red;
   static const Color greenActivityColor = Colors.green;
+  static const Color buttoncolor = Color(0xFF648BF7);
 }
 
 //  const Color myCustomColor = Color(0xFF808080);

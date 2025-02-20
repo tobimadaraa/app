@@ -3,7 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_application_2/components/dodge_list_view.dart';
 import 'package:flutter_application_2/components/dodge_list_input_fields.dart';
-import 'package:flutter_application_2/shared/classes/colour_classes.dart';
+//import 'package:flutter_application_2/shared/classes/colour_classes.dart';
 import 'package:flutter_application_2/repository/user_repository.dart';
 import 'package:flutter_application_2/models/leaderboard_model.dart';
 import 'package:flutter_application_2/shared/classes/notifiers.dart';
@@ -195,9 +195,14 @@ class DodgeListState extends State<DodgeList> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
-        backgroundColor: CustomColours.bluebuttonBackGroundColor,
-        title: const Center(child: Text("My Dodge List")),
+        backgroundColor: Colors.white,
+        title: const Center(
+            child: Text("Dodgelist",
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                ))),
       ),
       body: Column(
         children: [

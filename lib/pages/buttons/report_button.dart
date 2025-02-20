@@ -113,14 +113,16 @@ class ReportButtonState extends State<ReportButton> {
         Validator.validateTagline(widget.newTagLine) == null;
 
     // Determine button background color based on report type and validity.
-    final Color reportButtonColor;
+    final Color? reportButtonColor;
     if (widget.isHonour) {
-      reportButtonColor = isValid ? Colors.green : Colors.green.shade900;
+      reportButtonColor = isValid
+          ? Colors.green
+          : Colors.grey.shade200; // Colors.green.shade900;
     } else if (widget.isToxicity) {
-      reportButtonColor = isValid ? Colors.amber : Colors.yellow.shade700;
+      reportButtonColor = isValid ? Colors.amber : Colors.grey.shade200;
     } else {
       // Report Cheater
-      reportButtonColor = isValid ? Colors.red : Color(0xFF6C2F2F);
+      reportButtonColor = isValid ? Colors.red : Colors.grey.shade200;
     }
 
     return TextButton(

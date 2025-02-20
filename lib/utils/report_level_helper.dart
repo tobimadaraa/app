@@ -6,19 +6,8 @@ class ReportLevelHelper {
     required int toxicityReports,
     required int honourReports,
   }) {
-    // Only change color if at least one report count exceeds 10.
-    const Color textColor = Color(0xFF424242);
-    if (cheaterReports <= 10 && toxicityReports <= 10 && honourReports <= 10) {
-      return textColor;
-    }
-    // After 10 reports, the highest count determines the color.
-    if (honourReports >= cheaterReports && honourReports >= toxicityReports) {
-      return Colors.green;
-    } else if (cheaterReports >= toxicityReports) {
-      return Colors.red;
-    } else {
-      return Colors.amber;
-    }
+    // Always use the base color regardless of report counts.
+    return const Color(0xFF424242);
   }
 
   static Color getCheaterLevelColor(int cheaterReports) {
@@ -38,5 +27,46 @@ class ReportLevelHelper {
     if (ratio < 0.001) return const Color(0xFF81D4FA);
     if (ratio < 0.005) return const Color(0xFF29B6F6);
     return const Color(0xFF0288D1);
+  }
+
+  /// Returns an icon widget if [count] exceeds [threshold].
+  /// You can freely pass in the desired [icon], [color], [size], and [threshold].
+  static List<Widget> buildReportBadges({
+    required int cheaterReports,
+    required int toxicityReports,
+    required int honourReports,
+    int threshold = 10,
+    double iconSize = 16,
+  }) {
+    // Create a list with badge info.
+    List<Map<String, dynamic>> badgesData = [
+      {
+        'count': cheaterReports,
+        'icon': Icons.error,
+        'color': Colors.red,
+      },
+      {
+        'count': toxicityReports,
+        'icon': Icons.warning,
+        'color': Colors.amber,
+      },
+      {
+        'count': honourReports,
+        'icon': Icons.check_circle,
+        'color': Colors.green,
+      },
+    ];
+
+    // Sort the badges in descending order of count.
+    badgesData.sort((a, b) => b['count'].compareTo(a['count']));
+
+    // Build icon widgets only for counts above the threshold.
+    List<Widget> badges = [];
+    for (var badge in badgesData) {
+      if (badge['count'] > threshold) {
+        badges.add(Icon(badge['icon'], color: badge['color'], size: iconSize));
+      }
+    }
+    return badges;
   }
 }

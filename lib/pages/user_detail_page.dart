@@ -88,7 +88,7 @@ class UserDetailPage extends StatelessWidget {
                   ),
                   const SizedBox(height: 16),
                   const Text(
-                    'Last Cheater Reported Times:',
+                    'Last Cheater Report:',
                     style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 8),
@@ -114,7 +114,7 @@ class UserDetailPage extends StatelessWidget {
                         ),
                   const SizedBox(height: 24),
                   const Text(
-                    'Last Toxicity Reported Times:',
+                    'Last Toxicity Report:',
                     style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 8),

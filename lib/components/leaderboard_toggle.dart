@@ -44,7 +44,7 @@ class LeaderboardToggle extends StatelessWidget {
             borderRadius: BorderRadius.circular(10), // Rounded corners
             side: borderSide,
           ),
-          padding: const EdgeInsets.symmetric(vertical: 12), // Vertical padding
+          padding: const EdgeInsets.symmetric(vertical: 8), // Vertical padding
         ),
         child: FittedBox(
           child: Text(
