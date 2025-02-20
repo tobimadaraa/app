@@ -49,7 +49,7 @@ class LeadCardState extends State<LeadCard> {
   @override
   Widget build(BuildContext context) {
     return Card(
-      margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+      margin: EdgeInsets.zero,
       color: widget.backgroundColor,
       child: Column(
         children: [
@@ -66,7 +66,7 @@ class LeadCardState extends State<LeadCard> {
                   flex: 2,
                   child: Container(
                     alignment: Alignment.center,
-                    padding: const EdgeInsets.all(8.0),
+                    padding: EdgeInsets.zero,
                     child: Column(
                       children: [
                         Text(
@@ -94,7 +94,7 @@ class LeadCardState extends State<LeadCard> {
                   flex: 5,
                   child: Container(
                     alignment: Alignment.centerLeft,
-                    padding: const EdgeInsets.all(8.0),
+                    padding: EdgeInsets.zero,
                     child: Row(
                       children: [
                         Expanded(
@@ -118,7 +118,7 @@ class LeadCardState extends State<LeadCard> {
                 Expanded(
                   flex: 3,
                   child: Container(
-                    padding: const EdgeInsets.only(right: 8),
+                    padding: EdgeInsets.zero,
                     alignment: Alignment.centerRight,
                     child: Column(
                       children: [
@@ -148,32 +148,29 @@ class LeadCardState extends State<LeadCard> {
           ),
           // Expanded section showing last reported times.
           if (isExpanded)
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    "Last Reported Times:",
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: CustomColours.whiteDiscordText,
-                    ),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  "Last Reported Times:",
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: CustomColours.whiteDiscordText,
                   ),
-                  ...widget.lastReported.map(
-                    (time) => Padding(
-                      padding: const EdgeInsets.only(top: 4.0),
-                      child: Text(
-                        "• ${_formatTimestamp(time)}",
-                        style: TextStyle(
-                          color: CustomColours.whiteDiscordText,
-                          fontSize: 14,
-                        ),
+                ),
+                ...widget.lastReported.map(
+                  (time) => Padding(
+                    padding: const EdgeInsets.only(top: 0),
+                    child: Text(
+                      "• ${_formatTimestamp(time)}",
+                      style: TextStyle(
+                        color: CustomColours.whiteDiscordText,
+                        fontSize: 14,
                       ),
                     ),
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
         ],
       ),

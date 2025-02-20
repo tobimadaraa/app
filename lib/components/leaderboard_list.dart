@@ -37,6 +37,7 @@ class LeaderboardList extends StatelessWidget {
         print(
             "✅ UI received ${leaderboard.length} players for ${selectedLeaderboard.toString()}");
         return ListView.builder(
+          padding: EdgeInsets.zero, // Remove default ListView padding
           key: ValueKey(
               selectedLeaderboard), // 🔥 Force UI Refresh when switching
           itemCount: leaderboard.length,
@@ -52,15 +53,9 @@ class LeaderboardList extends StatelessWidget {
 
             // ✅ **Check if the user is "famous" (lots of page views)**
             bool isFamous = model.pageViews >= 20000;
-
-            // ✅ **Fix Background Color Logic**
             final backgroundColor = selectedLeaderboard ==
                     LeaderboardType.cheater
-                ? (isFamous
-                    ? ReportLevelHelper.getCheaterLevelColorRatio(
-                        model.cheaterReports, model.pageViews)
-                    : ReportLevelHelper.getCheaterLevelColor(
-                        model.cheaterReports))
+                ? ReportLevelHelper.getCheaterLevelColor(model.cheaterReports)
                 : selectedLeaderboard == LeaderboardType.toxicity
                     ? (isFamous
                         ? ReportLevelHelper.getToxicityLevelColorRatio(
@@ -68,9 +63,8 @@ class LeaderboardList extends StatelessWidget {
                         : ReportLevelHelper.getToxicityLevelColor(
                             model.toxicityReports))
                     : selectedLeaderboard == LeaderboardType.honour
-                        ? Colors.purple.shade400 // 🔥 Custom color for Honours
-                        : Colors.green; // Default color for Ranked leaderboard
-
+                        ? Colors.purple.shade400
+                        : Colors.white;
             // ✅ **Fix Report Label**
             final reportLabel = selectedLeaderboard == LeaderboardType.cheater
                 ? 'Cheater Reports'

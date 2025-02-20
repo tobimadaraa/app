@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_application_2/pages/user_detail_page.dart';
 import 'package:flutter_application_2/shared/classes/notifiers.dart';
 import 'package:flutter_application_2/shared/classes/shared_components.dart';
+import 'package:flutter_application_2/utils/report_level_helper.dart';
 import 'package:get/get.dart';
 import 'package:flutter_application_2/components/leaderboard_input_fields.dart';
 import 'package:flutter_application_2/components/leaderboard_toggle.dart';
@@ -204,10 +205,10 @@ class _LeaderBoardState extends State<LeaderBoard> {
         return Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
           child: Shimmer.fromColors(
-            baseColor: Colors.cyan.shade400,
+            baseColor: Colors.grey.shade200,
             highlightColor: Colors.grey.shade100,
             child: Container(
-              height: 80,
+              height: 60,
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(8),
@@ -222,56 +223,59 @@ class _LeaderBoardState extends State<LeaderBoard> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      extendBodyBehindAppBar: true,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: BackButton(
-          color: Colors.black,
-          onPressed: () {
-            Navigator.pushReplacementNamed(context, '/homepage');
-          },
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.search, color: Colors.black),
-            onPressed: () async {
-              showSearch(
-                context: context,
-                delegate: FirestoreSearchDelegate(selectedLeaderboard),
-              );
+        extendBodyBehindAppBar: true,
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          leading: IconButton(
+            icon: const Icon(
+              Icons.chevron_left,
+              color: Colors.black,
+              size: 28, // adjust size as needed
+            ),
+            onPressed: () {
+              Navigator.pushReplacementNamed(context, '/homepage');
             },
           ),
-        ],
-        centerTitle: true,
-        title: const Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              'Leaderboard',
-              style: TextStyle(
-                color: Colors.black,
-                fontSize: 22,
-                fontWeight: FontWeight.bold,
-              ),
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.search, color: Colors.black),
+              onPressed: () async {
+                showSearch(
+                  context: context,
+                  delegate: FirestoreSearchDelegate(selectedLeaderboard),
+                );
+              },
             ),
           ],
-        ),
-        flexibleSpace: Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [
-                Colors.white.withOpacity(0.08),
-                Colors.transparent,
-              ],
+          centerTitle: true,
+          title: const Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'Leaderboard',
+                style: TextStyle(
+                  color: Colors.black,
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+          flexibleSpace: Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  Colors.white.withOpacity(0.08),
+                  Colors.transparent,
+                ],
+              ),
             ),
           ),
         ),
-      ),
-      body: Stack(
-        children: [
+        body: Stack(children: [
           // 1) Background color (instead of an image)
           Container(
             color: Colors.white,
@@ -279,156 +283,186 @@ class _LeaderBoardState extends State<LeaderBoard> {
 
           // 2) Main content
           SafeArea(
-            child: Padding(
-              // Apply consistent padding around all widgets
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  // Only show Input Fields & Report Button if Cheater/Toxic/Honour
-                  if (selectedLeaderboard == LeaderboardType.cheater ||
-                      selectedLeaderboard == LeaderboardType.toxicity ||
-                      selectedLeaderboard == LeaderboardType.honour) ...[
-                    LeaderboardInputFields(
-                      usernameError: usernameError,
-                      taglineError: taglineError,
-                      onUsernameChanged: (value) {
-                        setState(() {
-                          newUserId = value;
-                          usernameError = Validator.validateUsername(value);
-                        });
-                      },
-                      onTaglineChanged: (value) {
-                        setState(() {
-                          newTagLine = value;
-                          taglineError = Validator.validateTagline(value);
-                        });
-                      },
-                    ),
-                    const SizedBox(height: 8),
-                    ReportButton(
-                      newUserId: newUserId,
-                      newTagLine: newTagLine,
-                      onSuccess: () async {
-                        setState(() {
-                          _loadedUsers.clear();
-                          _currentStartIndex = 0;
-                          _hasMoreData = true;
-                        });
-                        dodgeListEventNotifier.triggerUpdate();
-                        await _loadLeaderboard();
-                      },
-                      buttonText: selectedLeaderboard == LeaderboardType.cheater
-                          ? 'Report Cheater'
-                          : selectedLeaderboard == LeaderboardType.toxicity
-                              ? 'Report for Toxicity'
-                              : 'Honour Player',
-                      isToxicity:
-                          selectedLeaderboard == LeaderboardType.toxicity,
-                      isHonour: selectedLeaderboard == LeaderboardType.honour,
-                    ),
-                  ],
+              child: Padding(
+                  // Apply consistent padding around all widgets
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+                  child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        // Only show Input Fields & Report Button if Cheater/Toxic/Honour
+                        if (selectedLeaderboard == LeaderboardType.cheater ||
+                            selectedLeaderboard == LeaderboardType.toxicity ||
+                            selectedLeaderboard == LeaderboardType.honour) ...[
+                          LeaderboardInputFields(
+                            usernameError: usernameError,
+                            taglineError: taglineError,
+                            onUsernameChanged: (value) {
+                              setState(() {
+                                newUserId = value;
+                                usernameError =
+                                    Validator.validateUsername(value);
+                              });
+                            },
+                            onTaglineChanged: (value) {
+                              setState(() {
+                                newTagLine = value;
+                                taglineError = Validator.validateTagline(value);
+                              });
+                            },
+                          ),
+                          const SizedBox(height: 8),
+                          ReportButton(
+                            newUserId: newUserId,
+                            newTagLine: newTagLine,
+                            onSuccess: () async {
+                              setState(() {
+                                _loadedUsers.clear();
+                                _currentStartIndex = 0;
+                                _hasMoreData = true;
+                              });
+                              dodgeListEventNotifier.triggerUpdate();
+                              await _loadLeaderboard();
+                            },
+                            buttonText:
+                                selectedLeaderboard == LeaderboardType.cheater
+                                    ? 'Report Cheater'
+                                    : selectedLeaderboard ==
+                                            LeaderboardType.toxicity
+                                        ? 'Report for Toxicity'
+                                        : 'Honour Player',
+                            isToxicity:
+                                selectedLeaderboard == LeaderboardType.toxicity,
+                            isHonour:
+                                selectedLeaderboard == LeaderboardType.honour,
+                          ),
+                        ],
 
-                  // Spacing below the button (or the block above)
-                  SizedBox(
-                    height:
-                        selectedLeaderboard == LeaderboardType.ranked ? 0 : 8,
-                  ),
+                        // Spacing below the button (or the block above)
+                        SizedBox(
+                          height: selectedLeaderboard == LeaderboardType.ranked
+                              ? 0
+                              : 8,
+                        ),
 
-                  // Toggle Buttons
-                  LeaderboardToggle(
-                    selectedLeaderboard: selectedLeaderboard,
-                    onSelectLeaderboard: (LeaderboardType type) {
-                      setState(() {
-                        selectedLeaderboard = type;
-                        if (type == LeaderboardType.ranked) {
-                          newUserId = "";
-                          newTagLine = "";
-                        }
-                        _loadedUsers.clear();
-                        _currentStartIndex = 0;
-                        _hasMoreData = true;
-                        _latestRequestId++;
-                        _isLoadingMore = false;
-                        _isActiveLoading = false;
-                      });
-                      _loadLeaderboard();
-                    },
-                  ),
+                        // Toggle Buttons
+                        LeaderboardToggle(
+                          selectedLeaderboard: selectedLeaderboard,
+                          onSelectLeaderboard: (LeaderboardType type) {
+                            setState(() {
+                              selectedLeaderboard = type;
+                              if (type == LeaderboardType.ranked) {
+                                newUserId = "";
+                                newTagLine = "";
+                              }
+                              _loadedUsers.clear();
+                              _currentStartIndex = 0;
+                              _hasMoreData = true;
+                              _latestRequestId++;
+                              _isLoadingMore = false;
+                              _isActiveLoading = false;
+                            });
+                            _loadLeaderboard();
+                          },
+                        ),
 
-                  // Spacing below the toggles
-                  const SizedBox(height: 8),
+                        // Spacing below the toggles
+                        //const SizedBox(height: 8),
 
-                  // Expanded area for the leaderboard list
-                  Expanded(
-                    child: _isInitialLoading
-                        ? _buildSkeletonLoader()
-                        : RefreshIndicator(
-                            onRefresh: _refreshLeaderboard,
-                            child: ListView.builder(
-                              controller: _scrollController,
-                              itemCount: _loadedUsers.length +
-                                  (_isLoadingMore ? 1 : 0),
-                              itemBuilder: (context, index) {
-                                if (index >= _loadedUsers.length) {
-                                  return const Padding(
-                                    padding: EdgeInsets.all(16.0),
-                                    child: Center(
-                                        child: CircularProgressIndicator()),
-                                  );
-                                }
-                                final user = _loadedUsers[index];
-                                final bool isClickable = selectedLeaderboard ==
-                                        LeaderboardType.cheater ||
-                                    selectedLeaderboard ==
-                                        LeaderboardType.toxicity ||
-                                    selectedLeaderboard ==
-                                        LeaderboardType.honour;
+                        Expanded(
+                            child: _isInitialLoading
+                                ? _buildSkeletonLoader()
+                                : RefreshIndicator(
+                                    onRefresh: _refreshLeaderboard,
+                                    child: ListView.builder(
+                                        controller: _scrollController,
+                                        itemCount: _loadedUsers.length +
+                                            (_isLoadingMore ? 1 : 0),
+                                        itemBuilder: (context, index) {
+                                          if (index >= _loadedUsers.length) {
+                                            return const Padding(
+                                              padding: EdgeInsets.all(16.0),
+                                              child: Center(
+                                                  child:
+                                                      CircularProgressIndicator()),
+                                            );
+                                          }
+                                          final user = _loadedUsers[index];
+                                          final bool isClickable =
+                                              selectedLeaderboard ==
+                                                      LeaderboardType.cheater ||
+                                                  selectedLeaderboard ==
+                                                      LeaderboardType
+                                                          .toxicity ||
+                                                  selectedLeaderboard ==
+                                                      LeaderboardType.honour;
 
-                                return ListTile(
-                                  title:
-                                      Text('${user.gameName}#${user.tagLine}'),
-                                  subtitle: Text(
-                                    selectedLeaderboard ==
-                                            LeaderboardType.cheater
-                                        ? 'Rank: ${user.leaderboardRank} | Cheater Reports: ${user.cheaterReports}'
-                                        : selectedLeaderboard ==
-                                                LeaderboardType.toxicity
-                                            ? 'Rank: ${user.leaderboardRank} | Toxicity Reports: ${user.toxicityReports}'
-                                            : selectedLeaderboard ==
-                                                    LeaderboardType.honour
-                                                ? 'Rank: ${user.leaderboardRank} | Honour Reports: ${user.honourReports}'
-                                                : selectedLeaderboard ==
-                                                        LeaderboardType.ranked
-                                                    ? 'Rank: ${user.leaderboardRank} | Rating: ${user.rankedRating ?? "N/A"} | Wins: ${user.numberOfWins ?? "N/A"}'
-                                                    : '',
-                                  ),
-                                  onTap: isClickable
-                                      ? () {
-                                          Navigator.push(
-                                            context,
-                                            MaterialPageRoute(
-                                              builder: (context) =>
-                                                  UserDetailPage(
-                                                user: user,
-                                                leaderboardType:
-                                                    selectedLeaderboard,
+                                          return ListTile(
+                                            //  contentPadding: EdgeInsets
+                                            //  .zero, // or a smaller EdgeInsets
+                                            //  dense: true,
+                                            //contentPadding:
+                                            //const EdgeInsets.only(
+                                            //    left: 16, right: 0),
+                                            title: RichText(
+                                              text: TextSpan(
+                                                text:
+                                                    '${user.gameName}#${user.tagLine}',
+                                                style: TextStyle(
+                                                  color: selectedLeaderboard ==
+                                                          LeaderboardType.ranked
+                                                      ? Colors.grey[
+                                                          900] // Use a fixed color for ranked leaderboard
+                                                      : ReportLevelHelper
+                                                          .getGameNameColor(
+                                                          cheaterReports: user
+                                                              .cheaterReports,
+                                                          toxicityReports: user
+                                                              .toxicityReports,
+                                                          honourReports: user
+                                                              .honourReports,
+                                                        ),
+                                                  fontSize: 17,
+                                                  // fontWeight: FontWeight.bold,
+                                                ),
                                               ),
                                             ),
+                                            subtitle: Text(
+                                              selectedLeaderboard ==
+                                                      LeaderboardType.cheater
+                                                  ? 'Rank: ${user.leaderboardRank} | Cheater Reports: ${user.cheaterReports}'
+                                                  : selectedLeaderboard ==
+                                                          LeaderboardType
+                                                              .toxicity
+                                                      ? 'Rank: ${user.leaderboardRank} | Toxicity Reports: ${user.toxicityReports}'
+                                                      : selectedLeaderboard ==
+                                                              LeaderboardType
+                                                                  .honour
+                                                          ? 'Rank: ${user.leaderboardRank} | Honour Reports: ${user.honourReports}'
+                                                          : selectedLeaderboard ==
+                                                                  LeaderboardType
+                                                                      .ranked
+                                                              ? 'Rank: ${user.leaderboardRank} | Rating: ${user.rankedRating ?? "N/A"} | Wins: ${user.numberOfWins ?? "N/A"}'
+                                                              : '',
+                                            ),
+                                            onTap: isClickable
+                                                ? () {
+                                                    Navigator.push(
+                                                      context,
+                                                      MaterialPageRoute(
+                                                        builder: (context) =>
+                                                            UserDetailPage(
+                                                          user: user,
+                                                          leaderboardType:
+                                                              selectedLeaderboard,
+                                                        ),
+                                                      ),
+                                                    );
+                                                  }
+                                                : null,
                                           );
-                                        }
-                                      : null,
-                                );
-                              },
-                            ),
-                          ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
+                                        })))
+                      ])))
+        ]));
   }
 }

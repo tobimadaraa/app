@@ -1,50 +1,42 @@
 import 'package:flutter/material.dart';
 
 class ReportLevelHelper {
-  // Normal cheater color thresholds (green, yellow, red)
+  static Color getGameNameColor({
+    required int cheaterReports,
+    required int toxicityReports,
+    required int honourReports,
+  }) {
+    // Only change color if at least one report count exceeds 10.
+    const Color textColor = Color(0xFF424242);
+    if (cheaterReports <= 10 && toxicityReports <= 10 && honourReports <= 10) {
+      return textColor;
+    }
+    // After 10 reports, the highest count determines the color.
+    if (honourReports >= cheaterReports && honourReports >= toxicityReports) {
+      return Colors.green;
+    } else if (cheaterReports >= toxicityReports) {
+      return Colors.red;
+    } else {
+      return Colors.amber;
+    }
+  }
+
   static Color getCheaterLevelColor(int cheaterReports) {
-    if (cheaterReports < 3) {
-      return Colors.green;
-    } else if (cheaterReports < 7) {
-      return Colors.amber;
-    } else {
-      return Colors.orange;
-    }
+    if (cheaterReports < 3) return Colors.green;
+    if (cheaterReports < 7) return Colors.amber;
+    return Colors.red;
   }
 
-  // For famous users: calculate a ratio of reports to page views and assign a color.
-  // Adjust these thresholds as needed.
-  static Color getCheaterLevelColorRatio(int cheaterReports, int pageViews) {
-    double ratio = pageViews > 0 ? (cheaterReports / pageViews) : 0.0;
-    if (ratio < 0.001) {
-      return Colors.green;
-    } else if (ratio < 0.005) {
-      return Colors.amber;
-    } else {
-      return Colors.orange;
-    }
-  }
-
-  // Normal toxicity color thresholds (blue shades)
   static Color getToxicityLevelColor(int toxicityReports) {
-    if (toxicityReports < 3) {
-      return const Color(0xFF81D4FA); // Light Blue
-    } else if (toxicityReports < 7) {
-      return const Color(0xFF29B6F6); // Medium Blue
-    } else {
-      return const Color(0xFF0288D1); // Dark Blue
-    }
+    if (toxicityReports < 3) return const Color(0xFF81D4FA); // light blue
+    if (toxicityReports < 7) return const Color(0xFF29B6F6); // medium blue
+    return const Color(0xFF0288D1); // dark blue
   }
 
-  // For famous users (toxicity): calculate a ratio.
   static Color getToxicityLevelColorRatio(int toxicityReports, int pageViews) {
-    double ratio = pageViews > 0 ? (toxicityReports / pageViews) : 0.0;
-    if (ratio < 0.001) {
-      return const Color(0xFF81D4FA);
-    } else if (ratio < 0.005) {
-      return const Color(0xFF29B6F6);
-    } else {
-      return const Color(0xFF0288D1);
-    }
+    double ratio = pageViews > 0 ? toxicityReports / pageViews : 0;
+    if (ratio < 0.001) return const Color(0xFF81D4FA);
+    if (ratio < 0.005) return const Color(0xFF29B6F6);
+    return const Color(0xFF0288D1);
   }
 }

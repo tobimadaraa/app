@@ -22,14 +22,21 @@ class FirestoreSearchDelegate extends SearchDelegate {
 
   @override
   Widget? buildLeading(BuildContext context) => IconButton(
-        icon: const Icon(Icons.arrow_back),
+        icon: const Icon(
+          Icons.chevron_left,
+          color: Colors.black,
+          size: 28,
+        ),
         onPressed: () => close(context, null),
       );
 
   @override
   List<Widget>? buildActions(BuildContext context) => [
         IconButton(
-          icon: const Icon(Icons.clear),
+          icon: const Icon(
+            Icons.clear,
+            color: Colors.black,
+          ),
           onPressed: () {
             if (query.isEmpty) {
               close(context, null);

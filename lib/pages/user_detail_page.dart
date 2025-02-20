@@ -19,7 +19,17 @@ class UserDetailPage extends StatelessWidget {
     final bool isHonours = leaderboardType == LeaderboardType.honour;
 
     return Scaffold(
-      appBar: AppBar(title: Text('${user.gameName}#${user.tagLine}')),
+      appBar: AppBar(
+        title: Text('${user.gameName}#${user.tagLine}'),
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(1.0),
+          child: Divider(
+            height: 1.0,
+            thickness: 1.0,
+            color: Colors.grey.withOpacity(0.2), // 20% opaque grey
+          ),
+        ),
+      ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -136,12 +146,12 @@ class UserDetailPage extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    '${user.rankedRating} RR',
+                    '${user.rankedRating}rr ',
                     style: const TextStyle(fontSize: 18),
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    '${user.numberOfWins} wins',
+                    '${user.numberOfWins} games won',
                     style: const TextStyle(fontSize: 18),
                   ),
                   const SizedBox(height: 8),
