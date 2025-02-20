@@ -14,38 +14,47 @@ class LeaderboardToggle extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
+      mainAxisAlignment:
+          MainAxisAlignment.spaceEvenly, // Distribute buttons evenly
       children: [
-        _buildToggleButton("Ranked", LeaderboardType.ranked),
-        const SizedBox(width: 12), // ✅ Spacing
-        _buildToggleButton("Cheater", LeaderboardType.cheater),
-        const SizedBox(width: 12),
-        _buildToggleButton("Toxicity", LeaderboardType.toxicity),
-        const SizedBox(width: 12),
-        _buildToggleButton(
-            "Honours", LeaderboardType.honour), // ✅ New Honours Button
+        Expanded(child: _buildToggleButton("Ranked", LeaderboardType.ranked)),
+        Expanded(child: _buildToggleButton("Cheater", LeaderboardType.cheater)),
+        Expanded(
+            child: _buildToggleButton("Toxicity", LeaderboardType.toxicity)),
+        Expanded(child: _buildToggleButton("Honours", LeaderboardType.honour)),
       ],
     );
   }
 
-  /// **🔥 Dynamic Toggle Button**
+  /// **Dynamic Toggle Button with white background and black text**
   Widget _buildToggleButton(String text, LeaderboardType type) {
     final bool isSelected = type == selectedLeaderboard;
+    final BorderSide borderSide = isSelected
+        ? const BorderSide(color: Colors.black, width: 2)
+        : BorderSide(color: Colors.black.withOpacity(0.5), width: 1);
 
-    return ElevatedButton(
-      onPressed: () => onSelectLeaderboard(type),
-      style: ElevatedButton.styleFrom(
-        backgroundColor: isSelected ? Colors.blue : Colors.grey,
-        foregroundColor: Colors.white,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(10), // ✅ Rounded corners
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 4), // Add small spacing
+      child: ElevatedButton(
+        onPressed: () => onSelectLeaderboard(type),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.white, // White background
+          foregroundColor: Colors.black, // Black text
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10), // Rounded corners
+            side: borderSide,
+          ),
+          padding: const EdgeInsets.symmetric(vertical: 12), // Vertical padding
         ),
-        padding: const EdgeInsets.symmetric(
-            horizontal: 18, vertical: 12), // ✅ Good button size
-      ),
-      child: Text(
-        text,
-        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+        child: FittedBox(
+          child: Text(
+            text,
+            style: const TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.bold, // Smaller bold text
+            ),
+          ),
+        ),
       ),
     );
   }

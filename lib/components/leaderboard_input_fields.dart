@@ -21,7 +21,7 @@ class LeaderboardInputFields extends StatelessWidget {
     return Column(
       children: [
         Padding(
-          padding: const EdgeInsets.all(8.0),
+          padding: const EdgeInsets.all(4.0),
           child: InputField(
             labelText: 'Enter Riot ID',
             hintText: 'e.g. your username',
@@ -30,7 +30,7 @@ class LeaderboardInputFields extends StatelessWidget {
           ),
         ),
         Padding(
-          padding: const EdgeInsets.all(8.0),
+          padding: const EdgeInsets.all(2.0),
           child: InputField(
             labelText: 'Enter Tagline',
             hintText: 'e.g. NA1 (max 6 letters/numbers)',

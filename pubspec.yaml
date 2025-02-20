@@ -68,6 +68,7 @@ flutter:
   uses-material-design: true
   assets:
     - apikey.env
+    - assets/background.jpg
  #  fonts:
  #   - family: Schyler
  #     fonts:

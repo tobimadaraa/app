@@ -108,16 +108,27 @@ class ReportButtonState extends State<ReportButton> {
 
   @override
   Widget build(BuildContext context) {
-    // ✅ Reintroducing input validation using Validator class
+    // ✅ Validate inputs using the Validator class
     final bool isValid = Validator.validateUsername(widget.newUserId) == null &&
         Validator.validateTagline(widget.newTagLine) == null;
 
+    // Determine button background color based on report type and validity.
+    final Color reportButtonColor;
+    if (widget.isHonour) {
+      reportButtonColor = isValid ? Colors.green : Colors.green.shade900;
+    } else if (widget.isToxicity) {
+      reportButtonColor = isValid ? Colors.amber : Colors.yellow.shade700;
+    } else {
+      // Report Cheater
+      reportButtonColor = isValid ? Colors.red : Color(0xFF6C2F2F);
+    }
+
     return TextButton(
-      onPressed: isValid ? _handleReport : null, // ✅ Button disabled if invalid
+      onPressed: isValid
+          ? _handleReport
+          : null, // Button disabled if inputs are invalid.Color(0xFFB71C1C)
       style: TextButton.styleFrom(
-        backgroundColor: isValid
-            ? Colors.blue
-            : Colors.grey, // ✅ Show different colors when disabled
+        backgroundColor: reportButtonColor,
         foregroundColor: Colors.white,
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       ),
