@@ -28,7 +28,7 @@ class ReportLevelHelper {
     return const Color(0xFF0288D1);
   }
 
-  /// ✅ Returns a **list of widgets** displaying icons with labels.
+  /// ✅ Returns a **list of widgets** displaying labels only.
   /// - **Cheater (Red)**
   /// - **Very Toxic (Yellow)**
   /// - **Honorable (Green)**
@@ -37,64 +37,48 @@ class ReportLevelHelper {
     required int toxicityReports,
     required int honourReports,
     int threshold = 10,
-    double iconSize = 16,
   }) {
     List<Map<String, dynamic>> badgesData = [
-      {
-        'count': cheaterReports,
-        'icon': Icons.error,
-        'color': Colors.red,
-        'label': 'Cheater'
-      },
-      {
-        'count': toxicityReports,
-        'icon': Icons.warning,
-        'color': Colors.amber,
-        'label': 'Very Toxic'
-      },
-      {
-        'count': honourReports,
-        'icon': Icons.check_circle,
-        'color': Colors.green,
-        'label': 'Honorable'
-      },
+      {'count': cheaterReports, 'color': Colors.red, 'label': 'Cheater'},
+      {'count': toxicityReports, 'color': Colors.amber, 'label': 'Very Toxic'},
+      {'count': honourReports, 'color': Colors.green, 'label': 'Honorable'},
     ];
 
-    // Sort the badges in descending order of count.
+    // Sort badges in descending order of count.
     badgesData.sort((a, b) => b['count'].compareTo(a['count']));
 
-    // Build widgets **only** for values above the threshold.
+    // Build only labels without icons
     List<Widget> badges = [];
     for (var badge in badgesData) {
       if (badge['count'] > threshold) {
         badges.add(
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-            margin: const EdgeInsets.only(right: 6),
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+            margin: const EdgeInsets.only(right: 4),
             decoration: BoxDecoration(
               color: badge['color'].withOpacity(0.2),
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(12),
               border: Border.all(color: badge['color'], width: 1),
             ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(badge['icon'], color: badge['color'], size: iconSize),
-                const SizedBox(width: 4),
-                Text(
-                  badge['label'],
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold,
-                    color: badge['color'],
-                  ),
-                ),
-              ],
+            child: Text(
+              badge['label'],
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+                color: badge['color'],
+              ),
             ),
           ),
         );
       }
     }
-    return badges;
+
+    return [
+      Wrap(
+        spacing: 4,
+        runSpacing: 0,
+        children: badges,
+      )
+    ];
   }
 }

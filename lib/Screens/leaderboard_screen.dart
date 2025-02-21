@@ -427,7 +427,7 @@ class _LeaderBoardState extends State<LeaderBoard> {
                                                           text:
                                                               '${user.gameName}#${user.tagLine} '),
                                                       ...ReportLevelHelper
-                                                              .buildReportBadges(
+                                                          .buildReportBadges(
                                                         cheaterReports:
                                                             user.cheaterReports,
                                                         toxicityReports: user
@@ -435,18 +435,16 @@ class _LeaderBoardState extends State<LeaderBoard> {
                                                         honourReports:
                                                             user.honourReports,
                                                         threshold: 10,
-                                                        iconSize: 16,
+                                                        //iconSize: 20,
+                                                      ).map(
+                                                        (icon) => WidgetSpan(
+                                                          alignment:
+                                                              PlaceholderAlignment
+                                                                  .middle,
+                                                          child: icon,
+                                                        ),
                                                       )
-                                                          .map(
-                                                            (icon) =>
-                                                                WidgetSpan(
-                                                              alignment:
-                                                                  PlaceholderAlignment
-                                                                      .middle,
-                                                              child: icon,
-                                                            ),
-                                                          )
-                                                          .toList(),
+                                                      // .toList(),
                                                     ],
                                                   ),
                                                 ),
