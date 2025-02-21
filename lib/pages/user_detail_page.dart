@@ -20,13 +20,17 @@ class UserDetailPage extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('${user.gameName}#${user.tagLine}'),
+        centerTitle: true,
+        title: Text(
+          '${user.gameName}#${user.tagLine}',
+          style: const TextStyle(fontWeight: FontWeight.bold),
+        ),
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(1.0),
           child: Divider(
             height: 1.0,
             thickness: 1.0,
-            color: Colors.grey.withOpacity(0.2), // 20% opaque grey
+            color: Colors.grey.withOpacity(0.2),
           ),
         ),
       ),
@@ -36,124 +40,116 @@ class UserDetailPage extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             if (isHonours)
-              // ONLY show honours details for honours tabs:
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    'Honours:',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
+                  const Text("Honours:",
+                      style:
+                          TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 8),
-                  Text(
-                    'Times Honoured: ${user.honourReports}',
-                    style: const TextStyle(fontSize: 16),
-                  ),
+                  Text("Times Honoured: ${user.honourReports}",
+                      style: const TextStyle(fontSize: 16)),
                   const SizedBox(height: 16),
-                  const Text(
-                    'Last Time Honoured:',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 8),
-                  user.lastHonourReported.isNotEmpty
-                      ? Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: user.lastHonourReported.map((timestamp) {
-                            String formattedDate =
-                                DateFormatter.formatDate(timestamp);
+
+                  /// ✅ **Expandable Last Reported Section**
+                  ExpansionTile(
+                    title: const Text(
+                      "View Last Honours Reports",
+                      style: TextStyle(fontSize: 16, color: Colors.blue),
+                    ),
+                    children: user.lastHonourReported.isNotEmpty
+                        ? user.lastHonourReported.map((timestamp) {
                             return Padding(
-                              padding:
-                                  const EdgeInsets.symmetric(vertical: 2.0),
+                              padding: const EdgeInsets.symmetric(
+                                  vertical: 2.0, horizontal: 16.0),
                               child: Text(
-                                formattedDate,
+                                DateFormatter.formatDate(timestamp),
                                 style: const TextStyle(fontSize: 16),
                               ),
                             );
-                          }).toList(),
-                        )
-                      : const Text(
-                          'No honours yet.',
-                          style: TextStyle(fontSize: 16),
-                        ),
+                          }).toList()
+                        : [
+                            const Padding(
+                              padding: EdgeInsets.symmetric(vertical: 4.0),
+                              child: Text("No honours yet.",
+                                  style: TextStyle(fontSize: 16)),
+                            ),
+                          ],
+                  ),
                 ],
               )
             else if (!isRanked)
-              // For non-ranked non-honours (e.g., cheater/toxic types)
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Cheater Reports: ${user.cheaterReports}\nToxicity Reports: ${user.toxicityReports}',
+                    "Cheater Reports: ${user.cheaterReports}  |  Toxicity Reports: ${user.toxicityReports}",
                     style: const TextStyle(fontSize: 18),
                   ),
                   const SizedBox(height: 16),
-                  const Text(
-                    'Last Cheater Report:',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 8),
-                  user.lastCheaterReported.isNotEmpty
-                      ? Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: user.lastCheaterReported.map((timestamp) {
-                            String formattedDate =
-                                DateFormatter.formatDate(timestamp);
+
+                  /// ✅ **Expandable Last Cheater Reports**
+                  ExpansionTile(
+                    title: const Text(
+                      "View Last Cheater Reports",
+                      style: TextStyle(fontSize: 16, color: Colors.blue),
+                    ),
+                    children: user.lastCheaterReported.isNotEmpty
+                        ? user.lastCheaterReported.map((timestamp) {
                             return Padding(
-                              padding:
-                                  const EdgeInsets.symmetric(vertical: 2.0),
+                              padding: const EdgeInsets.symmetric(
+                                  vertical: 2.0, horizontal: 16.0),
                               child: Text(
-                                formattedDate,
+                                DateFormatter.formatDate(timestamp),
                                 style: const TextStyle(fontSize: 16),
                               ),
                             );
-                          }).toList(),
-                        )
-                      : const Text(
-                          'No cheater reports yet.',
-                          style: TextStyle(fontSize: 16),
-                        ),
-                  const SizedBox(height: 24),
-                  const Text(
-                    'Last Toxicity Report:',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                          }).toList()
+                        : [
+                            const Padding(
+                              padding: EdgeInsets.symmetric(vertical: 4.0),
+                              child: Text("No cheater reports yet.",
+                                  style: TextStyle(fontSize: 16)),
+                            ),
+                          ],
                   ),
-                  const SizedBox(height: 8),
-                  user.lastToxicityReported.isNotEmpty
-                      ? Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: user.lastToxicityReported.map((timestamp) {
-                            String formattedDate =
-                                DateFormatter.formatDate(timestamp);
+
+                  /// ✅ **Expandable Last Toxicity Reports**
+                  ExpansionTile(
+                    title: const Text(
+                      "View Last Toxicity Reports",
+                      style: TextStyle(fontSize: 16, color: Colors.blue),
+                    ),
+                    children: user.lastToxicityReported.isNotEmpty
+                        ? user.lastToxicityReported.map((timestamp) {
                             return Padding(
-                              padding:
-                                  const EdgeInsets.symmetric(vertical: 2.0),
+                              padding: const EdgeInsets.symmetric(
+                                  vertical: 2.0, horizontal: 16.0),
                               child: Text(
-                                formattedDate,
+                                DateFormatter.formatDate(timestamp),
                                 style: const TextStyle(fontSize: 16),
                               ),
                             );
-                          }).toList(),
-                        )
-                      : const Text(
-                          'No toxicity reports yet.',
-                          style: TextStyle(fontSize: 16),
-                        ),
+                          }).toList()
+                        : [
+                            const Padding(
+                              padding: EdgeInsets.symmetric(vertical: 4.0),
+                              child: Text("No toxicity reports yet.",
+                                  style: TextStyle(fontSize: 16)),
+                            ),
+                          ],
+                  ),
                 ],
               )
             else
-              // For ranked leaderboards:
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    '${user.rankedRating}rr ',
-                    style: const TextStyle(fontSize: 18),
-                  ),
+                  Text("${user.rankedRating} RR",
+                      style: const TextStyle(fontSize: 18)),
                   const SizedBox(height: 16),
-                  Text(
-                    '${user.numberOfWins} games won',
-                    style: const TextStyle(fontSize: 18),
-                  ),
+                  Text("${user.numberOfWins} games won",
+                      style: const TextStyle(fontSize: 18)),
                   const SizedBox(height: 8),
                 ],
               ),
