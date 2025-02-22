@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_application_2/components/dodge_list_view.dart';
 import 'package:flutter_application_2/components/dodge_list_input_fields.dart';
+import 'package:flutter_application_2/components/user_controller.dart';
 import 'package:flutter_application_2/repository/user_repository.dart';
 import 'package:flutter_application_2/models/leaderboard_model.dart';
 import 'package:flutter_application_2/shared/classes/colour_classes.dart';
@@ -23,7 +24,7 @@ class DodgeList extends StatefulWidget {
 class DodgeListState extends State<DodgeList> {
   List<LeaderboardModel> dodgeList = [];
   final UserRepository userRepository = UserRepository();
-
+  final UserController userController = Get.find<UserController>();
   String? usernameError;
   String? tagLineError;
   String newUserId = "";
@@ -79,6 +80,20 @@ class DodgeListState extends State<DodgeList> {
 
   Future<void> _addUserToDodgeList() async {
     try {
+      // If the user is non-premium and the dodge list already has 5 users, do not add.
+      if (!userController.isPremium.value && dodgeList.length >= 5) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text(
+                "Non-premium users can only add 5 users to the Dodge List"),
+            backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
+            duration: const Duration(milliseconds: 1500),
+          ),
+        );
+        return; // Stop execution if the limit is reached.
+      }
+
       // First, check in Firestore Users collection
       List<LeaderboardModel> data =
           await userRepository.firestoreGetLeaderboard();
@@ -100,7 +115,7 @@ class DodgeListState extends State<DodgeList> {
             lastHonourReported: []),
       );
 
-      // ✅ Check if user already exists **BEFORE ADDING**
+      // Check if user already exists BEFORE ADDING
       bool alreadyExists = dodgeList.any((user) =>
           user.gameName.toLowerCase() == newUserId.toLowerCase() &&
           user.tagLine.toLowerCase() == newTagLine.toLowerCase());
@@ -109,15 +124,15 @@ class DodgeListState extends State<DodgeList> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: const Text("User is already in Dodge List"),
-            backgroundColor: Colors.orange, // 🟠 Warning Color
+            backgroundColor: Colors.orange,
             behavior: SnackBarBehavior.floating,
             duration: const Duration(milliseconds: 1500),
           ),
         );
-        return; // 🔄 Stop execution if user already exists
+        return;
       }
 
-      // ✅ If the user is found in Firestore
+      // If the user is found in Firestore
       if (userFound.gameName.isNotEmpty) {
         dodgeList.add(userFound);
         await _saveDodgeListToLocalStorage();
@@ -126,7 +141,7 @@ class DodgeListState extends State<DodgeList> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: const Text("User added to Dodge List"),
-            backgroundColor: CustomColours.buttoncolor, // 🟢 SUCCESS (Green)
+            backgroundColor: CustomColours.buttoncolor,
             behavior: SnackBarBehavior.floating,
             duration: const Duration(milliseconds: 1500),
           ),
@@ -134,12 +149,12 @@ class DodgeListState extends State<DodgeList> {
         return;
       }
 
-      // ✅ If the user is not found in Firestore, check in the custom leaderboard batches
+      // If the user is not found in Firestore, check in the custom leaderboard batches
       LeaderboardModel? userFromBatches = await userRepository
           .checkFirebaseStoredLeaderboard(newUserId, newTagLine);
 
       if (userFromBatches != null) {
-        // ✅ User found in the custom leaderboard
+        // User found in the custom leaderboard
         dodgeList.add(userFromBatches);
         await _saveDodgeListToLocalStorage();
         setState(() {});
@@ -147,17 +162,17 @@ class DodgeListState extends State<DodgeList> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: const Text("User added to Dodge List"),
-            backgroundColor: CustomColours.buttoncolor, // 🟢 SUCCESS (Green)
+            backgroundColor: CustomColours.buttoncolor,
             behavior: SnackBarBehavior.floating,
             duration: const Duration(milliseconds: 1500),
           ),
         );
       } else {
-        // ❌ User not found in Firestore or custom leaderboards
+        // User not found in Firestore or custom leaderboards
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: const Text("User not found in leaderboard"),
-            backgroundColor: Colors.red, // 🔴 ERROR (Red)
+            backgroundColor: Colors.red,
             behavior: SnackBarBehavior.floating,
             duration: const Duration(milliseconds: 1500),
           ),
@@ -167,7 +182,7 @@ class DodgeListState extends State<DodgeList> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: const Text("Error fetching user"),
-          backgroundColor: Colors.red, // 🔴 ERROR (Red)
+          backgroundColor: Colors.red,
           behavior: SnackBarBehavior.floating,
           duration: const Duration(milliseconds: 1500),
         ),
@@ -235,18 +250,22 @@ class DodgeListState extends State<DodgeList> {
 
   @override
   Widget build(BuildContext context) {
+    final bool isPremium = userController.isPremium.value;
+    final List<LeaderboardModel> displayList = isPremium
+        ? dodgeList
+        : (dodgeList.length > 5 ? dodgeList.sublist(0, 5) : dodgeList);
+
     return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
         backgroundColor: Colors.white,
-        title: const Center(
-            child: Text("Dodgelist",
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                ))),
-      ),
-      body: Column(
-        children: [
+        appBar: AppBar(
+          backgroundColor: Colors.white,
+          title: const Center(
+              child: Text("Dodgelist",
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                  ))),
+        ),
+        body: Column(children: [
           DodgeListInputFields(
             usernameError: usernameError,
             tagLineError: tagLineError,
@@ -265,14 +284,36 @@ class DodgeListState extends State<DodgeList> {
             onAddUser: _addUserToDodgeList,
           ),
           Expanded(
-            child: DodgeListView(
-              dodgeList: dodgeList,
-              onRemoveUser: _removeUserFromDodgeList, // ✅ Pass delete function
+            child: Column(
+              children: [
+                Expanded(
+                  child: DodgeListView(
+                    dodgeList: displayList, // Use the filtered list
+                    onRemoveUser: _removeUserFromDodgeList,
+                  ),
+                ),
+                // If the user is not premium and the full list has more than 5 users,
+                // display a lock message.
+                if (!isPremium && dodgeList.length > 5)
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    color: Colors.grey.shade300,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: const [
+                        Icon(Icons.lock, color: Colors.grey),
+                        SizedBox(width: 8),
+                        Text(
+                          "Need Premium for more than 5 users",
+                          style: TextStyle(color: Colors.grey),
+                        ),
+                      ],
+                    ),
+                  ),
+              ],
             ),
           ),
-        ],
-      ),
-    );
+        ]));
   }
 
   Future<void> syncDodgeListWithLeaderboard() async {

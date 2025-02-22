@@ -38,9 +38,7 @@ class _LeaderBoardState extends State<LeaderBoard> {
   int _currentStartIndex = 0; // Tracks where pagination starts
   final int _pageSize = 50; // How many users to fetch per page
   bool _hasMoreData = true; // Tracks if there are more players to fetch
-  int _reportResetTriggerCheater = 0;
-  int _reportResetTriggerToxicity = 0;
-  int _reportResetTriggerHonour = 0;
+
   LeaderboardType selectedLeaderboard = LeaderboardType.ranked;
   String newUserId = "";
   String newTagLine = "";
@@ -62,9 +60,9 @@ class _LeaderBoardState extends State<LeaderBoard> {
     await prefs.remove("lastReport_toxicity");
     await prefs.remove("lastReport_honour");
     setState(() {
-      _reportResetTriggerCheater++;
-      _reportResetTriggerToxicity++;
-      _reportResetTriggerHonour++;
+      // _reportResetTriggerCheater++;
+      // _reportResetTriggerToxicity++;
+      // _reportResetTriggerHonour++;
     });
   }
 

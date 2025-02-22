@@ -5,6 +5,7 @@ import 'package:flutter_application_2/Screens/dodge_list_screen.dart';
 import 'package:flutter_application_2/Screens/home_page.dart';
 import 'package:flutter_application_2/Screens/leaderboard_screen.dart';
 import 'package:flutter_application_2/Screens/login_screen.dart';
+import 'package:flutter_application_2/components/user_controller.dart';
 //import 'package:flutter_application_2/repository/my_ranked_leaderboard.dart';
 import 'package:flutter_application_2/repository/user_repository.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -18,6 +19,7 @@ void main() async {
   await dotenv.load(fileName: "apikey.env");
   //await storeLeaderboardInBatches(); // Fetch and store leaderboard
   Get.put(UserRepository());
+  Get.put(UserController());
   runApp(const MyApp());
 }
 
