@@ -13,6 +13,11 @@ class ReportButton extends StatefulWidget {
   final String buttonText;
   final bool isToxicity;
   final bool isHonour;
+  final Duration cooldownDuration;
+  final String
+      reportType; // Unique identifier: e.g. "cheater", "toxicity", "honour"
+  final int
+      resetTrigger; // When this value changes, the widget re-checks its cooldown
 
   const ReportButton({
     super.key,
@@ -22,6 +27,9 @@ class ReportButton extends StatefulWidget {
     required this.isToxicity,
     required this.isHonour,
     required this.buttonText,
+    this.cooldownDuration = const Duration(hours: 24),
+    required this.reportType,
+    this.resetTrigger = 0,
   });
 
   @override
@@ -30,28 +38,27 @@ class ReportButton extends StatefulWidget {
 
 class ReportButtonState extends State<ReportButton> {
   final UserRepository _userRepository = UserRepository();
-  bool _canReport = true; // Controls whether the button is active
+  bool _canReport = true;
   Duration _remainingTime = Duration.zero;
   Timer? _cooldownTimer;
 
-  // Global key based solely on report type (Step 2)
-  String get _reportKey {
-    String type;
-    if (widget.isHonour) {
-      type = "honour";
-    } else if (widget.isToxicity) {
-      type = "toxicity";
-    } else {
-      type = "cheater";
-    }
-    // Now the key doesn't depend on newUserId or newTagLine.
-    return "lastReport_$type";
-  }
+  // Use the reportType parameter to build a unique SharedPreferences key.
+  String get _reportKey => "lastReport_${widget.reportType}";
 
   @override
   void initState() {
     super.initState();
+    print("Initializing ReportButton with key: $_reportKey");
     _checkReportAvailability();
+  }
+
+  @override
+  void didUpdateWidget(covariant ReportButton oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // When resetTrigger changes, force a re-check of the cooldown
+    if (widget.resetTrigger != oldWidget.resetTrigger) {
+      _checkReportAvailability();
+    }
   }
 
   @override
@@ -64,13 +71,13 @@ class ReportButtonState extends State<ReportButton> {
     final prefs = await SharedPreferences.getInstance();
     final int lastReport = prefs.getInt(_reportKey) ?? 0;
     final int now = DateTime.now().millisecondsSinceEpoch;
-    const oneDayMillis = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
-
+    final int cooldownMillis = widget.cooldownDuration.inMilliseconds;
     final int elapsed = now - lastReport;
-    if (elapsed < oneDayMillis) {
+
+    if (elapsed < cooldownMillis) {
       setState(() {
         _canReport = false;
-        _remainingTime = Duration(milliseconds: oneDayMillis - elapsed);
+        _remainingTime = Duration(milliseconds: cooldownMillis - elapsed);
       });
       _startCooldownTimer();
     } else {
@@ -92,7 +99,7 @@ class ReportButtonState extends State<ReportButton> {
         });
       } else {
         setState(() {
-          _remainingTime = _remainingTime - const Duration(seconds: 1);
+          _remainingTime -= const Duration(seconds: 1);
         });
       }
     });
@@ -104,7 +111,7 @@ class ReportButtonState extends State<ReportButton> {
     await prefs.setInt(_reportKey, now);
     setState(() {
       _canReport = false;
-      _remainingTime = const Duration(hours: 24);
+      _remainingTime = widget.cooldownDuration;
     });
     _startCooldownTimer();
   }
@@ -124,7 +131,6 @@ class ReportButtonState extends State<ReportButton> {
       });
       return;
     }
-
     try {
       bool reportResult = await _userRepository.reportPlayer(
         gameName: widget.newUserId.toLowerCase(),
@@ -191,7 +197,6 @@ class ReportButtonState extends State<ReportButton> {
         Validator.validateTagline(widget.newTagLine) == null;
     final Color? reportButtonColor =
         isValid ? CustomColours.buttoncolor : Colors.grey.shade200;
-
     return TextButton(
       onPressed: (isValid && _canReport) ? _handleReport : null,
       style: TextButton.styleFrom(
@@ -202,7 +207,7 @@ class ReportButtonState extends State<ReportButton> {
       child: _canReport
           ? Text(widget.buttonText, style: const TextStyle(fontSize: 16))
           : Text(
-              'Wait ${_remainingTime.inHours}h ${_remainingTime.inMinutes.remainder(60)}m',
+              'Wait ${_remainingTime.inSeconds}s',
               style: const TextStyle(fontSize: 16),
             ),
     );
