@@ -1,7 +1,10 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_application_2/repository/user_repository.dart';
-import 'package:flutter_application_2/utils/validators.dart'; // <-- Import the validators.
+import 'package:flutter_application_2/shared/classes/colour_classes.dart';
+import 'package:flutter_application_2/utils/validators.dart';
 import 'package:get/get.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class ReportButton extends StatefulWidget {
   final String newUserId;
@@ -9,7 +12,7 @@ class ReportButton extends StatefulWidget {
   final Future<void> Function() onSuccess;
   final String buttonText;
   final bool isToxicity;
-  final bool isHonour; // ✅ New Honour flag added
+  final bool isHonour;
 
   const ReportButton({
     super.key,
@@ -17,7 +20,7 @@ class ReportButton extends StatefulWidget {
     required this.newTagLine,
     required this.onSuccess,
     required this.isToxicity,
-    required this.isHonour, // ✅ Now it's always required
+    required this.isHonour,
     required this.buttonText,
   });
 
@@ -27,11 +30,86 @@ class ReportButton extends StatefulWidget {
 
 class ReportButtonState extends State<ReportButton> {
   final UserRepository _userRepository = UserRepository();
+  bool _canReport = true; // Controls whether the button is active
+  Duration _remainingTime = Duration.zero;
+  Timer? _cooldownTimer;
+
+  // Global key based solely on report type (Step 2)
+  String get _reportKey {
+    String type;
+    if (widget.isHonour) {
+      type = "honour";
+    } else if (widget.isToxicity) {
+      type = "toxicity";
+    } else {
+      type = "cheater";
+    }
+    // Now the key doesn't depend on newUserId or newTagLine.
+    return "lastReport_$type";
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _checkReportAvailability();
+  }
+
+  @override
+  void dispose() {
+    _cooldownTimer?.cancel();
+    super.dispose();
+  }
+
+  Future<void> _checkReportAvailability() async {
+    final prefs = await SharedPreferences.getInstance();
+    final int lastReport = prefs.getInt(_reportKey) ?? 0;
+    final int now = DateTime.now().millisecondsSinceEpoch;
+    const oneDayMillis = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
+
+    final int elapsed = now - lastReport;
+    if (elapsed < oneDayMillis) {
+      setState(() {
+        _canReport = false;
+        _remainingTime = Duration(milliseconds: oneDayMillis - elapsed);
+      });
+      _startCooldownTimer();
+    } else {
+      setState(() {
+        _canReport = true;
+        _remainingTime = Duration.zero;
+      });
+    }
+  }
+
+  void _startCooldownTimer() {
+    _cooldownTimer?.cancel();
+    _cooldownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (_remainingTime.inSeconds <= 1) {
+        timer.cancel();
+        setState(() {
+          _canReport = true;
+          _remainingTime = Duration.zero;
+        });
+      } else {
+        setState(() {
+          _remainingTime = _remainingTime - const Duration(seconds: 1);
+        });
+      }
+    });
+  }
+
+  Future<void> _updateReportTimestamp() async {
+    final prefs = await SharedPreferences.getInstance();
+    final int now = DateTime.now().millisecondsSinceEpoch;
+    await prefs.setInt(_reportKey, now);
+    setState(() {
+      _canReport = false;
+      _remainingTime = const Duration(hours: 24);
+    });
+    _startCooldownTimer();
+  }
 
   Future<void> _handleReport() async {
-    print(
-        "DEBUG: Report button pressed for ${widget.newUserId}#${widget.newTagLine}");
-
     if (widget.newUserId.isEmpty || widget.newTagLine.isEmpty) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted && Get.context != null) {
@@ -52,7 +130,7 @@ class ReportButtonState extends State<ReportButton> {
         gameName: widget.newUserId.toLowerCase(),
         tagLine: widget.newTagLine.toLowerCase(),
         isToxicityReport: widget.isToxicity,
-        isHonourReport: widget.isHonour, // ✅ Ensure Honour Report is passed
+        isHonourReport: widget.isHonour,
       );
 
       if (!reportResult) {
@@ -80,13 +158,14 @@ class ReportButtonState extends State<ReportButton> {
                     ? "Player successfully reported as toxic!"
                     : "Player successfully reported as a cheater!",
             snackPosition: SnackPosition.BOTTOM,
-            backgroundColor: Colors.green,
+            backgroundColor: CustomColours.buttoncolor,
             colorText: Colors.white,
           );
         }
       });
 
       await widget.onSuccess();
+      await _updateReportTimestamp();
 
       if (mounted) {
         setState(() {});
@@ -108,33 +187,24 @@ class ReportButtonState extends State<ReportButton> {
 
   @override
   Widget build(BuildContext context) {
-    // ✅ Validate inputs using the Validator class
     final bool isValid = Validator.validateUsername(widget.newUserId) == null &&
         Validator.validateTagline(widget.newTagLine) == null;
-
-    // Determine button background color based on report type and validity.
-    final Color? reportButtonColor;
-    if (widget.isHonour) {
-      reportButtonColor = isValid
-          ? Colors.green
-          : Colors.grey.shade200; // Colors.green.shade900;
-    } else if (widget.isToxicity) {
-      reportButtonColor = isValid ? Colors.amber : Colors.grey.shade200;
-    } else {
-      // Report Cheater
-      reportButtonColor = isValid ? Colors.red : Colors.grey.shade200;
-    }
+    final Color? reportButtonColor =
+        isValid ? CustomColours.buttoncolor : Colors.grey.shade200;
 
     return TextButton(
-      onPressed: isValid
-          ? _handleReport
-          : null, // Button disabled if inputs are invalid.Color(0xFFB71C1C)
+      onPressed: (isValid && _canReport) ? _handleReport : null,
       style: TextButton.styleFrom(
         backgroundColor: reportButtonColor,
         foregroundColor: Colors.white,
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       ),
-      child: Text(widget.buttonText, style: const TextStyle(fontSize: 16)),
+      child: _canReport
+          ? Text(widget.buttonText, style: const TextStyle(fontSize: 16))
+          : Text(
+              'Wait ${_remainingTime.inHours}h ${_remainingTime.inMinutes.remainder(60)}m',
+              style: const TextStyle(fontSize: 16),
+            ),
     );
   }
 }

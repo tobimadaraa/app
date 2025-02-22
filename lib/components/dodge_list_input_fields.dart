@@ -61,7 +61,7 @@ class _DodgeListInputFieldsState extends State<DodgeListInputFields> {
               validator: (value) => Validator.validateUsername(value ?? ''),
             ),
           ),
-          const SizedBox(height: 8),
+          //  const SizedBox(height: 2),
           Padding(
             padding: const EdgeInsets.all(4.0),
             child: InputField(

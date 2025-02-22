@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_application_2/models/leaderboard_model.dart';
 import 'package:flutter_application_2/shared/classes/shared_components.dart';
 import 'package:flutter_application_2/utils/date_formatter.dart';
+import 'package:flutter/services.dart'; // ✅ Required for status bar color
 
 class UserDetailPage extends StatelessWidget {
   final LeaderboardModel user;
@@ -18,11 +19,16 @@ class UserDetailPage extends StatelessWidget {
     final bool isRanked = leaderboardType == LeaderboardType.ranked;
 
     return Scaffold(
+      backgroundColor: Colors.grey[200], // 🌫 Same Grey Background
       appBar: AppBar(
+        backgroundColor: Colors.grey[200], // ✅ Same as Scaffold
+        elevation: 0, // ✅ Removes Shadow Effect
         centerTitle: true,
+        systemOverlayStyle: SystemUiOverlayStyle.dark, // ✅ Blends Status Bar
         title: Text(
           '${user.gameName}#${user.tagLine}',
-          style: const TextStyle(fontWeight: FontWeight.bold),
+          style:
+              const TextStyle(fontWeight: FontWeight.bold, color: Colors.black),
         ),
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(1.0),
@@ -36,190 +42,132 @@ class UserDetailPage extends StatelessWidget {
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            if (!isRanked) // Show this for all NON-ranked users
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  /// **Cheater Reports on a New Line**
-                  RichText(
-                    text: TextSpan(
-                      style: const TextStyle(fontSize: 18, color: Colors.black),
-                      children: [
-                        const TextSpan(
-                          text: "Cheater Reports: ",
-                          style: TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                        TextSpan(
-                          text: "${user.cheaterReports}",
-                          style: const TextStyle(color: Colors.red),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-
-                  /// **Toxicity Reports on a New Line**
-                  RichText(
-                    text: TextSpan(
-                      style: const TextStyle(fontSize: 18, color: Colors.black),
-                      children: [
-                        const TextSpan(
-                          text: "Toxicity Reports: ",
-                          style: TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                        TextSpan(
-                          text: "${user.toxicityReports}",
-                          style: const TextStyle(color: Colors.amber),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-
-                  /// **Honour Reports on a New Line**
-                  RichText(
-                    text: TextSpan(
-                      style: const TextStyle(fontSize: 18, color: Colors.black),
-                      children: [
-                        const TextSpan(
-                          text: "Honour Reports: ",
-                          style: TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                        TextSpan(
-                          text: "${user.honourReports}",
-                          style: const TextStyle(color: Colors.green),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-
-                  /// **Expandable Last Cheater Reports on a New Line**
-                  ExpandableReportSection(
-                    title: "Last Cheater Reports",
-                    reports: user.lastCheaterReported,
-                    color: Colors.red,
-                  ),
-                  const SizedBox(height: 6),
-
-                  /// **Expandable Last Toxicity Reports on a New Line**
-                  ExpandableReportSection(
-                    title: "Last Toxicity Reports",
-                    reports: user.lastToxicityReported,
-                    color: Colors.amber,
-                  ),
-                  const SizedBox(height: 6),
-
-                  /// **Expandable Last Honour Reports on a New Line**
-                  ExpandableReportSection(
-                    title: "Last Honour Reports",
-                    reports: user.lastHonourReported,
-                    color: Colors.green,
-                  ),
-                ],
-              )
-            else
-              // Ranked user section
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text("${user.rankedRating} RR",
-                      style: const TextStyle(fontSize: 18)),
-                  const SizedBox(height: 16),
-                  Text("${user.numberOfWins} games won",
-                      style: const TextStyle(fontSize: 18)),
-                  const SizedBox(height: 8),
-                ],
-              ),
+            if (!isRanked) _buildReportCard(user) else _buildRankedStats(user),
           ],
         ),
       ),
     );
   }
-}
 
-/// **Reusable Expandable Report Section**
-class ExpandableReportSection extends StatefulWidget {
-  final String title;
-  final List<String> reports;
-  final Color color;
+  /// **📌 Report Card for Non-Ranked Players**
+  Widget _buildReportCard(LeaderboardModel user) {
+    return Card(
+      color: Colors.white, // 🟢 White Card
+      elevation: 4,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          children: [
+            _buildReportSection("Cheater Reports", user.cheaterReports),
+            _buildReportSection("Toxicity Reports", user.toxicityReports),
+            _buildReportSection("Times Honoured", user.honourReports),
+            const SizedBox(height: 12),
 
-  const ExpandableReportSection({
-    super.key,
-    required this.title,
-    required this.reports,
-    required this.color,
-  });
+            /// **Expandable Sections for Reports**
+            _buildExpandableReport(
+                "Last Cheater Reports", user.lastCheaterReported),
+            _buildExpandableReport(
+                "Last Toxicity Reports", user.lastToxicityReported),
+            _buildExpandableReport(
+                "Last Honour Reports", user.lastHonourReported),
+          ],
+        ),
+      ),
+    );
+  }
 
-  @override
-  _ExpandableReportSectionState createState() =>
-      _ExpandableReportSectionState();
-}
+  /// **📌 Ranked Stats for Players**
+  Widget _buildRankedStats(LeaderboardModel user) {
+    return Card(
+      color: Colors.white, // 🟢 White Card
+      elevation: 4,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          children: [
+            Text(
+              "${user.rankedRating} RR",
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              "${user.numberOfWins} Games Won",
+              style: const TextStyle(fontSize: 18),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 
-class _ExpandableReportSectionState extends State<ExpandableReportSection> {
-  bool _isExpanded = false;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        Center(
-          child: ElevatedButton(
-            onPressed: () {
-              setState(() {
-                _isExpanded = !_isExpanded;
-              });
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: widget.color,
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius:
-                    BorderRadius.circular(12), // Smaller rounded edges
-              ),
-              minimumSize: const Size(150, 35), // Smaller button
+  /// **📌 Builds Each Report Line with Label & Count**
+  Widget _buildReportSection(String label, int count) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6.0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(label,
+              style:
+                  const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+            decoration: BoxDecoration(
+              color:
+                  Colors.blue.withOpacity(0.2), // 🔵 Light Blue for consistency
+              borderRadius: BorderRadius.circular(8),
             ),
             child: Text(
-              _isExpanded ? "Hide ${widget.title}" : "View ${widget.title}",
-              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+              count.toString(),
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+                color: Colors.blue, // 🔵 Blue Text for Readability
+              ),
             ),
           ),
-        ),
-        if (_isExpanded)
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 4.0),
-            child: widget.reports.isNotEmpty
-                ? Column(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: widget.reports.map((timestamp) {
-                      return Padding(
-                        padding: const EdgeInsets.symmetric(
-                            vertical: 2.0, horizontal: 6.0),
-                        child: Center(
-                          child: Text(
-                            DateFormatter.formatDate(timestamp),
-                            style: const TextStyle(fontSize: 14),
-                            textAlign: TextAlign.center,
-                          ),
-                        ),
-                      );
-                    }).toList(),
-                  )
-                : const Padding(
-                    padding: EdgeInsets.symmetric(vertical: 4.0),
-                    child: Center(
-                      child: Text(
-                        "No reports yet.",
-                        style: TextStyle(fontSize: 14),
-                        textAlign: TextAlign.center,
-                      ),
-                    ),
-                  ),
+        ],
+      ),
+    );
+  }
+
+  /// **📌 Expandable Report Section (For Last Reports)**
+  Widget _buildExpandableReport(String title, List<String> reports) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 8.0),
+      child: Card(
+        color: Colors.white, // 🟢 White for Consistency
+        elevation: 2,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        child: ExpansionTile(
+          title: Text(
+            title,
+            style: const TextStyle(
+                fontSize: 16, fontWeight: FontWeight.bold, color: Colors.blue),
           ),
-      ],
+          children: reports.isNotEmpty
+              ? reports.map((timestamp) {
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(
+                        vertical: 2.0, horizontal: 16.0),
+                    child: Text(
+                      DateFormatter.formatDate(timestamp),
+                      style: const TextStyle(fontSize: 14),
+                    ),
+                  );
+                }).toList()
+              : [
+                  const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 4.0),
+                    child:
+                        Text("No reports yet.", style: TextStyle(fontSize: 14)),
+                  ),
+                ],
+        ),
+      ),
     );
   }
 }

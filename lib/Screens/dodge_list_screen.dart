@@ -3,9 +3,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_application_2/components/dodge_list_view.dart';
 import 'package:flutter_application_2/components/dodge_list_input_fields.dart';
-//import 'package:flutter_application_2/shared/classes/colour_classes.dart';
 import 'package:flutter_application_2/repository/user_repository.dart';
 import 'package:flutter_application_2/models/leaderboard_model.dart';
+import 'package:flutter_application_2/shared/classes/colour_classes.dart';
 import 'package:flutter_application_2/shared/classes/notifiers.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -100,40 +100,77 @@ class DodgeListState extends State<DodgeList> {
             lastHonourReported: []),
       );
 
-      // If the user is found in Firestore
+      // ✅ Check if user already exists **BEFORE ADDING**
+      bool alreadyExists = dodgeList.any((user) =>
+          user.gameName.toLowerCase() == newUserId.toLowerCase() &&
+          user.tagLine.toLowerCase() == newTagLine.toLowerCase());
+
+      if (alreadyExists) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text("User is already in Dodge List"),
+            backgroundColor: Colors.orange, // 🟠 Warning Color
+            behavior: SnackBarBehavior.floating,
+            duration: const Duration(milliseconds: 1500),
+          ),
+        );
+        return; // 🔄 Stop execution if user already exists
+      }
+
+      // ✅ If the user is found in Firestore
       if (userFound.gameName.isNotEmpty) {
         dodgeList.add(userFound);
         await _saveDodgeListToLocalStorage();
         setState(() {});
 
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("User added to Dodge List")),
+          SnackBar(
+            content: const Text("User added to Dodge List"),
+            backgroundColor: CustomColours.buttoncolor, // 🟢 SUCCESS (Green)
+            behavior: SnackBarBehavior.floating,
+            duration: const Duration(milliseconds: 1500),
+          ),
         );
         return;
       }
 
-      // If the user is not found in Firestore, check in the custom leaderboard batches
+      // ✅ If the user is not found in Firestore, check in the custom leaderboard batches
       LeaderboardModel? userFromBatches = await userRepository
           .checkFirebaseStoredLeaderboard(newUserId, newTagLine);
 
       if (userFromBatches != null) {
-        // User found in the custom leaderboard
+        // ✅ User found in the custom leaderboard
         dodgeList.add(userFromBatches);
         await _saveDodgeListToLocalStorage();
         setState(() {});
 
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("User added to Dodge List")),
+          SnackBar(
+            content: const Text("User added to Dodge List"),
+            backgroundColor: CustomColours.buttoncolor, // 🟢 SUCCESS (Green)
+            behavior: SnackBarBehavior.floating,
+            duration: const Duration(milliseconds: 1500),
+          ),
         );
       } else {
-        // User not found in Firestore or custom leaderboards
+        // ❌ User not found in Firestore or custom leaderboards
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("User not found in leaderboard")),
+          SnackBar(
+            content: const Text("User not found in leaderboard"),
+            backgroundColor: Colors.red, // 🔴 ERROR (Red)
+            behavior: SnackBarBehavior.floating,
+            duration: const Duration(milliseconds: 1500),
+          ),
         );
       }
     } catch (error) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Error fetching user")),
+        SnackBar(
+          content: const Text("Error fetching user"),
+          backgroundColor: Colors.red, // 🔴 ERROR (Red)
+          behavior: SnackBarBehavior.floating,
+          duration: const Duration(milliseconds: 1500),
+        ),
       );
     }
   }
@@ -181,8 +218,12 @@ class DodgeListState extends State<DodgeList> {
 
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-              content: Text(
-                  "${user.gameName}#${user.tagLine} removed from Dodge List")),
+            content: Text(
+                "${user.gameName}#${user.tagLine} removed from Dodge List"),
+            backgroundColor: const Color(0xFFFF6347),
+            behavior: SnackBarBehavior.floating,
+            duration: const Duration(milliseconds: 1500),
+          ),
         );
       } catch (error) {
         ScaffoldMessenger.of(context).showSnackBar(

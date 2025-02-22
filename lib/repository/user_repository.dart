@@ -378,28 +378,6 @@ class UserRepository extends GetxController {
     }
   }
 
-  /// Add to Dodge List
-  // Future<void> addToDodgeList(LeaderboardModel user) async {
-  //   try {
-  //     await _db
-  //         .collection("DodgeList")
-  //         .doc("${user.gameName}#${user.tagLine}")
-  //         .set({
-  //       "gameName": user.gameName,
-  //       "tagLine": user.tagLine,
-  //       "cheater_reported": user.cheaterReports,
-  //       "toxicity_reported": user.toxicityReports,
-  //       "page_views": user.pageViews,
-  //       "last_cheater_reported": user.lastCheaterReported,
-  //       "last_toxicity_reported": user.lastToxicityReported,
-  //     });
-  //     print(
-  //         "DEBUG: User added to Dodge List -> ${user.gameName}#${user.tagLine}");
-  //   } catch (error) {
-  //     print("ERROR: Adding user to Dodge List failed: $error");
-  //   }
-  // }
-
   /// Remove from Dodge List
   Future<void> removeFromDodgeList(LeaderboardModel user) async {
     try {

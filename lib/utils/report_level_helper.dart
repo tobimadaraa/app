@@ -39,9 +39,21 @@ class ReportLevelHelper {
     int threshold = 10,
   }) {
     List<Map<String, dynamic>> badgesData = [
-      {'count': cheaterReports, 'color': Colors.red, 'label': 'Cheater'},
-      {'count': toxicityReports, 'color': Colors.amber, 'label': 'Very Toxic'},
-      {'count': honourReports, 'color': Colors.green, 'label': 'Honorable'},
+      {
+        'count': cheaterReports,
+        'color': const Color(0xFFFF6347),
+        'label': 'Cheater'
+      },
+      {
+        'count': toxicityReports,
+        'color': const Color(0xFFC79220),
+        'label': 'Very Toxic'
+      },
+      {
+        'count': honourReports,
+        'color': Color(0xff2E8B57),
+        'label': 'Honorable'
+      },
     ];
 
     // Sort badges in descending order of count.

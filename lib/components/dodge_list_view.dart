@@ -31,7 +31,8 @@ class DodgeListView extends StatelessWidget {
             ],
           ),
           trailing: IconButton(
-            icon: const Icon(Icons.delete, color: Colors.red),
+            icon: const Icon(Icons.person_remove, color: Colors.red),
+            iconSize: 20,
             onPressed: () => onRemoveUser(user),
           ),
         );
