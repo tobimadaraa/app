@@ -37,12 +37,12 @@ class ReportLevelHelper {
     if (toxicityReports > 25) {
       allBadges.add({
         'label': 'Very Toxic',
-        'color': const Color(0xFFFFA500), // Dark Orange Color(0xFFFFA500)
+        'color': const Color(0xFFB026FF), // Dark Orange Color(0xFFFFA500)
       });
     } else if (toxicityReports > 10) {
       allBadges.add({
         'label': 'Toxic',
-        'color': const Color(0xFFE67700), // Orange
+        'color': const Color(0XFF9966CC), // Orange
       });
     }
 
