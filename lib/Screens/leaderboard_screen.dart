@@ -281,7 +281,7 @@ class _LeaderBoardState extends State<LeaderBoard> {
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
               colors: [
-                Colors.white.withOpacity(0.08),
+                Colors.white.withAlpha((0.08 * 255).toInt()),
                 Colors.transparent,
               ],
             ),

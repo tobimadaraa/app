@@ -35,7 +35,7 @@ class UserDetailPage extends StatelessWidget {
           child: Divider(
             height: 1.0,
             thickness: 1.0,
-            color: Colors.grey.withOpacity(0.2),
+            color: Colors.grey.withValues(alpha: 0.2),
           ),
         ),
       ),
@@ -116,8 +116,8 @@ class UserDetailPage extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
             decoration: BoxDecoration(
-              color:
-                  Colors.blue.withOpacity(0.2), // 🔵 Light Blue for consistency
+              color: Colors.blue
+                  .withValues(alpha: 0.2), // 🔵 Light Blue for consistency
               borderRadius: BorderRadius.circular(8),
             ),
             child: Text(

@@ -31,7 +31,7 @@ class LeaderboardToggle extends StatelessWidget {
     final bool isSelected = type == selectedLeaderboard;
     final BorderSide borderSide = isSelected
         ? const BorderSide(color: Colors.black, width: 2)
-        : BorderSide(color: Colors.black.withOpacity(0.5), width: 1);
+        : BorderSide(color: Colors.black.withValues(alpha: 0.5), width: 1);
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 4), // Add small spacing

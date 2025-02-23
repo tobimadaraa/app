@@ -48,6 +48,7 @@ class ReportButtonState extends State<ReportButton> {
   @override
   void initState() {
     super.initState();
+    // ignore: avoid_print
     print("Initializing ReportButton with key: $_reportKey");
     _checkReportAvailability();
   }
@@ -195,7 +196,7 @@ class ReportButtonState extends State<ReportButton> {
   Widget build(BuildContext context) {
     final bool isValid = Validator.validateUsername(widget.newUserId) == null &&
         Validator.validateTagline(widget.newTagLine) == null;
-    final Color? reportButtonColor =
+    final Color reportButtonColor =
         isValid ? CustomColours.buttoncolor : Colors.grey.shade200;
     return TextButton(
       onPressed: (isValid && _canReport) ? _handleReport : null,

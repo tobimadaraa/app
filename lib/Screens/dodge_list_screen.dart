@@ -251,19 +251,20 @@ class DodgeListState extends State<DodgeList> {
   @override
   Widget build(BuildContext context) {
     final bool isPremium = userController.isPremium.value;
-    final List<LeaderboardModel> displayList = isPremium
-        ? dodgeList
-        : (dodgeList.length > 5 ? dodgeList.sublist(0, 5) : dodgeList);
+    // final List<LeaderboardModel> displayList = isPremium
+    //     ? dodgeList
+    //     : (dodgeList.length > 5 ? dodgeList.sublist(0, 5) : dodgeList);
 
     return Scaffold(
         backgroundColor: Colors.white,
         appBar: AppBar(
           backgroundColor: Colors.white,
           title: const Center(
-              child: Text("Dodgelist",
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                  ))),
+            child: Text(
+              "Dodgelist",
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
+          ),
         ),
         body: Column(children: [
           DodgeListInputFields(
@@ -284,37 +285,17 @@ class DodgeListState extends State<DodgeList> {
             onAddUser: _addUserToDodgeList,
           ),
           Expanded(
-            child: Column(
-              children: [
-                Expanded(
-                  child: DodgeListView(
-                    dodgeList: displayList, // Use the filtered list
-                    onRemoveUser: _removeUserFromDodgeList,
-                  ),
-                ),
-                // If the user is not premium and the full list has more than 5 users,
-                // display a lock message.
-                if (!isPremium && dodgeList.length > 5)
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    color: Colors.grey.shade300,
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: const [
-                        Icon(Icons.lock, color: Colors.grey),
-                        SizedBox(width: 8),
-                        Text(
-                          "Need Premium for more than 5 users",
-                          style: TextStyle(color: Colors.grey),
-                        ),
-                      ],
-                    ),
-                  ),
-              ],
+            child: DodgeListView(
+              dodgeList: dodgeList, // ✅ Pass the full list
+              onRemoveUser: _removeUserFromDodgeList, // ✅ Pass remove function
+              isPremium: isPremium, // ✅ Pass premium status
             ),
           ),
         ]));
   }
+
+  /// 🔒 Lock Paywall Widget (Appears Inside the List)
+// s
 
   Future<void> syncDodgeListWithLeaderboard() async {
     print("🔄 Syncing Dodge List with Leaderboard...");
