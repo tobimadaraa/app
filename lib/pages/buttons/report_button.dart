@@ -198,6 +198,12 @@ class ReportButtonState extends State<ReportButton> {
         Validator.validateTagline(widget.newTagLine) == null;
     final Color reportButtonColor =
         isValid ? CustomColours.buttoncolor : Colors.grey.shade200;
+
+    // Convert remaining time to hours and minutes
+    final int hours = _remainingTime.inHours;
+    final int minutes =
+        (_remainingTime.inMinutes % 60); // Remaining minutes after hours
+
     return TextButton(
       onPressed: (isValid && _canReport) ? _handleReport : null,
       style: TextButton.styleFrom(
@@ -208,7 +214,7 @@ class ReportButtonState extends State<ReportButton> {
       child: _canReport
           ? Text(widget.buttonText, style: const TextStyle(fontSize: 16))
           : Text(
-              'Wait ${_remainingTime.inSeconds}s',
+              'Wait ${hours}h ${minutes}m',
               style: const TextStyle(fontSize: 16),
             ),
     );

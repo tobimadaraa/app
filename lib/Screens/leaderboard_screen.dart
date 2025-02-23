@@ -31,7 +31,7 @@ class _LeaderBoardState extends State<LeaderBoard> {
   final UserRepository userRepository = Get.find<UserRepository>();
   bool isCheaterSelected =
       true; // 🚨 Default to "Cheater" when Reports is selected
-
+  String? _errorMessage;
   final ScrollController _scrollController = ScrollController();
   final List<LeaderboardModel> _loadedUsers = []; // List to store fetched users
   bool _isLoadingMore = false; // Prevent duplicate fetches
@@ -112,7 +112,8 @@ class _LeaderBoardState extends State<LeaderBoard> {
         _loadedUsers.clear();
         _currentStartIndex = 0;
         _hasMoreData = true;
-        _isActiveLoading = true; // ✅ Mark as actively loading
+        _isActiveLoading = true;
+        _errorMessage = null; // ✅ Reset error message
       });
     }
 
@@ -132,24 +133,16 @@ class _LeaderBoardState extends State<LeaderBoard> {
 
         print("✅ Ranked leaderboard received for request ID $requestId");
       } else {
-        // For cheater or toxicity, fetch from your "Users" collection only.
         print("⏳ Fetching Firebase leaderboard for reported users...");
-
-        // Decide if it's toxicity or cheater
-        // bool forToxic = (selectedLeaderboard == LeaderboardType.toxicity &&
-        //     !isCheaterSelected);
-
-        // Call your custom function
         List<LeaderboardModel> allUsers =
             await userRepository.getReportedUsersFromFirebase(
           leaderboardType: selectedLeaderboard,
         );
 
-        // Apply pagination
         newUsers = allUsers.skip(_currentStartIndex).take(_pageSize).toList();
         print("✅ Firebase leaderboard received for request ID $requestId");
       }
-      // 🚨 Ensure response is for the latest request before updating UI
+
       if (requestId != _latestRequestId) {
         print(
             "🚨 Ignoring outdated response: Request $requestId (Current: $_latestRequestId)");
@@ -162,22 +155,31 @@ class _LeaderBoardState extends State<LeaderBoard> {
               "🔄 Updating UI with ${newUsers.length} users for $selectedLeaderboard");
           _loadedUsers.addAll(newUsers);
           _currentStartIndex += newUsers.length;
-          _hasMoreData = newUsers.length ==
-              _pageSize; // ✅ Correctly updates when no more data exists
+          _hasMoreData = newUsers.length == _pageSize;
         });
       } else {
         setState(() {
-          _hasMoreData =
-              false; // ✅ Ensure it stops loading when no more data is available
+          _hasMoreData = false;
         });
         print("⚠️ No more data available, stopping load requests.");
       }
     } catch (e) {
       print("❌ ERROR: Failed to load leaderboard: $e");
+
+      if (e.toString().contains("403")) {
+        setState(() {
+          _errorMessage = "Error loading leaderboard. Please try again.";
+        });
+      } else if (e.toString().contains("429")) {
+        setState(() {
+          _errorMessage =
+              "Too many requests to Riot Servers, please wait and try again";
+        });
+      }
     } finally {
       if (requestId == _latestRequestId) {
-        _isLoadingMore = false; // ✅ Always reset loading state
-        _isActiveLoading = false; // ✅ Ensure we mark loading as done
+        _isLoadingMore = false;
+        _isActiveLoading = false;
         print("✅ Finished loading Request $requestId, UI can update");
         setState(() {});
       } else {
@@ -461,96 +463,132 @@ class _LeaderBoardState extends State<LeaderBoard> {
                       Expanded(
                           child: _isInitialLoading
                               ? _buildSkeletonLoader()
-                              : RefreshIndicator(
-                                  onRefresh: _refreshLeaderboard,
-                                  child: ListView.builder(
-                                      controller: _scrollController,
-                                      itemCount: _loadedUsers.length +
-                                          (_isLoadingMore ? 1 : 0),
-                                      itemBuilder: (context, index) {
-                                        if (index >= _loadedUsers.length) {
-                                          return const Center(
-                                              child:
-                                                  CircularProgressIndicator());
-                                          // );
-                                        }
-                                        final user = _loadedUsers[index];
-                                        final bool isClickable =
-                                            selectedLeaderboard ==
-                                                    LeaderboardType.cheater ||
-                                                selectedLeaderboard ==
-                                                    LeaderboardType.toxicity ||
-                                                selectedLeaderboard ==
-                                                    LeaderboardType.honour;
-                                        return Column(
-                                          children: [
-                                            ListTile(
-                                              dense: true,
-                                              contentPadding: EdgeInsets.only(
-                                                  left: 16,
-                                                  right: 8,
-                                                  top: 2,
-                                                  bottom: 2),
-                                              title: RichText(
-                                                text: TextSpan(
-                                                  style: TextStyle(
-                                                    color: selectedLeaderboard ==
-                                                            LeaderboardType
-                                                                .ranked
-                                                        ? Colors.grey[900]
-                                                        : ReportLevelHelper
-                                                            .getGameNameColor(
-                                                            cheaterReports: user
-                                                                .cheaterReports,
-                                                            toxicityReports: user
-                                                                .toxicityReports,
-                                                            honourReports: user
-                                                                .honourReports,
-                                                          ),
-                                                    fontSize: 17,
-                                                    height: 1.0,
-                                                  ),
-                                                  children: [
-                                                    TextSpan(
-                                                        text:
-                                                            '${user.gameName}#${user.tagLine} '),
-                                                    ...ReportLevelHelper
-                                                        .buildReportBadges(
-                                                      cheaterReports:
-                                                          user.cheaterReports,
-                                                      toxicityReports:
-                                                          user.toxicityReports,
-                                                      honourReports:
-                                                          user.honourReports,
-                                                      threshold: 10,
-                                                      //iconSize: 20,
-                                                    ).map(
-                                                      (icon) => WidgetSpan(
-                                                        alignment:
-                                                            PlaceholderAlignment
-                                                                .middle,
-                                                        child: icon,
-                                                      ),
-                                                    )
-                                                    // .toList(),
-                                                  ],
-                                                ),
+                              : _errorMessage != null
+                                  ? Center(
+                                      child: Column(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        children: [
+                                          Padding(
+                                            padding: const EdgeInsets.symmetric(
+                                                horizontal: 12.0,
+                                                vertical: 4.0),
+                                            child: Text(
+                                              _errorMessage!,
+                                              style: const TextStyle(
+                                                fontSize: 14, // ✅ Smaller text
+                                                fontWeight: FontWeight
+                                                    .w500, // ✅ Medium weight, not bold
+                                                color: Colors
+                                                    .grey, // ✅ Softer color instead of bright blue
                                               ),
-                                              subtitle: selectedLeaderboard ==
-                                                      LeaderboardType.ranked
-                                                  ? Text(
-                                                      'Rank: ${user.leaderboardRank} | Rating: ${user.rankedRating ?? "N/A"} | Wins: ${user.numberOfWins ?? "N/A"}',
+                                              textAlign: TextAlign.center,
+                                            ),
+                                          ),
+                                          const SizedBox(
+                                              height:
+                                                  10), // ✅ Reduce space between text & button
+                                          ElevatedButton(
+                                            onPressed: _refreshLeaderboard,
+                                            style: ElevatedButton.styleFrom(
+                                              backgroundColor: Colors.grey
+                                                  .shade200, // ✅ Lighter grey background
+                                              shape:
+                                                  const CircleBorder(), // ✅ Circular button
+                                              elevation: 2, // ✅ Softer shadow
+                                              padding: const EdgeInsets.all(
+                                                  12), // ✅ Smaller button size
+                                            ),
+                                            child: Icon(Icons.refresh,
+                                                color: Colors.grey.shade600,
+                                                size:
+                                                    24), // ✅ Darker grey icon, smaller size
+                                          ),
+                                        ],
+                                      ),
+                                    )
+                                  : RefreshIndicator(
+                                      onRefresh: _refreshLeaderboard,
+                                      child: ListView.builder(
+                                          controller: _scrollController,
+                                          itemCount: _loadedUsers.length +
+                                              (_isLoadingMore ? 1 : 0),
+                                          itemBuilder: (context, index) {
+                                            if (index >= _loadedUsers.length) {
+                                              return const Center(
+                                                  child:
+                                                      CircularProgressIndicator());
+                                              // );
+                                            }
+                                            final user = _loadedUsers[index];
+                                            final bool isClickable =
+                                                selectedLeaderboard ==
+                                                        LeaderboardType
+                                                            .cheater ||
+                                                    selectedLeaderboard ==
+                                                        LeaderboardType
+                                                            .toxicity ||
+                                                    selectedLeaderboard ==
+                                                        LeaderboardType.honour;
+                                            return Column(
+                                              children: [
+                                                ListTile(
+                                                  dense: true,
+                                                  contentPadding:
+                                                      EdgeInsets.only(
+                                                          left: 16,
+                                                          right: 8,
+                                                          top: 2,
+                                                          bottom: 2),
+                                                  title: RichText(
+                                                    text: TextSpan(
                                                       style: TextStyle(
-                                                          fontSize: 14,
-                                                          height: 1.0,
-                                                          color:
-                                                              Colors.grey[600]),
-                                                    )
-                                                  : selectedLeaderboard ==
-                                                          LeaderboardType
-                                                              .cheater
+                                                        color: selectedLeaderboard ==
+                                                                LeaderboardType
+                                                                    .ranked
+                                                            ? Colors.grey[900]
+                                                            : ReportLevelHelper
+                                                                .getGameNameColor(
+                                                                cheaterReports:
+                                                                    user.cheaterReports,
+                                                                toxicityReports:
+                                                                    user.toxicityReports,
+                                                                honourReports: user
+                                                                    .honourReports,
+                                                              ),
+                                                        fontSize: 17,
+                                                        height: 1.0,
+                                                      ),
+                                                      children: [
+                                                        TextSpan(
+                                                            text:
+                                                                '${user.gameName}#${user.tagLine} '),
+                                                        ...ReportLevelHelper
+                                                            .buildReportBadges(
+                                                          cheaterReports: user
+                                                              .cheaterReports,
+                                                          toxicityReports: user
+                                                              .toxicityReports,
+                                                          honourReports: user
+                                                              .honourReports,
+
+                                                          //iconSize: 20,
+                                                        ).map(
+                                                          (icon) => WidgetSpan(
+                                                            alignment:
+                                                                PlaceholderAlignment
+                                                                    .middle,
+                                                            child: icon,
+                                                          ),
+                                                        )
+                                                        // .toList(),
+                                                      ],
+                                                    ),
+                                                  ),
+                                                  subtitle: selectedLeaderboard ==
+                                                          LeaderboardType.ranked
                                                       ? Text(
-                                                          'Rank: ${user.leaderboardRank} | Cheater Reports: ${user.cheaterReports}',
+                                                          'Rank: ${user.leaderboardRank} | Rating: ${user.rankedRating ?? "N/A"} | Wins: ${user.numberOfWins ?? "N/A"}',
                                                           style: TextStyle(
                                                               fontSize: 14,
                                                               height: 1.0,
@@ -559,9 +597,9 @@ class _LeaderBoardState extends State<LeaderBoard> {
                                                         )
                                                       : selectedLeaderboard ==
                                                               LeaderboardType
-                                                                  .toxicity
+                                                                  .cheater
                                                           ? Text(
-                                                              'Rank: ${user.leaderboardRank} | Toxicity Reports: ${user.toxicityReports}',
+                                                              'Rank: ${user.leaderboardRank} | Cheater Reports: ${user.cheaterReports}',
                                                               style: TextStyle(
                                                                   fontSize: 14,
                                                                   height: 1.0,
@@ -571,9 +609,9 @@ class _LeaderBoardState extends State<LeaderBoard> {
                                                             )
                                                           : selectedLeaderboard ==
                                                                   LeaderboardType
-                                                                      .honour
+                                                                      .toxicity
                                                               ? Text(
-                                                                  'Rank: ${user.leaderboardRank} | Honour Reports: ${user.honourReports}',
+                                                                  'Rank: ${user.leaderboardRank} | Toxicity Reports: ${user.toxicityReports}',
                                                                   style: TextStyle(
                                                                       fontSize:
                                                                           14,
@@ -583,31 +621,44 @@ class _LeaderBoardState extends State<LeaderBoard> {
                                                                               .grey[
                                                                           600]),
                                                                 )
-                                                              : null,
-                                              onTap: isClickable
-                                                  ? () {
-                                                      Navigator.push(
-                                                        context,
-                                                        MaterialPageRoute(
-                                                          builder: (context) =>
-                                                              UserDetailPage(
-                                                            user: user,
-                                                            leaderboardType:
-                                                                selectedLeaderboard,
-                                                          ),
-                                                        ),
-                                                      );
-                                                    }
-                                                  : null,
-                                            ),
-                                            Divider(
-                                              color: Colors.grey,
-                                              thickness: 0.3,
-                                              height: 0,
-                                            ),
-                                          ],
-                                        );
-                                      })))
+                                                              : selectedLeaderboard ==
+                                                                      LeaderboardType
+                                                                          .honour
+                                                                  ? Text(
+                                                                      'Rank: ${user.leaderboardRank} | Honour Reports: ${user.honourReports}',
+                                                                      style: TextStyle(
+                                                                          fontSize:
+                                                                              14,
+                                                                          height:
+                                                                              1.0,
+                                                                          color:
+                                                                              Colors.grey[600]),
+                                                                    )
+                                                                  : null,
+                                                  onTap: isClickable
+                                                      ? () {
+                                                          Navigator.push(
+                                                            context,
+                                                            MaterialPageRoute(
+                                                              builder: (context) =>
+                                                                  UserDetailPage(
+                                                                user: user,
+                                                                leaderboardType:
+                                                                    selectedLeaderboard,
+                                                              ),
+                                                            ),
+                                                          );
+                                                        }
+                                                      : null,
+                                                ),
+                                                Divider(
+                                                  color: Colors.grey,
+                                                  thickness: 0.3,
+                                                  height: 0,
+                                                ),
+                                              ],
+                                            );
+                                          })))
                     ])))
       ]),
       floatingActionButton: FloatingActionButton(
