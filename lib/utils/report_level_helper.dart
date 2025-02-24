@@ -50,12 +50,12 @@ class ReportLevelHelper {
     if (honourReports > 25) {
       allBadges.add({
         'label': 'Honourable',
-        'color': const Color(0XFF50C878), // Sea Green
+        'color': const Color(0XFF2E8B57), // Sea Green 6BAF88
       });
     } else if (honourReports > 10) {
       allBadges.add({
         'label': 'Nice Guy',
-        'color': const Color(0xFF2E8B57), // Spring Green
+        'color': const Color(0xFF6BAF88), // Spring Green
       });
     }
 

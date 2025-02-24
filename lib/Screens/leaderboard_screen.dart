@@ -480,7 +480,7 @@ class _LeaderBoardState extends State<LeaderBoard> {
                                                 fontWeight: FontWeight
                                                     .w500, // ✅ Medium weight, not bold
                                                 color: Colors
-                                                    .grey, // ✅ Softer color instead of bright blue
+                                                    .black, // ✅ Softer color instead of bright blue
                                               ),
                                               textAlign: TextAlign.center,
                                             ),
@@ -500,7 +500,7 @@ class _LeaderBoardState extends State<LeaderBoard> {
                                                   12), // ✅ Smaller button size
                                             ),
                                             child: Icon(Icons.refresh,
-                                                color: Colors.grey.shade600,
+                                                color: Colors.black,
                                                 size:
                                                     24), // ✅ Darker grey icon, smaller size
                                           ),
