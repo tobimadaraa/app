@@ -80,7 +80,8 @@ class _LeaderBoardState extends State<LeaderBoard> {
       _hasMoreData = true;
     });
     // If you need the full leaderboard loaded before showing data, await it here.
-    await userRepository.loadFullLeaderboard();
+    await userRepository.loadFullLeaderboard(loadAll: false);
+    userRepository.loadFullLeaderboard(loadAll: true);
     _scrollController.addListener(_onScroll);
     await _loadLeaderboard(); // Load the appropriate leaderboard
     // When all loading is finished, remove the initial loading flag.
@@ -93,53 +94,57 @@ class _LeaderBoardState extends State<LeaderBoard> {
   int _latestRequestId = 0;
 
   /// Keep track of whether a leaderboard is actively loading
-  bool _isActiveLoading = false;
+  //bool _isActiveLoading = false;
   Future<void> _loadLeaderboard(
       {bool loadMore = false, bool forceRefresh = false}) async {
-    print("📢 LB Current Active Request ID: $_latestRequestId");
-    print("🔍 LB _isActiveLoading: $_isActiveLoading");
-    print("🔍 LB _isLoadingMore: $_isLoadingMore");
-
     if (_isLoadingMore || (!_hasMoreData && loadMore)) return;
 
-    _latestRequestId++; // 🔥 Generate a unique request ID
-    final int requestId = _latestRequestId; // 🔥 Capture this request’s ID
-
-    print(
-        "📢 Starting new request: Request ID $requestId for $selectedLeaderboard");
+    _latestRequestId++;
+    final int requestId = _latestRequestId;
 
     if (!loadMore) {
-      setState(() {
-        _loadedUsers.clear();
-        _currentStartIndex = 0;
-        _hasMoreData = true;
-        _isActiveLoading = true;
-        _errorMessage = null; // ✅ Reset error message
-      });
+      if (mounted) {
+        setState(() {
+          _loadedUsers.clear();
+          _currentStartIndex = 0;
+          _hasMoreData = true;
+          //_isActiveLoading = true;
+          _errorMessage = null;
+        });
+      }
     }
 
     _isLoadingMore = true;
-    setState(() {});
+    if (mounted) setState(() {});
 
     try {
       List<LeaderboardModel> newUsers = [];
 
       if (selectedLeaderboard == LeaderboardType.ranked) {
-        print("⏳ Fetching Ranked leaderboard...");
-        newUsers = await riotApiService.getLeaderboard(
-          startIndex: _currentStartIndex,
-          size: _pageSize,
-          forceRefresh: forceRefresh,
-        );
+        print("⏳ Fetching Firebase ranked leaderboard...");
+        List<LeaderboardModel> fullLeaderboard;
 
-        print("✅ Ranked leaderboard received for request ID $requestId");
+        // If the user hasn't scrolled past 500, use quick load mode.
+        if (_currentStartIndex < 500) {
+          fullLeaderboard =
+              await userRepository.loadFullLeaderboard(loadAll: false);
+        } else {
+          // The user scrolled past 500, so load the full leaderboard.
+          fullLeaderboard =
+              await userRepository.loadFullLeaderboard(loadAll: true);
+        }
+
+        newUsers =
+            fullLeaderboard.skip(_currentStartIndex).take(_pageSize).toList();
+        print(
+            "✅ Firebase ranked leaderboard received for request ID $requestId");
       } else {
+        // Existing logic for reported users...
         print("⏳ Fetching Firebase leaderboard for reported users...");
         List<LeaderboardModel> allUsers =
             await userRepository.getReportedUsersFromFirebase(
           leaderboardType: selectedLeaderboard,
         );
-
         newUsers = allUsers.skip(_currentStartIndex).take(_pageSize).toList();
         print("✅ Firebase leaderboard received for request ID $requestId");
       }
@@ -151,38 +156,41 @@ class _LeaderBoardState extends State<LeaderBoard> {
       }
 
       if (newUsers.isNotEmpty) {
-        setState(() {
-          print(
-              "🔄 Updating UI with ${newUsers.length} users for $selectedLeaderboard");
-          _loadedUsers.addAll(newUsers);
-          _currentStartIndex += newUsers.length;
-          _hasMoreData = newUsers.length == _pageSize;
-        });
+        if (mounted) {
+          setState(() {
+            _loadedUsers.addAll(newUsers);
+            _currentStartIndex += newUsers.length;
+            _hasMoreData = newUsers.length == _pageSize;
+          });
+        }
       } else {
-        setState(() {
-          _hasMoreData = false;
-        });
+        if (mounted) {
+          setState(() {
+            _hasMoreData = false;
+          });
+        }
         print("⚠️ No more data available, stopping load requests.");
       }
     } catch (e) {
       print("❌ ERROR: Failed to load leaderboard: $e");
-
-      if (e.toString().contains("403")) {
-        setState(() {
-          _errorMessage = "Error loading leaderboard. Please try again.";
-        });
-      } else if (e.toString().contains("429")) {
-        setState(() {
-          _errorMessage =
-              "Too many requests to Riot Servers, please wait and try again";
-        });
+      if (mounted) {
+        if (e.toString().contains("403")) {
+          setState(() {
+            _errorMessage = "Error loading leaderboard. Please try again.";
+          });
+        } else if (e.toString().contains("429")) {
+          setState(() {
+            _errorMessage =
+                "Too many requests to Riot Servers, please wait and try again";
+          });
+        }
       }
     } finally {
-      if (requestId == _latestRequestId) {
+      if (mounted && requestId == _latestRequestId) {
         _isLoadingMore = false;
-        _isActiveLoading = false;
-        print("✅ Finished loading Request $requestId, UI can update");
+        //  _isActiveLoading = false;
         setState(() {});
+        print("✅ Finished loading Request $requestId, UI can update");
       } else {
         print("⚠️ Request $requestId finished but was ignored.");
       }
@@ -452,7 +460,7 @@ class _LeaderBoardState extends State<LeaderBoard> {
                             _hasMoreData = true;
                             _latestRequestId++;
                             _isLoadingMore = false;
-                            _isActiveLoading = false;
+                            //    _isActiveLoading = false;
                           });
                           _loadLeaderboard();
                         },
@@ -512,6 +520,8 @@ class _LeaderBoardState extends State<LeaderBoard> {
                                       onRefresh: _refreshLeaderboard,
                                       child: ListView.builder(
                                           controller: _scrollController,
+                                          physics:
+                                              const AlwaysScrollableScrollPhysics(),
                                           itemCount: _loadedUsers.length +
                                               (_isLoadingMore ? 1 : 0),
                                           itemBuilder: (context, index) {
@@ -519,7 +529,6 @@ class _LeaderBoardState extends State<LeaderBoard> {
                                               return const Center(
                                                   child:
                                                       CircularProgressIndicator());
-                                              // );
                                             }
                                             final user = _loadedUsers[index];
                                             final bool isClickable =

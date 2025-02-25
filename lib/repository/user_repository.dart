@@ -9,19 +9,72 @@ import 'package:get/get.dart';
 class UserRepository extends GetxController {
   final _db = FirebaseFirestore.instance;
   final RiotApiService riotApiService = RiotApiService();
-  List<LeaderboardModel> _fullLeaderboard = [];
+  // List<LeaderboardModel> _fullLeaderboard = [];
+  List<LeaderboardModel>? _cachedLeaderboard;
+  DateTime? _cachedLeaderboardTime;
+  final Duration _cacheDuration = const Duration(minutes: 5);
+  Future<List<LeaderboardModel>> loadFullLeaderboard(
+      {bool loadAll = false}) async {
+    // Check cache first
+    if (_cachedLeaderboard != null &&
+        _cachedLeaderboardTime != null &&
+        DateTime.now().difference(_cachedLeaderboardTime!) < _cacheDuration) {
+      if (!loadAll && _cachedLeaderboard!.length >= 500) {
+        print(
+            "DEBUG: Returning cached top 500 leaderboard data (cached: ${_cachedLeaderboard!.length} players).");
+        return _cachedLeaderboard!.take(500).toList();
+      } else if (loadAll) {
+        print(
+            "DEBUG: Returning cached full leaderboard data (cached: ${_cachedLeaderboard!.length} players).");
+        return _cachedLeaderboard!;
+      }
+    }
 
-  Future<List<LeaderboardModel>> loadFullLeaderboard() async {
     try {
-      print("DEBUG: Sending request to Riot API...");
-      List<LeaderboardModel> riotLeaderboard =
-          await riotApiService.getLeaderboard(startIndex: 0, size: 200);
-      _fullLeaderboard = riotLeaderboard;
-      print(
-          "DEBUG: Loaded full leaderboard with ${_fullLeaderboard.length} players.");
-      return _fullLeaderboard;
+      print("DEBUG: Fetching leaderboard from Firestore...");
+      // Fetch all 8 batches in parallel
+      List<Future<DocumentSnapshot>> futures = [];
+      for (int i = 0; i < 8; i++) {
+        futures.add(_db.collection("LeaderboardDoc").doc("batch_$i").get());
+      }
+      List<DocumentSnapshot> docs = await Future.wait(futures);
+
+      List<LeaderboardModel> leaderboard = [];
+      for (DocumentSnapshot docSnapshot in docs) {
+        if (docSnapshot.exists) {
+          final data = docSnapshot.data();
+          if (data is Map<String, dynamic> && data.containsKey("players")) {
+            List<dynamic> players = data["players"];
+            for (var playerData in players) {
+              if (playerData is Map<String, dynamic>) {
+                leaderboard.add(LeaderboardModel.fromJson(playerData));
+              }
+            }
+          }
+        }
+      }
+
+      // Sort by rank (lower is better)
+      leaderboard
+          .sort((a, b) => a.leaderboardRank.compareTo(b.leaderboardRank));
+
+      // Update the cache with full data
+      _cachedLeaderboard = leaderboard;
+      _cachedLeaderboardTime = DateTime.now();
+
+      if (!loadAll) {
+        // Quick mode: only return the top 500
+        List<LeaderboardModel> top500 = leaderboard.take(500).toList();
+        print(
+            "DEBUG: Loaded top ${top500.length} players from Firestore (quick load).");
+        return top500;
+      } else {
+        print(
+            "DEBUG: Loaded full leaderboard from Firestore with ${leaderboard.length} players.");
+        return leaderboard;
+      }
     } catch (error) {
-      print("ERROR: Failed to fetch full leaderboard - $error");
+      print("ERROR: Failed to fetch leaderboard from Firestore - $error");
       return [];
     }
   }
@@ -298,6 +351,45 @@ class UserRepository extends GetxController {
       return results;
     } catch (error) {
       print("Error searching players in batches: $error");
+      return [];
+    }
+  }
+
+  Future<List<LeaderboardModel>> getLeaderboardPage({
+    int startIndex = 0,
+    int pageSize = 50,
+  }) async {
+    try {
+      List<LeaderboardModel> allPlayers = [];
+
+      // Loop through each batch document (batch_0 to batch_7)
+      for (int i = 0; i < 8; i++) {
+        DocumentSnapshot docSnapshot =
+            await _db.collection("LeaderboardDoc").doc("batch_$i").get();
+
+        if (docSnapshot.exists) {
+          final data = docSnapshot.data();
+          if (data is Map<String, dynamic> && data.containsKey("players")) {
+            List<dynamic> players = data["players"];
+
+            // Convert each player in the batch to a LeaderboardModel
+            for (var playerData in players) {
+              if (playerData is Map<String, dynamic>) {
+                final player = LeaderboardModel.fromJson(playerData);
+                allPlayers.add(player);
+              }
+            }
+          }
+        }
+      }
+
+      // Sort players by leaderboardRank (assuming lower rank is better)
+      allPlayers.sort((a, b) => a.leaderboardRank.compareTo(b.leaderboardRank));
+
+      // Implement paging: skip startIndex and take pageSize items
+      return allPlayers.skip(startIndex).take(pageSize).toList();
+    } catch (error) {
+      print("ERROR: Failed to fetch leaderboard players: $error");
       return [];
     }
   }

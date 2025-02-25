@@ -108,7 +108,7 @@ async function storeLeaderboardInBatches() {
 
     if (batchIndex < totalBatches - 1) {
       console.log(`⏳ Waiting 10 seconds before fetching batch ${batchIndex + 1}...`);
-      await delay(10000);
+      await delay(12000);
     }
   }
 
@@ -145,7 +145,7 @@ exports.updateLeaderboard = onRequest(
  */
 exports.ScheduledLeaderboardUpdate = onSchedule(
     {
-      schedule: "every 60 minutes", // Runs every hour
+      schedule: "every 20 minutes", // Runs every 20m
       timeZone: "Etc/UTC",
       region: "europe-west1",
       timeoutSeconds: 540,
