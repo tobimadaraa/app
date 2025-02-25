@@ -29,7 +29,9 @@ class DodgeListState extends State<DodgeList> {
   String? tagLineError;
   String newUserId = "";
   String newTagLine = "";
-
+  bool isSearching = false; // Controls whether we're in "search mode"
+  TextEditingController searchController = TextEditingController();
+  List<LeaderboardModel> filteredDodgeList = []; // Holds the filtered results
   @override
   void initState() {
     super.initState();
@@ -59,12 +61,33 @@ class DodgeListState extends State<DodgeList> {
       List<dynamic> jsonData = jsonDecode(storedList);
       setState(() {
         dodgeList = jsonData.map((e) => LeaderboardModel.fromJson(e)).toList();
+        // ➡️ Also copy dodgeList into filteredDodgeList initially
+        filteredDodgeList = List.from(dodgeList);
       });
-
       print("✅ Loaded Dodge List from cache.");
     } else {
       print("❌ No cached Dodge List found, querying Firestore...");
     }
+  }
+
+  void _filterDodgeList(String query) {
+    setState(() {
+      // For premium users, search the entire list.
+      // For non-premium, only search through the first 5 users.
+      List<LeaderboardModel> sourceList = userController.isPremium.value
+          ? dodgeList
+          : (dodgeList.length > 5 ? dodgeList.sublist(0, 5) : dodgeList);
+
+      if (query.isEmpty) {
+        filteredDodgeList = List.from(sourceList);
+      } else {
+        final lowerQuery = query.toLowerCase();
+        filteredDodgeList = sourceList.where((user) {
+          return user.gameName.toLowerCase().contains(lowerQuery) ||
+              user.tagLine.toLowerCase().contains(lowerQuery);
+        }).toList();
+      }
+    });
   }
 
   Future<void> _saveDodgeListToLocalStorage() async {
@@ -252,21 +275,51 @@ class DodgeListState extends State<DodgeList> {
   Widget build(BuildContext context) {
     final bool isPremium = userController.isPremium.value;
     // final List<LeaderboardModel> displayList = isPremium
-    //     ? dodgeList
-    //     : (dodgeList.length > 5 ? dodgeList.sublist(0, 5) : dodgeList);
+    //     ? filteredDodgeList
+    //     : (filteredDodgeList.length > 5
+    //         ? filteredDodgeList.sublist(0, 5)
+    //         : filteredDodgeList);
 
     return Scaffold(
+      backgroundColor: Colors.white,
+      appBar: AppBar(
         backgroundColor: Colors.white,
-        appBar: AppBar(
-          backgroundColor: Colors.white,
-          title: const Center(
-            child: Text(
-              "Dodgelist",
-              style: TextStyle(fontWeight: FontWeight.bold),
-            ),
-          ),
-        ),
-        body: Column(children: [
+        title: isSearching
+            ? TextField(
+                controller: searchController,
+                autofocus: true,
+                onChanged: _filterDodgeList,
+                style: const TextStyle(color: Colors.black),
+                decoration: const InputDecoration(
+                  hintText: "Search Riot ID or Tagline...",
+                  hintStyle: TextStyle(color: Colors.black54),
+                  border: InputBorder.none,
+                ),
+              )
+            : const Center(
+                child: Text(
+                  "Dodgelist",
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+              ),
+        centerTitle: true,
+        actions: [
+          IconButton(
+              icon: Icon(isSearching ? Icons.close : Icons.search,
+                  color: Colors.black),
+              onPressed: () {
+                setState(() {
+                  isSearching = !isSearching;
+                  if (!isSearching) {
+                    searchController.clear();
+                    _filterDodgeList("");
+                  }
+                });
+              })
+        ],
+      ),
+      body: Column(
+        children: [
           DodgeListInputFields(
             usernameError: usernameError,
             tagLineError: tagLineError,
@@ -286,12 +339,15 @@ class DodgeListState extends State<DodgeList> {
           ),
           Expanded(
             child: DodgeListView(
-              dodgeList: dodgeList, // ✅ Pass the full list
-              onRemoveUser: _removeUserFromDodgeList, // ✅ Pass remove function
-              isPremium: isPremium, // ✅ Pass premium status
+              dodgeList: isSearching ? filteredDodgeList : dodgeList,
+              onRemoveUser: _removeUserFromDodgeList,
+              isPremium: isPremium,
+              showPaywall: !isSearching, // Disable paywall during search
             ),
           ),
-        ]));
+        ],
+      ),
+    );
   }
 
   /// 🔒 Lock Paywall Widget (Appears Inside the List)

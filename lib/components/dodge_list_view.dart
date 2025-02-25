@@ -4,20 +4,28 @@ import 'package:flutter_application_2/models/leaderboard_model.dart';
 class DodgeListView extends StatelessWidget {
   final List<LeaderboardModel> dodgeList;
   final Function(LeaderboardModel) onRemoveUser;
-  final bool isPremium; // ✅ Check if the user is premium
+  final bool isPremium;
+  final bool showPaywall; // NEW parameter
 
   const DodgeListView({
     super.key,
     required this.dodgeList,
     required this.onRemoveUser,
-    required this.isPremium, // ✅ Receive premium status
+    required this.isPremium,
+    this.showPaywall = true, // default true
   });
 
   @override
   Widget build(BuildContext context) {
-    final int itemCount = isPremium
-        ? dodgeList.length
-        : (dodgeList.length > 5 ? 6 : dodgeList.length); // ✅ Add paywall if >5
+    final int itemCount;
+    if (isPremium) {
+      itemCount = dodgeList.length;
+    } else {
+      // If paywall is enabled, show 5 items plus paywall; if disabled, cap at 5.
+      itemCount = showPaywall
+          ? (dodgeList.length > 5 ? 6 : dodgeList.length)
+          : (dodgeList.length > 5 ? 5 : dodgeList.length);
+    }
 
     return ListView.separated(
       itemCount: itemCount,
@@ -26,7 +34,7 @@ class DodgeListView extends StatelessWidget {
         thickness: 0.5,
       ),
       itemBuilder: (context, index) {
-        if (!isPremium && index == 5) {
+        if (!isPremium && showPaywall && index == 5) {
           return _buildPaywallWidget();
         }
 
@@ -50,7 +58,6 @@ class DodgeListView extends StatelessWidget {
     );
   }
 
-  /// 🔒 Premium Paywall Widget (Appears at index 5 if non-premium)
   Widget _buildPaywallWidget() {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),

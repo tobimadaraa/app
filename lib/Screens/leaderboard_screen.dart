@@ -1,5 +1,6 @@
 // ignore_for_file: avoid_print
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_application_2/pages/user_detail_page.dart';
 import 'package:flutter_application_2/shared/classes/notifiers.dart';
@@ -661,13 +662,15 @@ class _LeaderBoardState extends State<LeaderBoard> {
                                           })))
                     ])))
       ]),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () async {
-          await resetAllReportCooldowns();
-          Get.snackbar("Reset", "All report cooldowns have been reset");
-        },
-        child: const Icon(Icons.refresh),
-      ),
+      floatingActionButton: kDebugMode
+          ? FloatingActionButton(
+              onPressed: () async {
+                await resetAllReportCooldowns();
+                Get.snackbar("Reset", "All report cooldowns have been reset");
+              },
+              child: const Icon(Icons.refresh),
+            )
+          : null,
     );
   }
 }
