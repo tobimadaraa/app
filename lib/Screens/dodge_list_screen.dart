@@ -274,12 +274,6 @@ class DodgeListState extends State<DodgeList> {
   @override
   Widget build(BuildContext context) {
     final bool isPremium = userController.isPremium.value;
-    // final List<LeaderboardModel> displayList = isPremium
-    //     ? filteredDodgeList
-    //     : (filteredDodgeList.length > 5
-    //         ? filteredDodgeList.sublist(0, 5)
-    //         : filteredDodgeList);
-
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
