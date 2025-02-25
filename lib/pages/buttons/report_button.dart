@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter_application_2/components/user_controller.dart';
 import 'package:flutter_application_2/repository/user_repository.dart';
 import 'package:flutter_application_2/shared/classes/colour_classes.dart';
 import 'package:flutter_application_2/utils/validators.dart';
@@ -14,6 +15,7 @@ class ReportButton extends StatefulWidget {
   final bool isToxicity;
   final bool isHonour;
   final Duration cooldownDuration;
+
   final String
       reportType; // Unique identifier: e.g. "cheater", "toxicity", "honour"
   final int
@@ -41,7 +43,7 @@ class ReportButtonState extends State<ReportButton> {
   bool _canReport = true;
   Duration _remainingTime = Duration.zero;
   Timer? _cooldownTimer;
-
+  int get allowedReports => Get.find<UserController>().isPremium.value ? 2 : 1;
   // Use the reportType parameter to build a unique SharedPreferences key.
   String get _reportKey => "lastReport_${widget.reportType}";
 
@@ -70,22 +72,36 @@ class ReportButtonState extends State<ReportButton> {
 
   Future<void> _checkReportAvailability() async {
     final prefs = await SharedPreferences.getInstance();
-    final int lastReport = prefs.getInt(_reportKey) ?? 0;
+    // Use keys for both the count and the start time
+    final String countKey = "reportCount_${widget.reportType}";
+    final String startKey = "reportStart_${widget.reportType}";
+
+    int reportCount = prefs.getInt(countKey) ?? 0;
+    int reportStart =
+        prefs.getInt(startKey) ?? DateTime.now().millisecondsSinceEpoch;
     final int now = DateTime.now().millisecondsSinceEpoch;
     final int cooldownMillis = widget.cooldownDuration.inMilliseconds;
-    final int elapsed = now - lastReport;
 
-    if (elapsed < cooldownMillis) {
-      setState(() {
-        _canReport = false;
-        _remainingTime = Duration(milliseconds: cooldownMillis - elapsed);
-      });
-      _startCooldownTimer();
-    } else {
+    // If the cooldown period has expired, reset the counter and start time.
+    if (now - reportStart >= cooldownMillis) {
+      await prefs.setInt(countKey, 0);
+      await prefs.setInt(startKey, now);
+      reportCount = 0;
+      reportStart = now;
+    }
+
+    if (reportCount < allowedReports) {
       setState(() {
         _canReport = true;
         _remainingTime = Duration.zero;
       });
+    } else {
+      setState(() {
+        _canReport = false;
+        _remainingTime =
+            Duration(milliseconds: cooldownMillis - (now - reportStart));
+      });
+      _startCooldownTimer();
     }
   }
 
@@ -108,11 +124,34 @@ class ReportButtonState extends State<ReportButton> {
 
   Future<void> _updateReportTimestamp() async {
     final prefs = await SharedPreferences.getInstance();
+    final String countKey = "reportCount_${widget.reportType}";
+    final String startKey = "reportStart_${widget.reportType}";
+
     final int now = DateTime.now().millisecondsSinceEpoch;
-    await prefs.setInt(_reportKey, now);
+    int reportCount = prefs.getInt(countKey) ?? 0;
+    int reportStart = prefs.getInt(startKey) ?? now;
+    final int cooldownMillis = widget.cooldownDuration.inMilliseconds;
+
+    // If the cooldown period has expired, reset the counter and start time.
+    if (now - reportStart >= cooldownMillis) {
+      reportCount = 0;
+      reportStart = now;
+    }
+
+    reportCount++;
+    await prefs.setInt(countKey, reportCount);
+    await prefs.setInt(startKey, reportStart);
+
+    // Update the local state: if we've reached allowedReports, disable reporting.
     setState(() {
-      _canReport = false;
-      _remainingTime = widget.cooldownDuration;
+      if (reportCount >= allowedReports) {
+        _canReport = false;
+        _remainingTime =
+            Duration(milliseconds: cooldownMillis - (now - reportStart));
+      } else {
+        _canReport = true;
+        _remainingTime = Duration.zero;
+      }
     });
     _startCooldownTimer();
   }
