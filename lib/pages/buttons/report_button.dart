@@ -43,7 +43,13 @@ class ReportButtonState extends State<ReportButton> {
   bool _canReport = true;
   Duration _remainingTime = Duration.zero;
   Timer? _cooldownTimer;
-  int get allowedReports => Get.find<UserController>().isPremium.value ? 2 : 1;
+  int get allowedReports {
+    if (widget.reportType.toLowerCase() == "honour") {
+      return 1;
+    }
+    return Get.find<UserController>().isPremium.value ? 2 : 1;
+  }
+
   // Use the reportType parameter to build a unique SharedPreferences key.
   String get _reportKey => "lastReport_${widget.reportType}";
 

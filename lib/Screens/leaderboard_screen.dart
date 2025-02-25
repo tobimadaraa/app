@@ -57,13 +57,19 @@ class _LeaderBoardState extends State<LeaderBoard> {
 
   Future<void> resetAllReportCooldowns() async {
     final prefs = await SharedPreferences.getInstance();
+    // Clear old keys if needed:
     await prefs.remove("lastReport_cheater");
     await prefs.remove("lastReport_toxicity");
     await prefs.remove("lastReport_honour");
+    // Clear the new keys for each report type.
+    await prefs.remove("reportCount_cheater");
+    await prefs.remove("reportStart_cheater");
+    await prefs.remove("reportCount_toxicity");
+    await prefs.remove("reportStart_toxicity");
+    await prefs.remove("reportCount_honour");
+    await prefs.remove("reportStart_honour");
     setState(() {
-      // _reportResetTriggerCheater++;
-      // _reportResetTriggerToxicity++;
-      // _reportResetTriggerHonour++;
+      // Trigger a UI update if necessary.
     });
   }
 

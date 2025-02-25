@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_application_2/Screens/home_page.dart';
-import 'package:flutter_application_2/Screens/initialiser.dart';
+import 'package:flutter_application_2/initialiser.dart';
 import 'package:flutter_application_2/Screens/leaderboard_screen.dart';
 import 'package:flutter_application_2/Screens/login_screen.dart';
 import 'package:flutter_application_2/Screens/dodge_list_screen.dart';
