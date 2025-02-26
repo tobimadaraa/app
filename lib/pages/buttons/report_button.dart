@@ -78,17 +78,17 @@ class ReportButtonState extends State<ReportButton> {
 
   Future<void> _checkReportAvailability() async {
     final prefs = await SharedPreferences.getInstance();
-    // Use keys for both the count and the start time
+
+    // ✅ Use a unique key for each report type
     final String countKey = "reportCount_${widget.reportType}";
     final String startKey = "reportStart_${widget.reportType}";
 
     int reportCount = prefs.getInt(countKey) ?? 0;
-    int reportStart =
-        prefs.getInt(startKey) ?? DateTime.now().millisecondsSinceEpoch;
+    int reportStart = prefs.getInt(startKey) ?? 0; // Start at 0 if missing
     final int now = DateTime.now().millisecondsSinceEpoch;
     final int cooldownMillis = widget.cooldownDuration.inMilliseconds;
 
-    // If the cooldown period has expired, reset the counter and start time.
+    // ✅ Ensure the stored cooldown is only affecting the correct report type
     if (now - reportStart >= cooldownMillis) {
       await prefs.setInt(countKey, 0);
       await prefs.setInt(startKey, now);
@@ -130,6 +130,8 @@ class ReportButtonState extends State<ReportButton> {
 
   Future<void> _updateReportTimestamp() async {
     final prefs = await SharedPreferences.getInstance();
+
+    // ✅ Unique keys per report type
     final String countKey = "reportCount_${widget.reportType}";
     final String startKey = "reportStart_${widget.reportType}";
 
@@ -138,7 +140,7 @@ class ReportButtonState extends State<ReportButton> {
     int reportStart = prefs.getInt(startKey) ?? now;
     final int cooldownMillis = widget.cooldownDuration.inMilliseconds;
 
-    // If the cooldown period has expired, reset the counter and start time.
+    // ✅ Reset only if the cooldown for THIS report type has expired
     if (now - reportStart >= cooldownMillis) {
       reportCount = 0;
       reportStart = now;
@@ -146,9 +148,9 @@ class ReportButtonState extends State<ReportButton> {
 
     reportCount++;
     await prefs.setInt(countKey, reportCount);
-    await prefs.setInt(startKey, reportStart);
+    await prefs.setInt(
+        startKey, now); // ✅ Only update for this specific report type
 
-    // Update the local state: if we've reached allowedReports, disable reporting.
     setState(() {
       if (reportCount >= allowedReports) {
         _canReport = false;
