@@ -29,28 +29,15 @@ class _HomePageState extends State<HomePage> {
     return Scaffold(
       body: Center(child: _widgetOptions.elementAt(_selectedIndex)),
       bottomNavigationBar: BottomNavigationBar(
-        type: BottomNavigationBarType.fixed,
-        iconSize: 42,
-        backgroundColor: Colors.white,
-        items: [
+        backgroundColor: const Color(0xFF1B1E30),
+        selectedItemColor: Colors.white,
+        unselectedItemColor: Colors.grey,
+        items: const [
+          BottomNavigationBarItem(icon: Icon(Icons.person), label: "Profile"),
           BottomNavigationBarItem(
-            icon: SizedBox(
-              width: 42,
-              height: 42,
-              child: CircleAvatar(
-                backgroundImage: NetworkImage(
-                  'https://yt3.googleusercontent.com/Lep5zj2y6yjTwNn9HRP1rtC7_NoCBS6sO8BhwyHmQS59PjdUeMPKS0QZ8N_dj4T2sUXtkEIR=s160-c-k-c0x00ffffff-no-rj',
-                ),
-              ),
-            ),
-            label: 'You',
-          ),
+              icon: Icon(Icons.leaderboard), label: "Leaderboard"),
           BottomNavigationBarItem(
-            icon: Icon(Icons.show_chart),
-            label: 'leaderboard',
-          ),
-          BottomNavigationBarItem(
-              icon: Icon(Icons.person_off), label: 'dodgelist'),
+              icon: Icon(Icons.person_off), label: "Dodge List"),
         ],
         onTap: _onItemTapped,
       ),

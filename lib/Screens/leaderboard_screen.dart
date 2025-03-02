@@ -235,8 +235,8 @@ class _LeaderBoardState extends State<LeaderBoard> {
         return Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
           child: Shimmer.fromColors(
-            baseColor: Colors.grey.shade200,
-            highlightColor: Colors.grey.shade100,
+            baseColor: Colors.grey.shade800,
+            highlightColor: Colors.grey.shade600,
             child: Container(
               height: 60,
               decoration: BoxDecoration(
@@ -257,19 +257,9 @@ class _LeaderBoardState extends State<LeaderBoard> {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        leading: IconButton(
-          icon: const Icon(
-            Icons.chevron_left,
-            color: Colors.black,
-            size: 28, // adjust size as needed
-          ),
-          onPressed: () {
-            Navigator.pushReplacementNamed(context, '/homepage');
-          },
-        ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.search, color: Colors.black),
+            icon: const Icon(Icons.search, color: Colors.white),
             onPressed: () async {
               showSearch(
                 context: context,
@@ -278,15 +268,15 @@ class _LeaderBoardState extends State<LeaderBoard> {
             },
           ),
         ],
-        centerTitle: true,
+        //centerTitle: true,
         title: const Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
               'Leaderboard',
               style: TextStyle(
-                color: Colors.black,
-                fontSize: 22,
+                color: Colors.white,
+                fontSize: 26,
                 fontWeight: FontWeight.bold,
               ),
             ),
@@ -307,9 +297,7 @@ class _LeaderBoardState extends State<LeaderBoard> {
       ),
       body: Stack(children: [
         // 1) Background color (instead of an image)
-        Container(
-          color: Colors.white,
-        ),
+        Container(color: const Color(0xFF1B1E30)),
 
         // 2) Main content
         SafeArea(
@@ -515,7 +503,7 @@ class _LeaderBoardState extends State<LeaderBoard> {
                                                   12), // ✅ Smaller button size
                                             ),
                                             child: Icon(Icons.refresh,
-                                                color: Colors.black,
+                                                color: Colors.white,
                                                 size:
                                                     24), // ✅ Darker grey icon, smaller size
                                           ),
@@ -546,23 +534,32 @@ class _LeaderBoardState extends State<LeaderBoard> {
                                                             .toxicity ||
                                                     selectedLeaderboard ==
                                                         LeaderboardType.honour;
-                                            return Column(
-                                              children: [
-                                                ListTile(
-                                                  dense: true,
-                                                  contentPadding:
-                                                      EdgeInsets.only(
-                                                          left: 16,
-                                                          right: 8,
-                                                          top: 2,
-                                                          bottom: 2),
+                                            return Padding(
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                      horizontal: 16,
+                                                      vertical: 8),
+                                              child: Container(
+                                                decoration: BoxDecoration(
+                                                  color: const Color(
+                                                      0xFF262A40), // Darker background for leaderboard cards
+                                                  borderRadius:
+                                                      BorderRadius.circular(12),
+                                                ),
+                                                child: ListTile(
+                                                  leading: CircleAvatar(
+                                                    radius:
+                                                        24, // Adjust size if needed
+                                                    backgroundImage: AssetImage(
+                                                        'assets/placeholder.png'), // Replace with actual images
+                                                  ),
                                                   title: RichText(
                                                     text: TextSpan(
                                                       style: TextStyle(
                                                         color: selectedLeaderboard ==
                                                                 LeaderboardType
                                                                     .ranked
-                                                            ? Colors.grey[900]
+                                                            ? Colors.white
                                                             : ReportLevelHelper
                                                                 .getGameNameColor(
                                                                 cheaterReports:
@@ -587,8 +584,6 @@ class _LeaderBoardState extends State<LeaderBoard> {
                                                               .toxicityReports,
                                                           honourReports: user
                                                               .honourReports,
-
-                                                          //iconSize: 20,
                                                         ).map(
                                                           (icon) => WidgetSpan(
                                                             alignment:
@@ -597,60 +592,38 @@ class _LeaderBoardState extends State<LeaderBoard> {
                                                             child: icon,
                                                           ),
                                                         )
-                                                        // .toList(),
                                                       ],
                                                     ),
                                                   ),
-                                                  subtitle: selectedLeaderboard ==
-                                                          LeaderboardType.ranked
-                                                      ? Text(
-                                                          'Rank: ${user.leaderboardRank} | Rating: ${user.rankedRating ?? "N/A"} | Wins: ${user.numberOfWins ?? "N/A"}',
-                                                          style: TextStyle(
-                                                              fontSize: 14,
-                                                              height: 1.0,
-                                                              color: Colors
-                                                                  .grey[600]),
-                                                        )
-                                                      : selectedLeaderboard ==
-                                                              LeaderboardType
-                                                                  .cheater
-                                                          ? Text(
-                                                              'Rank: ${user.leaderboardRank} | Cheater Reports: ${user.cheaterReports}',
-                                                              style: TextStyle(
-                                                                  fontSize: 14,
-                                                                  height: 1.0,
-                                                                  color: Colors
-                                                                          .grey[
-                                                                      600]),
-                                                            )
-                                                          : selectedLeaderboard ==
-                                                                  LeaderboardType
-                                                                      .toxicity
-                                                              ? Text(
-                                                                  'Rank: ${user.leaderboardRank} | Toxicity Reports: ${user.toxicityReports}',
-                                                                  style: TextStyle(
-                                                                      fontSize:
-                                                                          14,
-                                                                      height:
-                                                                          1.0,
-                                                                      color: Colors
-                                                                              .grey[
-                                                                          600]),
-                                                                )
-                                                              : selectedLeaderboard ==
-                                                                      LeaderboardType
-                                                                          .honour
-                                                                  ? Text(
-                                                                      'Rank: ${user.leaderboardRank} | Honour Reports: ${user.honourReports}',
-                                                                      style: TextStyle(
-                                                                          fontSize:
-                                                                              14,
-                                                                          height:
-                                                                              1.0,
-                                                                          color:
-                                                                              Colors.grey[600]),
-                                                                    )
-                                                                  : null,
+                                                  subtitle: Text(
+                                                    selectedLeaderboard ==
+                                                            LeaderboardType
+                                                                .ranked
+                                                        ? 'Rank: ${user.leaderboardRank} | Rating: ${user.rankedRating ?? "N/A"} | Wins: ${user.numberOfWins ?? "N/A"}'
+                                                        : selectedLeaderboard ==
+                                                                LeaderboardType
+                                                                    .cheater
+                                                            ? 'Rank: ${user.leaderboardRank} | Cheater Reports: ${user.cheaterReports}'
+                                                            : selectedLeaderboard ==
+                                                                    LeaderboardType
+                                                                        .toxicity
+                                                                ? 'Rank: ${user.leaderboardRank} | Toxicity Reports: ${user.toxicityReports}'
+                                                                : 'Rank: ${user.leaderboardRank} | Honour Reports: ${user.honourReports}',
+                                                    style: TextStyle(
+                                                        fontSize: 14,
+                                                        height: 1.0,
+                                                        color:
+                                                            Colors.grey[400]),
+                                                  ),
+                                                  trailing: Text(
+                                                    "${user.rankedRating ?? 0} pts",
+                                                    style: const TextStyle(
+                                                      color: Colors.lightBlue,
+                                                      fontSize: 14,
+                                                      fontWeight:
+                                                          FontWeight.bold,
+                                                    ),
+                                                  ),
                                                   onTap: isClickable
                                                       ? () {
                                                           Navigator.push(
@@ -667,12 +640,7 @@ class _LeaderBoardState extends State<LeaderBoard> {
                                                         }
                                                       : null,
                                                 ),
-                                                Divider(
-                                                  color: Colors.grey,
-                                                  thickness: 0.3,
-                                                  height: 0,
-                                                ),
-                                              ],
+                                              ),
                                             );
                                           })))
                     ])))
