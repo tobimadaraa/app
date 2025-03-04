@@ -71,6 +71,8 @@ flutter:
   uses-material-design: true
   assets:
     - apikey.env
+    - assets/radiant.png
+    - assets/userprofile.webp
  #  fonts:
  #   - family: Schyler
  #     fonts:

@@ -1,4 +1,5 @@
 // ignore_for_file: avoid_print
+import 'dart:ui';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -296,9 +297,50 @@ class _LeaderBoardState extends State<LeaderBoard> {
         ),
       ),
       body: Stack(children: [
-        // 1) Background color (instead of an image)
-        Container(color: const Color(0xFF1B1E30)),
+        // Base Background Color (Dark Layer)
+        Container(color: const Color(0xFF141429)),
 
+        // Soft Gradient Overlay (Less Intense & More Blended)
+        Container(
+          decoration: BoxDecoration(
+            gradient: RadialGradient(
+              center: Alignment.topLeft, // Adjusted to spread the effect evenly
+              radius: 2.0, // Increase radius for a smoother look
+              colors: [
+                Color(0xFF37D5F8).withOpacity(0.1), // Soft Light Blue
+                Color(0xFFA54CFF).withOpacity(0.15), // Soft Purple
+                Color(0xFF141429), // Merging with base background
+              ],
+              stops: [
+                0.2,
+                0.5,
+                1.0
+              ], // Controls how the colors fade into each other
+            ),
+          ),
+        ),
+
+        // Consistent Blur Effect (Keeps Background Subtle)
+        BackdropFilter(
+          filter: ImageFilter.blur(
+              sigmaX: 50, sigmaY: 50), // Lower blur for smoothness
+          child: Container(
+            color: Colors.transparent, // No extra brightness
+          ),
+        ),
+
+        // Leaderboard UI (Same as before, no changes)
+        SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                // Your leaderboard content here
+              ],
+            ),
+          ),
+        ),
         // 2) Main content
         SafeArea(
             child: Padding(
@@ -542,7 +584,7 @@ class _LeaderBoardState extends State<LeaderBoard> {
                                               child: Container(
                                                 decoration: BoxDecoration(
                                                   color: const Color(
-                                                      0xFF262A40), // Darker background for leaderboard cards
+                                                      0xff1a1e36), // Darker background for leaderboard cards
                                                   borderRadius:
                                                       BorderRadius.circular(12),
                                                 ),
@@ -550,8 +592,10 @@ class _LeaderBoardState extends State<LeaderBoard> {
                                                   leading: CircleAvatar(
                                                     radius:
                                                         24, // Adjust size if needed
+                                                    backgroundColor:
+                                                        Colors.transparent,
                                                     backgroundImage: AssetImage(
-                                                        'assets/placeholder.png'), // Replace with actual images
+                                                        'assets/userprofile.webp'), // Replace with actual images
                                                   ),
                                                   title: RichText(
                                                     text: TextSpan(
