@@ -63,7 +63,7 @@ class DodgeListView extends StatelessWidget {
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.black.withOpacity(0.7),
+        color: Colors.black.withAlpha((0.7 * 255).toInt()), // 70% opacity
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(

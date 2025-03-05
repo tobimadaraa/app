@@ -3,7 +3,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_application_2/Screens/home_page.dart';
 import 'package:flutter_application_2/initialiser.dart';
 import 'package:flutter_application_2/Screens/leaderboard_screen.dart';
-import 'package:flutter_application_2/Screens/login_screen.dart';
+//import 'package:flutter_application_2/Screens/login_screen.dart';
 import 'package:flutter_application_2/Screens/dodge_list_screen.dart';
 import 'package:flutter_application_2/components/user_controller.dart';
 import 'package:flutter_application_2/repository/user_repository.dart';
@@ -33,7 +33,7 @@ class MyApp extends StatelessWidget {
       initialRoute: '/homepage',
       getPages: [
         GetPage(name: '/homepage', page: () => HomePage()),
-        GetPage(name: '/login', page: () => LoginPage()),
+        //GetPage(name: '/login', page: () => LoginPage()),
         GetPage(name: '/leaderboard', page: () => LeaderBoard()),
         GetPage(name: '/discord', page: () => DodgeList()),
       ],

@@ -51,6 +51,7 @@ dependencies:
   lucide_icons: ^0.257.0
   fl_chart: ^0.70.2  # or the latest version available
   change_app_package_name: ^1.5.0
+  curved_navigation_bar: ^1.0.6
 
 dev_dependencies:
   flutter_test:
@@ -73,11 +74,14 @@ flutter:
     - apikey.env
     - assets/radiant.png
     - assets/userprofile.webp
- #  fonts:
- #   - family: Schyler
- #     fonts:
-  #       - asset: fonts/Schyler-Regular.ttf
-  #       - asset: fonts/Schyler-Italic.ttf
+  fonts:
+    - family: Kanit
+      fonts:
+         - asset: assets/fonts/Kanit-Regular.ttf
+         - asset: assets/fonts/Kanit-Bold.ttf
+           weight: 700
+         - asset: assets/fonts/Kanit-Italic.ttf
+           style: italic
 #         style: italic 
     # - family: Trajan Pro
      #  fonts:
