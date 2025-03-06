@@ -244,7 +244,7 @@ class ReportButtonState extends State<ReportButton> {
     final bool isValid = Validator.validateUsername(widget.newUserId) == null &&
         Validator.validateTagline(widget.newTagLine) == null;
     final Color reportButtonColor =
-        isValid ? Color(0xff37d5f8) : Colors.grey.shade200;
+        isValid ? Color(0xff37d5f8) : Color(0xff525252);
 
     // Convert remaining time to hours and minutes
     final int hours = _remainingTime.inHours;

@@ -8,6 +8,7 @@ import 'package:flutter_application_2/repository/user_repository.dart';
 import 'package:flutter_application_2/models/leaderboard_model.dart';
 import 'package:flutter_application_2/shared/classes/colour_classes.dart';
 import 'package:flutter_application_2/shared/classes/notifiers.dart';
+import 'package:flutter_application_2/shared/classes/shared_components.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
@@ -276,137 +277,149 @@ class DodgeListState extends State<DodgeList> {
   Widget build(BuildContext context) {
     final bool isPremium = userController.isPremium.value;
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: const Color(0xFF141429),
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: Colors.transparent,
+        elevation: 0,
         title: isSearching
             ? TextField(
                 controller: searchController,
                 autofocus: true,
                 onChanged: _filterDodgeList,
-                style: const TextStyle(color: Colors.black),
+                style: const TextStyle(color: Colors.white),
                 decoration: const InputDecoration(
                   hintText: "Search Riot ID or Tagline...",
-                  hintStyle: TextStyle(color: Colors.black54),
+                  hintStyle: TextStyle(color: Colors.white54),
                   border: InputBorder.none,
                 ),
               )
-            : const Center(
-                child: Text(
-                  "Dodgelist",
-                  style: TextStyle(fontWeight: FontWeight.bold),
+            : const Text(
+                "Dodgelist",
+                style: TextStyle(
+                  fontWeight: FontWeight.w500,
+                  fontFamily: 'Kanit',
+                  color: Colors.white,
+                  fontSize: 32,
                 ),
               ),
-        centerTitle: true,
+        // centerTitle: true,
         actions: [
           IconButton(
-              icon: Icon(isSearching ? Icons.close : Icons.search,
-                  color: Colors.black),
-              onPressed: () {
-                setState(() {
-                  isSearching = !isSearching;
-                  if (!isSearching) {
-                    searchController.clear();
-                    _filterDodgeList("");
-                  }
-                });
-              })
+            icon: Icon(isSearching ? Icons.close : Icons.search,
+                color: Colors.white),
+            onPressed: () {
+              setState(() {
+                isSearching = !isSearching;
+                if (!isSearching) {
+                  searchController.clear();
+                  _filterDodgeList("");
+                }
+              });
+            },
+          )
         ],
       ),
-      body: Column(
+      body: Stack(
         children: [
-          DodgeListInputFields(
-            usernameError: usernameError,
-            tagLineError: tagLineError,
-            onUsernameChanged: (value) {
-              setState(() {
-                newUserId = value;
-                usernameError = value.isEmpty ? "Enter a Riot ID" : null;
-              });
-            },
-            onTaglineChanged: (value) {
-              setState(() {
-                newTagLine = value;
-                tagLineError = value.isEmpty ? "Enter a Tagline" : null;
-              });
-            },
-            onAddUser: _addUserToDodgeList,
-          ),
-          Expanded(
-            child: DodgeListView(
-              dodgeList: isSearching ? filteredDodgeList : dodgeList,
-              onRemoveUser: _removeUserFromDodgeList,
-              isPremium: isPremium,
-              showPaywall: !isSearching, // Disable paywall during search
+          Container(color: const Color(0xFF141429)),
+          SafeArea(
+            child: Column(
+              children: [
+                DodgeListInputFields(
+                  usernameError: usernameError,
+                  tagLineError: tagLineError,
+                  onUsernameChanged: (value) {
+                    setState(() {
+                      newUserId = value;
+                      usernameError = value.isEmpty ? "Enter a Riot ID" : null;
+                    });
+                  },
+                  onTaglineChanged: (value) {
+                    setState(() {
+                      newTagLine = value;
+                      tagLineError = value.isEmpty ? "Enter a Tagline" : null;
+                    });
+                  },
+                  onAddUser: _addUserToDodgeList,
+                ),
+                Expanded(
+                  child: DodgeListView(
+                    dodgeList: isSearching ? filteredDodgeList : dodgeList,
+                    onRemoveUser: _removeUserFromDodgeList,
+                    isPremium: isPremium,
+                    showPaywall: !isSearching,
+                  ),
+                ),
+              ],
             ),
           ),
         ],
       ),
     );
   }
+}
 
-  /// 🔒 Lock Paywall Widget (Appears Inside the List)
+/// 🔒 Lock Paywall Widget (Appears Inside the List)
 // s
 
-  Future<void> syncDodgeListWithLeaderboard() async {
-    print("🔄 Syncing Dodge List with Leaderboard...");
+Future<void> syncDodgeListWithLeaderboard() async {
+  print("🔄 Syncing Dodge List with Leaderboard...");
 
-    // ✅ Load Dodge List from Local Storage
-    final prefs = await SharedPreferences.getInstance();
-    String? storedList = prefs.getString("dodge_list");
+  // ✅ Load Dodge List from Local Storage
+  final prefs = await SharedPreferences.getInstance();
+  String? storedList = prefs.getString("dodge_list");
 
-    if (storedList == null) {
-      print("❌ No stored Dodge List found.");
-      return;
-    }
+  if (storedList == null) {
+    print("❌ No stored Dodge List found.");
+    return;
+  }
 
-    List<dynamic> jsonData = jsonDecode(storedList);
-    List<LeaderboardModel> localDodgeList =
-        jsonData.map((e) => LeaderboardModel.fromJson(e)).toList();
+  List<dynamic> jsonData = jsonDecode(storedList);
+  List<LeaderboardModel> localDodgeList =
+      jsonData.map((e) => LeaderboardModel.fromJson(e)).toList();
 
-    // ✅ Fetch Latest Leaderboard Data from Firestore
-    List<LeaderboardModel> latestLeaderboard =
-        await userRepository.firestoreGetLeaderboard();
+  // ✅ Fetch Latest Leaderboard Data from Firestore
+  List<LeaderboardModel> latestLeaderboard =
+      await userRepository.firestoreGetLeaderboard();
 
-    bool isUpdated = false;
+  bool isUpdated = false;
 
-    for (var dodgeUser in localDodgeList) {
-      // 🔹 Find the user in the latest leaderboard
-      var leaderboardUser = latestLeaderboard.firstWhereOrNull(
-        (user) =>
-            user.gameName.toLowerCase() == dodgeUser.gameName.toLowerCase() &&
-            user.tagLine.toLowerCase() == dodgeUser.tagLine.toLowerCase(),
-      );
+  for (var dodgeUser in localDodgeList) {
+    // 🔹 Find the user in the latest leaderboard
+    var leaderboardUser = latestLeaderboard.firstWhereOrNull(
+      (user) =>
+          user.gameName.toLowerCase() == dodgeUser.gameName.toLowerCase() &&
+          user.tagLine.toLowerCase() == dodgeUser.tagLine.toLowerCase(),
+    );
 
-      if (leaderboardUser != null) {
-        // 🔍 Check if report counts have increased
-        if (leaderboardUser.cheaterReports > dodgeUser.cheaterReports ||
-            leaderboardUser.toxicityReports > dodgeUser.toxicityReports) {
-          print(
-              "⚠️ Updated Reports for ${dodgeUser.gameName}#${dodgeUser.tagLine}");
+    if (leaderboardUser != null) {
+      // 🔍 Check if report counts have increased
+      if (leaderboardUser.cheaterReports > dodgeUser.cheaterReports ||
+          leaderboardUser.toxicityReports > dodgeUser.toxicityReports) {
+        print(
+            "⚠️ Updated Reports for ${dodgeUser.gameName}#${dodgeUser.tagLine}");
 
-          // 🔄 Update the Dodge List user with new report counts
-          dodgeUser.cheaterReports = leaderboardUser.cheaterReports;
-          dodgeUser.toxicityReports = leaderboardUser.toxicityReports;
-          isUpdated = true;
-        }
+        // 🔄 Update the Dodge List user with new report counts
+        dodgeUser.cheaterReports = leaderboardUser.cheaterReports;
+        dodgeUser.toxicityReports = leaderboardUser.toxicityReports;
+        isUpdated = true;
       }
     }
+  }
 
-    if (isUpdated) {
-      print("✅ Dodge List Updated with Latest Reports!");
+  if (isUpdated) {
+    print("✅ Dodge List Updated with Latest Reports!");
 
-      // ✅ Save Updated Dodge List to Local Storage
-      List<Map<String, dynamic>> updatedJson =
-          localDodgeList.map((user) => user.toJson()).toList();
-      await prefs.setString("dodge_list", jsonEncode(updatedJson));
+    // ✅ Save Updated Dodge List to Local Storage
+    List<Map<String, dynamic>> updatedJson =
+        localDodgeList.map((user) => user.toJson()).toList();
+    await prefs.setString("dodge_list", jsonEncode(updatedJson));
 
-      // ✅ Refresh Dodge List UI
-      if (dodgeListKey.currentState != null) {
-        dodgeListKey.currentState!._loadDodgeList();
-      }
-    } else {
-      print("✅ Dodge List is Already Up-To-Date.");
+    // ✅ Refresh Dodge List UI
+    if (dodgeListKey.currentState != null) {
+      dodgeListKey.currentState!._loadDodgeList();
     }
+  } else {
+    print("✅ Dodge List is Already Up-To-Date.");
   }
 }

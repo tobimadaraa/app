@@ -281,7 +281,7 @@ class _LeaderBoardState extends State<LeaderBoard> {
                 'Leaderboard',
                 style: TextStyle(
                   color: Colors.white,
-                  fontSize: 26,
+                  fontSize: 32,
                   fontWeight: FontWeight.w500,
                   fontFamily: 'Kanit',
                 ),

@@ -32,6 +32,8 @@ class DodgeListView extends StatelessWidget {
       separatorBuilder: (context, index) => const Divider(
         color: Colors.grey,
         thickness: 0.5,
+        indent: 10,
+        endIndent: 10,
       ),
       itemBuilder: (context, index) {
         if (!isPremium && showPaywall && index == 5) {
@@ -40,12 +42,21 @@ class DodgeListView extends StatelessWidget {
 
         final user = dodgeList[index];
         return ListTile(
-          title: Text('${user.gameName}#${user.tagLine}'),
+          title: Text(
+            '${user.gameName}#${user.tagLine}',
+            style: TextStyle(color: Colors.white),
+          ),
           subtitle: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Cheater Reports: ${user.cheaterReports}'),
-              Text('Toxicity Reports: ${user.toxicityReports}'),
+              Text(
+                'Cheater Reports: ${user.cheaterReports}',
+                style: TextStyle(color: Colors.grey.shade400),
+              ),
+              Text(
+                'Toxicity Reports: ${user.toxicityReports}',
+                style: TextStyle(color: Colors.grey.shade400),
+              ),
             ],
           ),
           trailing: IconButton(

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_application_2/components/input_field.dart';
-import 'package:flutter_application_2/shared/classes/colour_classes.dart';
 import 'package:flutter_application_2/utils/validators.dart';
 
 class DodgeListInputFields extends StatefulWidget {
@@ -38,69 +37,87 @@ class _DodgeListInputFieldsState extends State<DodgeListInputFields> {
 
   @override
   Widget build(BuildContext context) {
-    return Form(
-      key: _formKey,
-      // Validate on each user interaction.
-      autovalidateMode: AutovalidateMode.onUserInteraction,
-      child: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(4.0),
-            child: InputField(
-              labelText: 'Enter Riot ID',
-              hintText: 'e.g. your username',
-              onChanged: (value) {
-                widget.onUsernameChanged(value);
-                _validateForm();
-              },
-              inputFormatters: [
-                FilteringTextInputFormatter.allow(
-                  RegExp(Validator.validCharPattern),
-                ),
-              ],
-              validator: (value) => Validator.validateUsername(value ?? ''),
-            ),
+    return Container(
+        margin: const EdgeInsets.symmetric(horizontal: 4), // ✅ Outer margin
+        padding: const EdgeInsets.all(16), // ✅ Inner padding
+        decoration: BoxDecoration(
+          color: const Color(0xff1d223c)
+              .withOpacity(0.4), // ✅ Background color with opacity
+          borderRadius: BorderRadius.circular(12), // ✅ Rounded corners
+          border: Border.all(
+            color: const Color(0xff323449), // ✅ Border color (adjust as needed)
+            width: 1.0, // ✅ Border thickness
           ),
-          //  const SizedBox(height: 2),
-          Padding(
-            padding: const EdgeInsets.all(4.0),
-            child: InputField(
-              labelText: 'Enter Tagline',
-              hintText: 'e.g. NA1',
-              onChanged: (value) {
-                widget.onTaglineChanged(value);
-                _validateForm();
-              },
-              inputFormatters: [
-                FilteringTextInputFormatter.allow(
-                  RegExp(Validator.validCharPattern),
+        ),
+        child: Form(
+          key: _formKey,
+          // Validate on each user interaction.
+          autovalidateMode: AutovalidateMode.onUserInteraction,
+          child: Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(4.0),
+                child: InputField(
+                  labelText: 'Enter Riot ID',
+                  hintText: 'e.g. doglover (3-16 characters)',
+                  onChanged: (value) {
+                    widget.onUsernameChanged(value);
+                    _validateForm();
+                  },
+                  inputFormatters: [
+                    FilteringTextInputFormatter.allow(
+                      RegExp(Validator.validCharPattern),
+                    ),
+                  ],
+                  validator: (value) => Validator.validateUsername(value ?? ''),
                 ),
-              ],
-              validator: (value) => Validator.validateTagline(value ?? ''),
-            ),
-          ),
-          const SizedBox(height: 8),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 4.0),
-            child: SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: _isFormValid ? widget.onAddUser : null,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: CustomColours.buttoncolor,
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(64),
-                  ),
-                  minimumSize: const Size(0, 50),
-                ),
-                child: const Text("Add to Dodgelist"),
               ),
-            ),
+              //  const SizedBox(height: 2),
+              Padding(
+                padding: const EdgeInsets.all(4.0),
+                child: InputField(
+                  labelText: 'Enter Tagline',
+                  hintText: 'e.g. NA1',
+                  onChanged: (value) {
+                    widget.onTaglineChanged(value);
+                    _validateForm();
+                  },
+                  inputFormatters: [
+                    FilteringTextInputFormatter.allow(
+                      RegExp(Validator.validCharPattern),
+                    ),
+                  ],
+                  validator: (value) => Validator.validateTagline(value ?? ''),
+                ),
+              ),
+              const SizedBox(height: 8),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                child: SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: _isFormValid ? widget.onAddUser : null,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Color(0xff37D5F8),
+                      disabledBackgroundColor: Color(0xff525252),
+                      foregroundColor: _isFormValid
+                          ? Colors.white
+                          : Colors.grey.shade400, // ✅ Changes text color
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(64),
+                      ),
+                      minimumSize: const Size(0, 43),
+                    ),
+                    child: const Text(
+                      "Add to Dodgelist",
+                      style: TextStyle(fontSize: 18, fontFamily: 'Kanit'),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 8),
+            ],
           ),
-          const SizedBox(height: 8),
-        ],
-      ),
-    );
+        ));
   }
 }
