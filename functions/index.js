@@ -100,6 +100,7 @@ async function storeLeaderboardInBatches() {
         ...player,
         // e.g., "wylde frac#ssj"
         searchKey: `${gameNameLower}#${tagLineLower}`,
+        iconIndex: Math.floor(Math.random() * 5), // random number between 0 and 4
       };
     });
     const docRef = leaderboardRef.doc(`batch_${batchIndex}`);

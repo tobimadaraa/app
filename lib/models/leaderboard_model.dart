@@ -11,6 +11,7 @@ class LeaderboardModel {
   final List<String> lastHonourReported; // ✅ Ensure this exists
   final int? rankedRating;
   final int? numberOfWins;
+  final int iconIndex; // 🟢 Add this field
   LeaderboardModel({
     required this.leaderboardRank,
     required this.gameName,

@@ -1,0 +1,14 @@
+class IconManager {
+  static final List<String> iconPaths = [
+    'assets/icons/userprofile.webp',
+    'assets/icons/userprofile1.webp',
+    'assets/icons/userprofile2.webp',
+    'assets/icons/userprofile3.webp',
+    'assets/icons/userprofile4.webp',
+  ];
+
+  /// Returns the correct icon path based on the stored index.
+  static String getUserIcon(int iconIndex) {
+    return iconPaths[iconIndex.clamp(0, iconPaths.length - 1)];
+  }
+}

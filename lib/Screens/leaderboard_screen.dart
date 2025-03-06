@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_application_2/pages/user_detail_page.dart';
 import 'package:flutter_application_2/shared/classes/notifiers.dart';
 import 'package:flutter_application_2/shared/classes/shared_components.dart';
+import 'package:flutter_application_2/utils/icons_manager';
 import 'package:flutter_application_2/utils/report_level_helper.dart';
 import 'package:get/get.dart';
 import 'package:flutter_application_2/components/leaderboard_input_fields.dart';
@@ -605,12 +606,33 @@ class _LeaderBoardState extends State<LeaderBoard> {
                                                 const EdgeInsets.symmetric(
                                                     horizontal: 16,
                                                     vertical: 8),
-                                            leading: CircleAvatar(
-                                              radius: 30,
-                                              backgroundColor:
-                                                  Colors.transparent,
-                                              backgroundImage: const AssetImage(
-                                                  'assets/userprofile.webp'),
+
+                                            leading: FutureBuilder<int>(
+                                              future: Future.value(user
+                                                      .iconIndex ??
+                                                  0), // Fetch iconIndex with default
+                                              builder: (context, snapshot) {
+                                                if (!snapshot.hasData) {
+                                                  return const CircleAvatar(
+                                                    radius: 30,
+                                                    backgroundColor: Colors
+                                                        .grey, // Placeholder while loading
+                                                  );
+                                                }
+
+                                                final int iconIndex =
+                                                    snapshot.data!.clamp(0,
+                                                        4); // Ensure valid index
+
+                                                return CircleAvatar(
+                                                  radius: 30,
+                                                  backgroundColor:
+                                                      Colors.transparent,
+                                                  backgroundImage: AssetImage(
+                                                      IconManager.getUserIcon(
+                                                          iconIndex)),
+                                                );
+                                              },
                                             ),
                                             // Title only shows game name and tagline now.
                                             title: Text(

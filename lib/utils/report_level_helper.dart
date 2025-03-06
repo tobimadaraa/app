@@ -55,7 +55,7 @@ class ReportLevelHelper {
     } else if (honourReports > 10) {
       allBadges.add({
         'label': 'Nice Guy',
-        'color': const Color(0XFF2E8B57), // Spring Green
+        'color': const Color(0XFF36A06B), // Spring Green
       });
     }
 
