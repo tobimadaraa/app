@@ -234,7 +234,7 @@ class _LeaderBoardState extends State<LeaderBoard> {
         return Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
           child: Shimmer.fromColors(
-            baseColor: Colors.grey.shade800,
+            baseColor: Color(0xff2c3154),
             highlightColor: Colors.grey.shade600,
             child: Container(
               height: 60,
@@ -479,24 +479,28 @@ class _LeaderBoardState extends State<LeaderBoard> {
 
               // Toggle Buttons
               LeaderboardToggle(
-                selectedLeaderboard: selectedLeaderboard,
-                onSelectLeaderboard: (LeaderboardType type) {
-                  setState(() {
-                    selectedLeaderboard = type;
-                    if (type == LeaderboardType.ranked) {
-                      newUserId = "";
-                      newTagLine = "";
-                    }
-                    _loadedUsers.clear();
-                    _currentStartIndex = 0;
-                    _hasMoreData = true;
-                    _latestRequestId++;
-                    _isLoadingMore = false;
-                    //    _isActiveLoading = false;
-                  });
-                  _loadLeaderboard();
-                },
-              ),
+                  selectedLeaderboard: selectedLeaderboard,
+                  onSelectLeaderboard: (LeaderboardType type) {
+                    setState(() {
+                      selectedLeaderboard = type;
+                      if (type == LeaderboardType.ranked) {
+                        newUserId = "";
+                        newTagLine = "";
+                      }
+                      _loadedUsers.clear();
+                      _currentStartIndex = 0;
+                      _hasMoreData = true;
+                      _latestRequestId++;
+                      _isLoadingMore = false;
+                      _isInitialLoading =
+                          true; // Set loading state when switching
+                    });
+                    _loadLeaderboard().then((_) {
+                      setState(() {
+                        _isInitialLoading = false;
+                      });
+                    });
+                  }),
 
               // Spacing below the toggles
               //const SizedBox(height: 8),
@@ -504,79 +508,92 @@ class _LeaderBoardState extends State<LeaderBoard> {
                 height: 20,
               ),
               Expanded(
-                  child: _isInitialLoading
-                      ? _buildSkeletonLoader()
-                      : _errorMessage != null
-                          ? Center(
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Padding(
-                                    padding: const EdgeInsets.symmetric(
-                                        horizontal: 12.0, vertical: 4.0),
-                                    child: Text(
-                                      _errorMessage!,
-                                      style: const TextStyle(
-                                        fontSize: 14, // ✅ Smaller text
-                                        fontWeight: FontWeight
-                                            .w500, // ✅ Medium weight, not bold
-                                        color: Colors
-                                            .black, // ✅ Softer color instead of bright blue
+                child: _isInitialLoading
+                    ? _buildSkeletonLoader()
+                    : _errorMessage != null
+                        ? _errorMessage!.contains("404")
+                            ? const Center(
+                                child: Text(
+                                  "No data available yet",
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 16,
+                                  ),
+                                ),
+                              )
+                            : Center(
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 12.0, vertical: 4.0),
+                                      child: Text(
+                                        _errorMessage!,
+                                        style: const TextStyle(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w500,
+                                          color: Colors.black,
+                                        ),
+                                        textAlign: TextAlign.center,
                                       ),
-                                      textAlign: TextAlign.center,
                                     ),
-                                  ),
-                                  const SizedBox(
-                                      height:
-                                          10), // ✅ Reduce space between text & button
-                                  ElevatedButton(
-                                    onPressed: _refreshLeaderboard,
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: Colors.grey
-                                          .shade200, // ✅ Lighter grey background
-                                      shape:
-                                          const CircleBorder(), // ✅ Circular button
-                                      elevation: 2, // ✅ Softer shadow
-                                      padding: const EdgeInsets.all(
-                                          12), // ✅ Smaller button size
-                                    ),
-                                    child: Icon(Icons.refresh,
+                                    const SizedBox(height: 10),
+                                    ElevatedButton(
+                                      onPressed: _refreshLeaderboard,
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: Colors.grey.shade200,
+                                        shape: const CircleBorder(),
+                                        elevation: 2,
+                                        padding: const EdgeInsets.all(12),
+                                      ),
+                                      child: const Icon(
+                                        Icons.refresh,
                                         color: Colors.white,
-                                        size:
-                                            24), // ✅ Darker grey icon, smaller size
+                                        size: 24,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              )
+                        : _loadedUsers.isEmpty
+                            ? const Center(
+                                child: Text(
+                                  "No data available yet",
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 16,
                                   ),
-                                ],
-                              ),
-                            )
-                          : RefreshIndicator(
-                              onRefresh: _refreshLeaderboard,
-                              child: ListView.builder(
-                                controller: _scrollController,
-                                physics: const AlwaysScrollableScrollPhysics(),
-                                itemCount: _loadedUsers.length +
-                                    (_isLoadingMore ? 1 : 0),
-                                itemBuilder: (context, index) {
-                                  if (index >= _loadedUsers.length) {
-                                    return const Center(
-                                        child: CircularProgressIndicator());
-                                  }
-                                  final user = _loadedUsers[index];
-                                  final bool isClickable =
-                                      selectedLeaderboard ==
-                                              LeaderboardType.cheater ||
-                                          selectedLeaderboard ==
-                                              LeaderboardType.toxicity ||
-                                          selectedLeaderboard ==
-                                              LeaderboardType.honour;
-
-                                  return Container(
+                                ),
+                              )
+                            : RefreshIndicator(
+                                onRefresh: _refreshLeaderboard,
+                                child: ListView.builder(
+                                  controller: _scrollController,
+                                  physics:
+                                      const AlwaysScrollableScrollPhysics(),
+                                  itemCount: _loadedUsers.length +
+                                      (_isLoadingMore ? 1 : 0),
+                                  itemBuilder: (context, index) {
+                                    if (index >= _loadedUsers.length) {
+                                      return const Center(
+                                          child: CircularProgressIndicator());
+                                    }
+                                    final user = _loadedUsers[index];
+                                    final bool isClickable =
+                                        selectedLeaderboard ==
+                                                LeaderboardType.cheater ||
+                                            selectedLeaderboard ==
+                                                LeaderboardType.toxicity ||
+                                            selectedLeaderboard ==
+                                                LeaderboardType.honour;
+                                    return Container(
                                       width: double.infinity,
                                       decoration: BoxDecoration(
                                         color: const Color(0xff2c3154),
                                         borderRadius: index == 0
                                             ? const BorderRadius.vertical(
-                                                top: Radius.circular(
-                                                    16), // Rounded top corners for the first item
+                                                top: Radius.circular(16),
                                               )
                                             : BorderRadius.zero,
                                       ),
@@ -595,72 +612,78 @@ class _LeaderBoardState extends State<LeaderBoard> {
                                               backgroundImage: const AssetImage(
                                                   'assets/userprofile.webp'),
                                             ),
-                                            title: RichText(
-                                              text: TextSpan(
-                                                style: TextStyle(
-                                                  color: selectedLeaderboard ==
+                                            // Title only shows game name and tagline now.
+                                            title: Text(
+                                              '${user.gameName}#${user.tagLine}',
+                                              style: const TextStyle(
+                                                color: Colors.white,
+                                                fontSize: 17,
+                                                height: 1.0,
+                                              ),
+                                            ),
+                                            // Subtitle is now a Column with the rank info on top and badges below.
+                                            subtitle: Column(
+                                              mainAxisSize: MainAxisSize.min,
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: [
+                                                Text(
+                                                  selectedLeaderboard ==
                                                           LeaderboardType.ranked
-                                                      ? Colors.white
-                                                      : ReportLevelHelper
-                                                          .getGameNameColor(
-                                                          cheaterReports: user
-                                                              .cheaterReports,
-                                                          toxicityReports: user
-                                                              .toxicityReports,
-                                                          honourReports: user
-                                                              .honourReports,
-                                                        ),
-                                                  fontSize: 17,
-                                                  height: 1.0,
+                                                      ? 'Rank: ${user.leaderboardRank} | Wins: ${user.numberOfWins ?? "N/A"}'
+                                                      : 'Rank: ${user.leaderboardRank}',
+                                                  style: TextStyle(
+                                                    fontSize: 14,
+                                                    height: 1.0,
+                                                    color: Colors.grey[400],
+                                                  ),
                                                 ),
-                                                children: [
-                                                  TextSpan(
-                                                      text:
-                                                          '${user.gameName}#${user.tagLine} '),
-                                                  ...ReportLevelHelper
-                                                      .buildReportBadges(
+                                                const SizedBox(height: 4),
+                                                // Use a plain Row so the badges are displayed at their intrinsic size
+                                                Row(
+                                                  mainAxisSize:
+                                                      MainAxisSize.min,
+                                                  children: ReportLevelHelper
+                                                          .buildReportBadges(
                                                     cheaterReports:
                                                         user.cheaterReports,
                                                     toxicityReports:
                                                         user.toxicityReports,
                                                     honourReports:
                                                         user.honourReports,
-                                                  ).map(
-                                                    (icon) => WidgetSpan(
-                                                      alignment:
-                                                          PlaceholderAlignment
-                                                              .middle,
-                                                      child: icon,
-                                                    ),
                                                   )
-                                                ],
-                                              ),
+                                                      .map(
+                                                        (badge) => Padding(
+                                                          padding:
+                                                              const EdgeInsets
+                                                                  .only(
+                                                                  right: 4.0),
+                                                          child: badge,
+                                                        ),
+                                                      )
+                                                      .toList(),
+                                                ),
+                                              ],
                                             ),
-                                            subtitle: Text(
+
+                                            // Trailing widget remains unchanged
+                                            trailing: Text(
                                               selectedLeaderboard ==
                                                       LeaderboardType.ranked
-                                                  ? 'Rank: ${user.leaderboardRank} | Wins: ${user.numberOfWins ?? "N/A"}'
+                                                  ? "${user.rankedRating ?? 0} pts"
                                                   : selectedLeaderboard ==
                                                           LeaderboardType
                                                               .cheater
-                                                      ? 'Rank: ${user.leaderboardRank} | Cheater Reports: ${user.cheaterReports}'
+                                                      ? "Cheater Reports: ${user.cheaterReports}"
                                                       : selectedLeaderboard ==
                                                               LeaderboardType
                                                                   .toxicity
-                                                          ? 'Rank: ${user.leaderboardRank} | Toxicity Reports: ${user.toxicityReports}'
-                                                          : 'Rank: ${user.leaderboardRank} | Honour Reports: ${user.honourReports}',
-                                              style: TextStyle(
-                                                fontSize: 14,
-                                                height: 1.0,
-                                                color: Colors.grey[400],
-                                              ),
-                                            ),
-                                            trailing: Text(
-                                              "${user.rankedRating ?? 0} pts",
+                                                          ? "Toxicity Reports: ${user.toxicityReports}"
+                                                          : "Honour Reports: ${user.honourReports}",
                                               style: const TextStyle(
                                                 color: Color(0xff37d5f8),
-                                                fontSize: 14,
-                                                fontWeight: FontWeight.bold,
+                                                fontSize: 12,
+                                                fontWeight: FontWeight.w500,
                                               ),
                                             ),
                                             onTap: isClickable
@@ -679,7 +702,6 @@ class _LeaderBoardState extends State<LeaderBoard> {
                                                   }
                                                 : null,
                                           ),
-                                          // Only add the Divider if this isn't the last item
                                           if (index != _loadedUsers.length - 1)
                                             Padding(
                                               padding:
@@ -692,10 +714,12 @@ class _LeaderBoardState extends State<LeaderBoard> {
                                               ),
                                             ),
                                         ],
-                                      ));
-                                },
+                                      ),
+                                    );
+                                  },
+                                ),
                               ),
-                            ))
+              )
             ]))
       ]), //]),
       floatingActionButton: kDebugMode

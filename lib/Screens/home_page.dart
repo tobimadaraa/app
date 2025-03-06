@@ -38,40 +38,25 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // If you want a different page background, set it here
-      backgroundColor: Color(0xff2b3254),
+      backgroundColor: const Color(0xff2b3254),
       body: Center(child: _widgetOptions.elementAt(_selectedIndex)),
-      bottomNavigationBar: Material(
-        // 1) Define the shape with rounded top corners
-        shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.only(
-            topLeft: Radius.circular(24),
-            topRight: Radius.circular(24),
+      bottomNavigationBar: BottomNavigationBar(
+        backgroundColor: const Color(0xFF101122),
+        selectedItemColor: const Color(0xFF37D5F8),
+        unselectedItemColor: Colors.white.withOpacity(0.8),
+        items: const [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.leaderboard, size: 30),
+            label: "Leaderboard",
           ),
-        ),
-        // 2) Make sure we actually clip the corners
-        clipBehavior: Clip.antiAlias,
-        // 3) Color for the bar
-        color: const Color(0xFF101122),
-        child: BottomNavigationBar(
-          // 4) Transparent background so Material color shows through
-          backgroundColor: Colors.transparent,
-          selectedItemColor: const Color(0xFF37D5F8),
-          unselectedItemColor: Colors.white.withOpacity(0.8),
-          items: const [
-            BottomNavigationBarItem(
-              icon: Icon(Icons.leaderboard, size: 30),
-              label: "Leaderboard",
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.block, size: 30),
-              label: "Dodge List",
-            ),
-          ],
-          currentIndex: _selectedIndex,
-          onTap: _onItemTapped,
-          elevation: 0,
-        ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.person_off, size: 30),
+            label: "Dodge List",
+          ),
+        ],
+        currentIndex: _selectedIndex,
+        onTap: _onItemTapped,
+        elevation: 0,
       ),
     );
   }

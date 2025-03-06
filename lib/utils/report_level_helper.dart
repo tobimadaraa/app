@@ -50,12 +50,12 @@ class ReportLevelHelper {
     if (honourReports > 25) {
       allBadges.add({
         'label': 'Honourable',
-        'color': const Color(0XFF2E8B57), // Sea Green 6BAF88
+        'color': const Color(0XFF0EF67E), // Sea Green 6BAF88
       });
     } else if (honourReports > 10) {
       allBadges.add({
         'label': 'Nice Guy',
-        'color': const Color(0xFF6BAF88), // Spring Green
+        'color': const Color(0XFF2E8B57), // Spring Green
       });
     }
 
@@ -68,8 +68,8 @@ class ReportLevelHelper {
     // Generate badge widgets
     List<Widget> badgeWidgets = selectedBadges.map((badge) {
       return Container(
-        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
-        margin: const EdgeInsets.only(right: 4),
+        padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 3),
+        margin: const EdgeInsets.only(right: 2),
         decoration: BoxDecoration(
           color: badge['color']!.withOpacity(0.2),
           borderRadius: BorderRadius.circular(12),
@@ -78,7 +78,7 @@ class ReportLevelHelper {
         child: Text(
           badge['label']!,
           style: TextStyle(
-            fontSize: 12,
+            fontSize: 8,
             fontWeight: FontWeight.bold,
             color: badge['color'],
           ),
