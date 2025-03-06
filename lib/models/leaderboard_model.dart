@@ -11,7 +11,8 @@ class LeaderboardModel {
   final List<String> lastHonourReported; // ✅ Ensure this exists
   final int? rankedRating;
   final int? numberOfWins;
-  final int iconIndex; // 🟢 Add this field
+  final int iconIndex; // 🟢 Added this field
+
   LeaderboardModel({
     required this.leaderboardRank,
     required this.gameName,
@@ -25,34 +26,21 @@ class LeaderboardModel {
     this.rankedRating,
     this.numberOfWins,
     required this.lastToxicityReported,
+    required this.iconIndex, // 🟢 Make sure it's required
   });
 
-  // Factory constructor to convert JSON from API response
+  /// ✅ Factory constructor to convert JSON from Firestore or API response
   factory LeaderboardModel.fromJson(Map<String, dynamic> json,
       {bool includeStats = true}) {
-    ("DEBUG: Decoding JSON - ${json.toString()}");
-
-    // Check if the data comes from the API, Firestore, or Local Storage
-    bool isFromApi =
-        json.containsKey('gameName') && json.containsKey('tagLine');
-
     return LeaderboardModel(
-      leaderboardRank: json['leaderboardRank'] ??
-          json['leaderboardRank'] ??
-          -1, // Riot API handling/ Handle both API & Local cases
-      gameName: isFromApi
-          ? json['gameName'].toString().trim()
-          : json['gameName'].toString().trim(),
-      tagLine: isFromApi
-          ? json['tagLine'].toString().trim()
-          : json['tagLine'].toString().trim(),
+      leaderboardRank: json['leaderboardRank'] ?? -1,
+      gameName: json['gameName']?.toString().trim() ?? "Unknown",
+      tagLine: json['tagLine']?.toString().trim() ?? "N/A",
       rankedRating: includeStats ? json['rankedRating'] ?? 0 : null,
       numberOfWins: includeStats ? json['numberOfWins'] ?? 0 : null,
       cheaterReports: json['cheater_reported'] ?? 0,
       toxicityReports: json['toxicity_reported'] ?? 0,
-      honourReports:
-          json.containsKey('times_honoured') ? json['times_honoured'] ?? 0 : 0,
-
+      honourReports: json['times_honoured'] ?? 0,
       pageViews: json['page_views'] ?? 0,
       lastCheaterReported: json['last_cheater_reported'] is List
           ? List<String>.from(json['last_cheater_reported'])
@@ -63,26 +51,29 @@ class LeaderboardModel {
       lastHonourReported: json['last_time_honoured'] is List
           ? List<String>.from(json['last_time_honoured'])
           : [],
+
+      iconIndex: json['iconIndex'] ?? 0, // 🟢 Ensuring default value
     );
   }
 
-  get leaderboardType => null;
-
+  /// ✅ Convert `LeaderboardModel` to JSON for Firestore/API
   Map<String, dynamic> toJson() {
     return {
       'leaderboardRank': leaderboardRank,
-      'gameName': gameName, // ✅ Ensure always using `username`
-      'tagLine': tagLine, // ✅ Ensure always using `tagline`
+      'gameName': gameName,
+      'tagLine': tagLine,
       'cheater_reported': cheaterReports,
       'toxicity_reported': toxicityReports,
       'times_honoured': honourReports,
       'page_views': pageViews,
       'last_cheater_reported': lastCheaterReported,
       'last_toxicity_reported': lastToxicityReported,
-      'last_time_honoured': lastHonourReported, // ✅ Fix: Add missing field
+      'last_time_honoured': lastHonourReported,
+      'iconIndex': iconIndex, // 🟢 Ensure this is saved to Firestore
     };
   }
 
+  /// ✅ `copyWith` to modify instances without recreating everything
   LeaderboardModel copyWith({
     int? leaderboardRank,
     String? gameName,
@@ -92,8 +83,10 @@ class LeaderboardModel {
     int? pageViews,
     List<String>? lastCheaterReported,
     List<String>? lastToxicityReported,
+    List<String>? lastHonourReported,
     int? rankedRating,
     int? numberOfWins,
+    int? iconIndex, // 🟢 Add this so it can be modified
   }) {
     return LeaderboardModel(
       leaderboardRank: leaderboardRank ?? this.leaderboardRank,
@@ -105,9 +98,10 @@ class LeaderboardModel {
       pageViews: pageViews ?? this.pageViews,
       lastCheaterReported: lastCheaterReported ?? this.lastCheaterReported,
       lastToxicityReported: lastToxicityReported ?? this.lastToxicityReported,
-      lastHonourReported: lastHonourReported,
+      lastHonourReported: lastHonourReported ?? this.lastHonourReported,
       rankedRating: rankedRating ?? this.rankedRating,
       numberOfWins: numberOfWins ?? this.numberOfWins,
+      iconIndex: iconIndex ?? this.iconIndex, // 🟢 Make sure it can be modified
     );
   }
 }

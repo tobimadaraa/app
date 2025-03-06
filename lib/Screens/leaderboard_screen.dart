@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_application_2/pages/user_detail_page.dart';
 import 'package:flutter_application_2/shared/classes/notifiers.dart';
 import 'package:flutter_application_2/shared/classes/shared_components.dart';
-import 'package:flutter_application_2/utils/icons_manager';
 import 'package:flutter_application_2/utils/report_level_helper.dart';
 import 'package:get/get.dart';
 import 'package:flutter_application_2/components/leaderboard_input_fields.dart';
@@ -17,6 +16,7 @@ import 'package:flutter_application_2/utils/search_delegate.dart';
 import 'package:flutter_application_2/utils/validators.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:shimmer/shimmer.dart';
+import 'package:flutter_application_2/utils/icons_manager.dart';
 
 class LeaderBoard extends StatefulWidget {
   const LeaderBoard({
@@ -594,8 +594,7 @@ class _LeaderBoardState extends State<LeaderBoard> {
                                         color: const Color(0xff2c3154),
                                         borderRadius: index == 0
                                             ? const BorderRadius.vertical(
-                                                top: Radius.circular(16),
-                                              )
+                                                top: Radius.circular(16))
                                             : BorderRadius.zero,
                                       ),
                                       child: Column(
@@ -606,35 +605,15 @@ class _LeaderBoardState extends State<LeaderBoard> {
                                                 const EdgeInsets.symmetric(
                                                     horizontal: 16,
                                                     vertical: 8),
-
-                                            leading: FutureBuilder<int>(
-                                              future: Future.value(user
-                                                      .iconIndex ??
-                                                  0), // Fetch iconIndex with default
-                                              builder: (context, snapshot) {
-                                                if (!snapshot.hasData) {
-                                                  return const CircleAvatar(
-                                                    radius: 30,
-                                                    backgroundColor: Colors
-                                                        .grey, // Placeholder while loading
-                                                  );
-                                                }
-
-                                                final int iconIndex =
-                                                    snapshot.data!.clamp(0,
-                                                        4); // Ensure valid index
-
-                                                return CircleAvatar(
-                                                  radius: 30,
-                                                  backgroundColor:
-                                                      Colors.transparent,
-                                                  backgroundImage: AssetImage(
-                                                      IconManager.getUserIcon(
-                                                          iconIndex)),
-                                                );
-                                              },
+                                            // Use the stored icon index directly here
+                                            leading: CircleAvatar(
+                                              radius: 30,
+                                              backgroundColor:
+                                                  Colors.transparent,
+                                              backgroundImage: AssetImage(
+                                                  IconManager.getIconByIndex(
+                                                      user.iconIndex)),
                                             ),
-                                            // Title only shows game name and tagline now.
                                             title: Text(
                                               '${user.gameName}#${user.tagLine}',
                                               style: const TextStyle(
@@ -643,7 +622,6 @@ class _LeaderBoardState extends State<LeaderBoard> {
                                                 height: 1.0,
                                               ),
                                             ),
-                                            // Subtitle is now a Column with the rank info on top and badges below.
                                             subtitle: Column(
                                               mainAxisSize: MainAxisSize.min,
                                               crossAxisAlignment:
@@ -661,7 +639,6 @@ class _LeaderBoardState extends State<LeaderBoard> {
                                                   ),
                                                 ),
                                                 const SizedBox(height: 4),
-                                                // Use a plain Row so the badges are displayed at their intrinsic size
                                                 Row(
                                                   mainAxisSize:
                                                       MainAxisSize.min,
@@ -687,8 +664,6 @@ class _LeaderBoardState extends State<LeaderBoard> {
                                                 ),
                                               ],
                                             ),
-
-                                            // Trailing widget remains unchanged
                                             trailing: Text(
                                               selectedLeaderboard ==
                                                       LeaderboardType.ranked

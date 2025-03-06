@@ -9,7 +9,6 @@ import 'package:get/get.dart';
 class UserRepository extends GetxController {
   final _db = FirebaseFirestore.instance;
   final RiotApiService riotApiService = RiotApiService();
-  // List<LeaderboardModel> _fullLeaderboard = [];
   List<LeaderboardModel>? _cachedLeaderboard;
   DateTime? _cachedLeaderboardTime;
   final Duration _cacheDuration = const Duration(minutes: 5);
@@ -20,25 +19,17 @@ class UserRepository extends GetxController {
         _cachedLeaderboardTime != null &&
         DateTime.now().difference(_cachedLeaderboardTime!) < _cacheDuration) {
       if (!loadAll && _cachedLeaderboard!.length >= 500) {
-        print(
-            "DEBUG: Returning cached top 500 leaderboard data (cached: ${_cachedLeaderboard!.length} players).");
         return _cachedLeaderboard!.take(500).toList();
       } else if (loadAll) {
-        print(
-            "DEBUG: Returning cached full leaderboard data (cached: ${_cachedLeaderboard!.length} players).");
         return _cachedLeaderboard!;
       }
     }
-
     try {
-      print("DEBUG: Fetching leaderboard from Firestore...");
-      // Fetch all 8 batches in parallel
       List<Future<DocumentSnapshot>> futures = [];
       for (int i = 0; i < 8; i++) {
         futures.add(_db.collection("LeaderboardDoc").doc("batch_$i").get());
       }
       List<DocumentSnapshot> docs = await Future.wait(futures);
-
       List<LeaderboardModel> leaderboard = [];
       for (DocumentSnapshot docSnapshot in docs) {
         if (docSnapshot.exists) {
@@ -65,16 +56,11 @@ class UserRepository extends GetxController {
       if (!loadAll) {
         // Quick mode: only return the top 500
         List<LeaderboardModel> top500 = leaderboard.take(500).toList();
-        print(
-            "DEBUG: Loaded top ${top500.length} players from Firestore (quick load).");
         return top500;
       } else {
-        print(
-            "DEBUG: Loaded full leaderboard from Firestore with ${leaderboard.length} players.");
         return leaderboard;
       }
     } catch (error) {
-      print("ERROR: Failed to fetch leaderboard from Firestore - $error");
       return [];
     }
   }
@@ -119,26 +105,26 @@ class UserRepository extends GetxController {
                   // int leaderboardRank = int.tryParse(playerMap["leaderboardRank"]?.toString() ?? "0") ?? 0;
 
                   return LeaderboardModel(
-                      leaderboardRank: leaderboardRank,
-                      gameName: playerMap["gameName"] ?? "",
-                      tagLine: playerMap["tagLine"] ?? "",
-                      cheaterReports: playerMap["cheater_reported"] ?? 0,
-                      toxicityReports: playerMap["toxicity_reported"] ?? 0,
-                      honourReports: data['times_honoured'] ?? 0,
-                      pageViews: playerMap["page_views"] ?? 0,
-                      lastCheaterReported:
-                          playerMap["last_cheater_reported"] is List
-                              ? List<String>.from(
-                                  playerMap["last_cheater_reported"])
-                              : [],
-                      lastToxicityReported:
-                          playerMap["last_toxicity_reported"] is List
-                              ? List<String>.from(
-                                  playerMap["last_toxicity_reported"])
-                              : [],
-                      lastHonourReported: data['last_time_honoured'] is List
-                          ? List<String>.from(data['last_time_honoured'])
-                          : []);
+                    leaderboardRank: leaderboardRank,
+                    gameName: playerMap["gameName"] ?? "",
+                    tagLine: playerMap["tagLine"] ?? "",
+                    cheaterReports: playerMap["cheater_reported"] ?? 0,
+                    toxicityReports: playerMap["toxicity_reported"] ?? 0,
+                    honourReports: data['times_honoured'] ?? 0,
+                    pageViews: playerMap["page_views"] ?? 0,
+                    lastCheaterReported: playerMap["last_cheater_reported"]
+                            is List
+                        ? List<String>.from(playerMap["last_cheater_reported"])
+                        : [],
+                    lastToxicityReported: playerMap["last_toxicity_reported"]
+                            is List
+                        ? List<String>.from(playerMap["last_toxicity_reported"])
+                        : [],
+                    lastHonourReported: data['last_time_honoured'] is List
+                        ? List<String>.from(data['last_time_honoured'])
+                        : [],
+                    iconIndex: playerMap['iconIndex'] ?? 0,
+                  );
                 }
               }
             }
@@ -264,22 +250,25 @@ class UserRepository extends GetxController {
       List<LeaderboardModel> reportedUsers = snapshot.docs.map((doc) {
         final data = doc.data() as Map<String, dynamic>;
         return LeaderboardModel(
-            leaderboardRank: data['leaderboardRank'] ?? 0,
-            gameName: data['gameName'] ?? "",
-            tagLine: data['tagLine'] ?? "",
-            cheaterReports: data['cheater_reported'] ?? 0,
-            toxicityReports: data['toxicity_reported'] ?? 0,
-            honourReports: data['times_honoured'] ?? 0,
-            pageViews: data['page_views'] ?? 0,
-            lastCheaterReported: data['last_cheater_reported'] is List
-                ? List<String>.from(data['last_cheater_reported'])
-                : [],
-            lastToxicityReported: data['last_toxicity_reported'] is List
-                ? List<String>.from(data['last_toxicity_reported'])
-                : [],
-            lastHonourReported: data['last_time_honoured'] is List
-                ? List<String>.from(data['last_time_honoured'])
-                : []);
+          leaderboardRank: data['leaderboardRank'] ?? 0,
+
+          gameName: data['gameName'] ?? "",
+          tagLine: data['tagLine'] ?? "",
+          cheaterReports: data['cheater_reported'] ?? 0,
+          toxicityReports: data['toxicity_reported'] ?? 0,
+          honourReports: data['times_honoured'] ?? 0,
+          pageViews: data['page_views'] ?? 0,
+          lastCheaterReported: data['last_cheater_reported'] is List
+              ? List<String>.from(data['last_cheater_reported'])
+              : [],
+          lastToxicityReported: data['last_toxicity_reported'] is List
+              ? List<String>.from(data['last_toxicity_reported'])
+              : [],
+          lastHonourReported: data['last_time_honoured'] is List
+              ? List<String>.from(data['last_time_honoured'])
+              : [],
+          iconIndex: data['iconIndex'] ?? 0, // ✅ Add this line
+        );
       }).toList();
 
       // **Filter based on the leaderboard type**
@@ -407,7 +396,8 @@ class UserRepository extends GetxController {
         String tagLine = normalize(data['tagLine'] ?? '');
 
         // Create LeaderboardModel from Firestore data
-        firestoreLeaderboard.add(LeaderboardModel(
+        firestoreLeaderboard.add(
+          LeaderboardModel(
             leaderboardRank:
                 data['rank'] ?? 0, // Assuming 'rank' is in Firestore
             gameName: gameName,
@@ -424,7 +414,10 @@ class UserRepository extends GetxController {
                 : [],
             lastHonourReported: data['last_time_honoured'] is List
                 ? List<String>.from(data['last_time_honoured'])
-                : []));
+                : [],
+            iconIndex: data['iconIndex'] ?? 0,
+          ),
+        );
       }
 
       // Return the list of leaderboard data fetched from Firestore
@@ -462,7 +455,8 @@ class UserRepository extends GetxController {
                 : [],
             lastHonourReported: data['last_time_honoured'] is List
                 ? List<String>.from(data['last_time_honoured'])
-                : []);
+                : [],
+            iconIndex: data['iconIndex'] ?? 0);
       }).toList();
     } catch (error) {
       print("ERROR: Fetching Dodge List failed: $error");

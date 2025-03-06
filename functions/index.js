@@ -56,6 +56,13 @@ async function storeLeaderboardInBatches() {
   const totalPlayers = 15000; // Maximum number of players you want to fetch.
   const totalBatches = Math.ceil(totalPlayers / batchSize);
 
+  function hashStringToInt(str) {
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+      hash = str.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    return Math.abs(hash);
+  }
   let actId;
   try {
     actId = await getCurrentActId();
@@ -96,11 +103,12 @@ async function storeLeaderboardInBatches() {
     allPlayers = allPlayers.map((player) => {
       const gameNameLower = (player.gameName || "").toLowerCase();
       const tagLineLower = (player.tagLine || "").toLowerCase();
+      const searchKey = `${gameNameLower}#${tagLineLower}`;
+      const iconIndex = hashStringToInt(searchKey) % 5; // Gives a number from 0 to 4
       return {
         ...player,
-        // e.g., "wylde frac#ssj"
-        searchKey: `${gameNameLower}#${tagLineLower}`,
-        iconIndex: Math.floor(Math.random() * 5), // random number between 0 and 4
+        searchKey: searchKey,
+        iconIndex: iconIndex,
       };
     });
     const docRef = leaderboardRef.doc(`batch_${batchIndex}`);

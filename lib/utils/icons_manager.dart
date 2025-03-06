@@ -7,8 +7,8 @@ class IconManager {
     'assets/icons/userprofile4.webp',
   ];
 
-  /// Returns the correct icon path based on the stored index.
-  static String getUserIcon(int iconIndex) {
-    return iconPaths[iconIndex.clamp(0, iconPaths.length - 1)];
+  /// Returns the icon asset path corresponding to the given index.
+  static String getIconByIndex(int index) {
+    return iconPaths[index % iconPaths.length];
   }
 }

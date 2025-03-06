@@ -135,7 +135,8 @@ class DodgeListState extends State<DodgeList> {
             pageViews: 0,
             lastCheaterReported: [],
             lastToxicityReported: [],
-            lastHonourReported: []),
+            lastHonourReported: [],
+            iconIndex: 0),
       );
 
       // Check if user already exists BEFORE ADDING

@@ -72,11 +72,11 @@ flutter:
   uses-material-design: true
   assets:
     - apikey.env
-    - assets/images/userprofile.webp
-    - assets/images/userprofile1.webp
-    - assets/images/userprofile2.webp
-    - assets/images/userprofile3.webp
-    - assets/images/userprofile4.webp
+    - assets/icons/userprofile.webp
+    - assets/icons/userprofile1.webp
+    - assets/icons/userprofile2.webp
+    - assets/icons/userprofile3.webp
+    - assets/icons/userprofile4.webp
   fonts:
     - family: Kanit
       fonts:
