@@ -232,7 +232,7 @@ class UserRepository extends GetxController {
         'last_time_honoured': isHonourReport
             ? [newReportTime]
             : storedPlayerModel.lastHonourReported,
-        'page_views': 0,
+        'iconIndex': storedPlayerModel.iconIndex,
       });
       print("DEBUG: Successfully added new player.");
       return true;

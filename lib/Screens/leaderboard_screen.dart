@@ -39,8 +39,9 @@ class _LeaderBoardState extends State<LeaderBoard> {
   int _currentStartIndex = 0; // Tracks where pagination starts
   final int _pageSize = 50; // How many users to fetch per page
   bool _hasMoreData = true; // Tracks if there are more players to fetch
-
+  Color mycustomcolor = Color(0xff323449);
   LeaderboardType selectedLeaderboard = LeaderboardType.ranked;
+  bool _isRefreshing = false;
   String newUserId = "";
   String newTagLine = "";
   String? usernameError;
@@ -205,16 +206,16 @@ class _LeaderBoardState extends State<LeaderBoard> {
 
   Future<void> _refreshLeaderboard() async {
     setState(() {
+      _errorMessage = null; // Clear previous error
       _loadedUsers.clear();
       _currentStartIndex = 0;
       _hasMoreData = true;
-      _isInitialLoading = true;
+      _isRefreshing = true; // Indicate that we're refreshing
     });
-    // Force refresh: set forceRefresh to true.
     riotApiService.clearCache();
     await _loadLeaderboard(forceRefresh: true);
     setState(() {
-      _isInitialLoading = false;
+      _isRefreshing = false;
     });
   }
 
@@ -312,8 +313,8 @@ class _LeaderBoardState extends State<LeaderBoard> {
           top: -22, // Matches Figma position
           left: 312, // Matches Figma position
           child: Container(
-            width: 140,
-            height: 140,
+            width: 110,
+            height: 110,
             decoration: BoxDecoration(
               boxShadow: [
                 BoxShadow(
@@ -342,6 +343,7 @@ class _LeaderBoardState extends State<LeaderBoard> {
             ),
           ),
         ),
+
         // 2) Main content
         SafeArea(
             // child: Padding(
@@ -352,127 +354,181 @@ class _LeaderBoardState extends State<LeaderBoard> {
                 children: [
               // Only show Input Fields & Report Button if Cheater/Toxic/Honour
               if (selectedLeaderboard == LeaderboardType.cheater) ...[
-                LeaderboardInputFields(
-                  usernameError: usernameError,
-                  taglineError: taglineError,
-                  onUsernameChanged: (value) {
-                    setState(() {
-                      newUserId = value;
-                      usernameError = Validator.validateUsername(value);
-                    });
-                  },
-                  onTaglineChanged: (value) {
-                    setState(() {
-                      newTagLine = value;
-                      taglineError = Validator.validateTagline(value);
-                    });
-                  },
-                ),
-                const SizedBox(height: 8),
-                // Use a unique ValueKey for the cheater button
-                ReportButton(
-                  key: const ValueKey("reportButton_cheater"),
-                  newUserId: newUserId,
-                  newTagLine: newTagLine,
-                  onSuccess: () async {
-                    setState(() {
-                      _loadedUsers.clear();
-                      _currentStartIndex = 0;
-                      _hasMoreData = true;
-                    });
-                    dodgeListEventNotifier.triggerUpdate();
-                    await _loadLeaderboard();
-                  },
-                  buttonText: 'Report Cheater',
-                  isToxicity: false,
-                  isHonour: false,
-                  cooldownDuration: const Duration(hours: 24),
-                  reportType:
-                      "cheater", // This makes the SharedPreferences key "lastReport_cheater"
-                  resetTrigger:
-                      0, // You can leave this at 0 if you’re not using it
+                Container(
+                  margin:
+                      const EdgeInsets.symmetric(horizontal: 4), // outer margin
+                  padding: const EdgeInsets.all(16), // inner padding
+                  decoration: BoxDecoration(
+                    color: Color(0xff1d223c)
+                        .withOpacity(0.4), // background of the rectangle
+                    borderRadius: BorderRadius.circular(12), // rounded corners
+                    border: Border.all(
+                      color:
+                          mycustomcolor, // or a specific grey, e.g. Color(0xffCCCCCC)
+                      width: 1.0, // Adjust the width as needed
+                    ),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      LeaderboardInputFields(
+                        usernameError: usernameError,
+                        taglineError: taglineError,
+                        onUsernameChanged: (value) {
+                          setState(() {
+                            newUserId = value;
+                            usernameError = Validator.validateUsername(value);
+                          });
+                        },
+                        onTaglineChanged: (value) {
+                          setState(() {
+                            newTagLine = value;
+                            taglineError = Validator.validateTagline(value);
+                          });
+                        },
+                      ),
+                      const SizedBox(height: 8),
+                      ReportButton(
+                        key: const ValueKey("reportButton_cheater"),
+                        newUserId: newUserId,
+                        newTagLine: newTagLine,
+                        onSuccess: () async {
+                          setState(() {
+                            _loadedUsers.clear();
+                            _currentStartIndex = 0;
+                            _hasMoreData = true;
+                          });
+                          dodgeListEventNotifier.triggerUpdate();
+                          await _loadLeaderboard();
+                        },
+                        buttonText: 'Report Cheater',
+                        isToxicity: false,
+                        isHonour: false,
+                        cooldownDuration: const Duration(hours: 24),
+                        reportType: "cheater",
+                        resetTrigger: 0,
+                      ),
+                    ],
+                  ),
                 ),
               ] else if (selectedLeaderboard == LeaderboardType.toxicity) ...[
-                LeaderboardInputFields(
-                  usernameError: usernameError,
-                  taglineError: taglineError,
-                  onUsernameChanged: (value) {
-                    setState(() {
-                      newUserId = value;
-                      usernameError = Validator.validateUsername(value);
-                    });
-                  },
-                  onTaglineChanged: (value) {
-                    setState(() {
-                      newTagLine = value;
-                      taglineError = Validator.validateTagline(value);
-                    });
-                  },
-                ),
-                const SizedBox(height: 8),
-                // Unique ValueKey for the toxicity button
-                ReportButton(
-                  key: const ValueKey("reportButton_toxicity"),
-                  newUserId: newUserId,
-                  newTagLine: newTagLine,
-                  onSuccess: () async {
-                    setState(() {
-                      _loadedUsers.clear();
-                      _currentStartIndex = 0;
-                      _hasMoreData = true;
-                    });
-                    dodgeListEventNotifier.triggerUpdate();
-                    await _loadLeaderboard();
-                  },
-                  buttonText: 'Report for Toxicity',
-                  isToxicity: true,
-                  isHonour: false,
-                  cooldownDuration: const Duration(hours: 24),
-                  reportType:
-                      "toxicity", // SharedPreferences key becomes "lastReport_toxicity"
-                  resetTrigger: 0,
+                Container(
+                  margin:
+                      const EdgeInsets.symmetric(horizontal: 4), // outer margin
+                  padding: const EdgeInsets.all(16), // inner padding
+                  decoration: BoxDecoration(
+                    color: Color(0xff1d223c)
+                        .withOpacity(0.4), // background of the rectangle
+                    borderRadius: BorderRadius.circular(12), // rounded corners
+                    border: Border.all(
+                      color:
+                          mycustomcolor, // or a specific grey, e.g. Color(0xffCCCCCC)
+                      width: 1.0, // Adjust the width as needed
+                    ),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      LeaderboardInputFields(
+                        usernameError: usernameError,
+                        taglineError: taglineError,
+                        onUsernameChanged: (value) {
+                          setState(() {
+                            newUserId = value;
+                            usernameError = Validator.validateUsername(value);
+                          });
+                        },
+                        onTaglineChanged: (value) {
+                          setState(() {
+                            newTagLine = value;
+                            taglineError = Validator.validateTagline(value);
+                          });
+                        },
+                      ),
+                      const SizedBox(height: 8),
+                      ReportButton(
+                        key: const ValueKey("reportButton_toxicity"),
+                        newUserId: newUserId,
+                        newTagLine: newTagLine,
+                        onSuccess: () async {
+                          setState(() {
+                            _loadedUsers.clear();
+                            _currentStartIndex = 0;
+                            _hasMoreData = true;
+                          });
+                          dodgeListEventNotifier.triggerUpdate();
+                          await _loadLeaderboard();
+                        },
+                        buttonText: 'Report for Toxicity',
+                        isToxicity: true,
+                        isHonour: false,
+                        cooldownDuration: const Duration(hours: 24),
+                        reportType: "toxicity",
+                        resetTrigger: 0,
+                      ),
+                    ],
+                  ),
                 ),
               ] else if (selectedLeaderboard == LeaderboardType.honour) ...[
-                LeaderboardInputFields(
-                  usernameError: usernameError,
-                  taglineError: taglineError,
-                  onUsernameChanged: (value) {
-                    setState(() {
-                      newUserId = value;
-                      usernameError = Validator.validateUsername(value);
-                    });
-                  },
-                  onTaglineChanged: (value) {
-                    setState(() {
-                      newTagLine = value;
-                      taglineError = Validator.validateTagline(value);
-                    });
-                  },
-                ),
-                const SizedBox(height: 8),
-                // Unique ValueKey for the honour button
-                ReportButton(
-                  key: const ValueKey("reportButton_honour"),
-                  newUserId: newUserId,
-                  newTagLine: newTagLine,
-                  onSuccess: () async {
-                    setState(() {
-                      _loadedUsers.clear();
-                      _currentStartIndex = 0;
-                      _hasMoreData = true;
-                    });
-                    dodgeListEventNotifier.triggerUpdate();
-                    await _loadLeaderboard();
-                  },
-                  buttonText: 'Honour Player',
-                  isToxicity: false,
-                  isHonour: true,
-                  cooldownDuration: const Duration(hours: 24),
-                  reportType:
-                      "honour", // SharedPreferences key becomes "lastReport_honour"
-                  resetTrigger: 0,
+                Container(
+                  margin:
+                      const EdgeInsets.symmetric(horizontal: 4), // outer margin
+                  padding: const EdgeInsets.all(16), // inner padding
+                  decoration: BoxDecoration(
+                    color: Color(0xff1d223c)
+                        .withOpacity(0.4), // background of the rectangle
+                    borderRadius: BorderRadius.circular(12), // rounded corners
+                    border: Border.all(
+                      color:
+                          mycustomcolor, // or a specific grey, e.g. Color(0xffCCCCCC)
+                      width: 1.0, // Adjust the width as needed
+                    ),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      LeaderboardInputFields(
+                        usernameError: usernameError,
+                        taglineError: taglineError,
+                        onUsernameChanged: (value) {
+                          setState(() {
+                            newUserId = value;
+                            usernameError = Validator.validateUsername(value);
+                          });
+                        },
+                        onTaglineChanged: (value) {
+                          setState(() {
+                            newTagLine = value;
+                            taglineError = Validator.validateTagline(value);
+                          });
+                        },
+                      ),
+                      const SizedBox(height: 8),
+                      ReportButton(
+                        key: const ValueKey("reportButton_honour"),
+                        newUserId: newUserId,
+                        newTagLine: newTagLine,
+                        onSuccess: () async {
+                          setState(() {
+                            _loadedUsers.clear();
+                            _currentStartIndex = 0;
+                            _hasMoreData = true;
+                          });
+                          dodgeListEventNotifier.triggerUpdate();
+                          await _loadLeaderboard();
+                        },
+                        buttonText: 'Honour Player',
+                        isToxicity: false,
+                        isHonour: true,
+                        cooldownDuration: const Duration(hours: 24),
+                        reportType: "honour",
+                        resetTrigger: 0,
+                      ),
+                    ],
+                  ),
                 ),
               ],
+
               // Spacing below the button (or the block above)
               SizedBox(
                 height: 20,
@@ -509,7 +565,7 @@ class _LeaderBoardState extends State<LeaderBoard> {
                 height: 20,
               ),
               Expanded(
-                child: _isInitialLoading
+                child: (_isInitialLoading || _isRefreshing)
                     ? _buildSkeletonLoader()
                     : _errorMessage != null
                         ? _errorMessage!.contains("404")
@@ -557,166 +613,151 @@ class _LeaderBoardState extends State<LeaderBoard> {
                                   ],
                                 ),
                               )
-                        : _loadedUsers.isEmpty
-                            ? const Center(
-                                child: Text(
-                                  "No data available yet",
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 16,
+                        : RefreshIndicator(
+                            onRefresh: _refreshLeaderboard,
+                            child: ListView.builder(
+                              key: ValueKey(
+                                  selectedLeaderboard), // 🔥 Forces full rebuild on leaderboard switch
+                              controller: _scrollController,
+                              physics: const AlwaysScrollableScrollPhysics(),
+                              itemCount: _loadedUsers.length +
+                                  (_isLoadingMore ? 1 : 0),
+                              itemBuilder: (context, index) {
+                                if (index >= _loadedUsers.length) {
+                                  return const Center(
+                                      child: CircularProgressIndicator());
+                                }
+                                final user = _loadedUsers[index];
+                                final bool isClickable = selectedLeaderboard ==
+                                        LeaderboardType.cheater ||
+                                    selectedLeaderboard ==
+                                        LeaderboardType.toxicity ||
+                                    selectedLeaderboard ==
+                                        LeaderboardType.honour;
+                                return Container(
+                                  width: double.infinity,
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xff2c3154),
+                                    borderRadius: index == 0
+                                        ? const BorderRadius.vertical(
+                                            top: Radius.circular(16))
+                                        : BorderRadius.zero,
                                   ),
-                                ),
-                              )
-                            : RefreshIndicator(
-                                onRefresh: _refreshLeaderboard,
-                                child: ListView.builder(
-                                  controller: _scrollController,
-                                  physics:
-                                      const AlwaysScrollableScrollPhysics(),
-                                  itemCount: _loadedUsers.length +
-                                      (_isLoadingMore ? 1 : 0),
-                                  itemBuilder: (context, index) {
-                                    if (index >= _loadedUsers.length) {
-                                      return const Center(
-                                          child: CircularProgressIndicator());
-                                    }
-                                    final user = _loadedUsers[index];
-                                    final bool isClickable =
-                                        selectedLeaderboard ==
-                                                LeaderboardType.cheater ||
-                                            selectedLeaderboard ==
-                                                LeaderboardType.toxicity ||
-                                            selectedLeaderboard ==
-                                                LeaderboardType.honour;
-                                    return Container(
-                                      width: double.infinity,
-                                      decoration: BoxDecoration(
-                                        color: const Color(0xff2c3154),
-                                        borderRadius: index == 0
-                                            ? const BorderRadius.vertical(
-                                                top: Radius.circular(16))
-                                            : BorderRadius.zero,
-                                      ),
-                                      child: Column(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          ListTile(
-                                            contentPadding:
-                                                const EdgeInsets.symmetric(
-                                                    horizontal: 16,
-                                                    vertical: 8),
-                                            // Use the stored icon index directly here
-                                            leading: CircleAvatar(
-                                              radius: 30,
-                                              backgroundColor:
-                                                  Colors.transparent,
-                                              backgroundImage: AssetImage(
-                                                  IconManager.getIconByIndex(
-                                                      user.iconIndex)),
-                                            ),
-                                            title: Text(
-                                              '${user.gameName}#${user.tagLine}',
-                                              style: const TextStyle(
-                                                color: Colors.white,
-                                                fontSize: 17,
-                                                height: 1.0,
-                                              ),
-                                            ),
-                                            subtitle: Column(
-                                              mainAxisSize: MainAxisSize.min,
-                                              crossAxisAlignment:
-                                                  CrossAxisAlignment.start,
-                                              children: [
-                                                Text(
-                                                  selectedLeaderboard ==
-                                                          LeaderboardType.ranked
-                                                      ? 'Rank: ${user.leaderboardRank} | Wins: ${user.numberOfWins ?? "N/A"}'
-                                                      : 'Rank: ${user.leaderboardRank}',
-                                                  style: TextStyle(
-                                                    fontSize: 14,
-                                                    height: 1.0,
-                                                    color: Colors.grey[400],
-                                                  ),
-                                                ),
-                                                const SizedBox(height: 4),
-                                                Row(
-                                                  mainAxisSize:
-                                                      MainAxisSize.min,
-                                                  children: ReportLevelHelper
-                                                          .buildReportBadges(
-                                                    cheaterReports:
-                                                        user.cheaterReports,
-                                                    toxicityReports:
-                                                        user.toxicityReports,
-                                                    honourReports:
-                                                        user.honourReports,
-                                                  )
-                                                      .map(
-                                                        (badge) => Padding(
-                                                          padding:
-                                                              const EdgeInsets
-                                                                  .only(
-                                                                  right: 4.0),
-                                                          child: badge,
-                                                        ),
-                                                      )
-                                                      .toList(),
-                                                ),
-                                              ],
-                                            ),
-                                            trailing: Text(
+                                  child: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      ListTile(
+                                        key: ValueKey(
+                                            '${user.gameName}#${user.tagLine}'), // 🔥 Prevents animation effect per user
+                                        contentPadding:
+                                            const EdgeInsets.symmetric(
+                                                horizontal: 16, vertical: 8),
+                                        leading: CircleAvatar(
+                                          radius: 30,
+                                          backgroundColor: Colors.transparent,
+                                          backgroundImage: AssetImage(
+                                              IconManager.getIconByIndex(
+                                                  user.iconIndex)),
+                                        ),
+                                        title: Text(
+                                          '${user.gameName}#${user.tagLine}',
+                                          style: const TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 17,
+                                            height: 1.0,
+                                          ),
+                                        ),
+                                        subtitle: Column(
+                                          mainAxisSize: MainAxisSize.min,
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
                                               selectedLeaderboard ==
                                                       LeaderboardType.ranked
-                                                  ? "${user.rankedRating ?? 0} pts"
+                                                  ? 'Rank: ${user.leaderboardRank} | Wins: ${user.numberOfWins ?? "N/A"}'
+                                                  : 'Rank: ${user.leaderboardRank}',
+                                              style: TextStyle(
+                                                fontSize: 14,
+                                                height: 1.0,
+                                                color: Colors.grey[400],
+                                              ),
+                                            ),
+                                            const SizedBox(height: 4),
+                                            Row(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: ReportLevelHelper
+                                                      .buildReportBadges(
+                                                cheaterReports:
+                                                    user.cheaterReports,
+                                                toxicityReports:
+                                                    user.toxicityReports,
+                                                honourReports:
+                                                    user.honourReports,
+                                              )
+                                                  .map(
+                                                    (badge) => Padding(
+                                                      padding:
+                                                          const EdgeInsets.only(
+                                                              right: 4.0),
+                                                      child: badge,
+                                                    ),
+                                                  )
+                                                  .toList(),
+                                            ),
+                                          ],
+                                        ),
+                                        trailing: Text(
+                                          selectedLeaderboard ==
+                                                  LeaderboardType.ranked
+                                              ? "${user.rankedRating ?? 0} pts"
+                                              : selectedLeaderboard ==
+                                                      LeaderboardType.cheater
+                                                  ? "Cheater Reports: ${user.cheaterReports}"
                                                   : selectedLeaderboard ==
                                                           LeaderboardType
-                                                              .cheater
-                                                      ? "Cheater Reports: ${user.cheaterReports}"
-                                                      : selectedLeaderboard ==
-                                                              LeaderboardType
-                                                                  .toxicity
-                                                          ? "Toxicity Reports: ${user.toxicityReports}"
-                                                          : "Honour Reports: ${user.honourReports}",
-                                              style: const TextStyle(
-                                                color: Color(0xff37d5f8),
-                                                fontSize: 12,
-                                                fontWeight: FontWeight.w500,
-                                              ),
-                                            ),
-                                            onTap: isClickable
-                                                ? () {
-                                                    Navigator.push(
-                                                      context,
-                                                      MaterialPageRoute(
-                                                        builder: (context) =>
-                                                            UserDetailPage(
-                                                          user: user,
-                                                          leaderboardType:
-                                                              selectedLeaderboard,
-                                                        ),
-                                                      ),
-                                                    );
-                                                  }
-                                                : null,
+                                                              .toxicity
+                                                      ? "Toxicity Reports: ${user.toxicityReports}"
+                                                      : "Honour Reports: ${user.honourReports}",
+                                          style: const TextStyle(
+                                            color: Color(0xff37d5f8),
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.w500,
                                           ),
-                                          if (index != _loadedUsers.length - 1)
-                                            Padding(
-                                              padding:
-                                                  const EdgeInsets.symmetric(
-                                                      horizontal: 16),
-                                              child: Divider(
-                                                color: Colors.grey[800],
-                                                thickness: 1,
-                                                height: 1,
-                                              ),
-                                            ),
-                                        ],
+                                        ),
+                                        onTap: isClickable
+                                            ? () {
+                                                Navigator.push(
+                                                  context,
+                                                  MaterialPageRoute(
+                                                    builder: (context) =>
+                                                        UserDetailPage(
+                                                      user: user,
+                                                      leaderboardType:
+                                                          selectedLeaderboard,
+                                                    ),
+                                                  ),
+                                                );
+                                              }
+                                            : null,
                                       ),
-                                    );
-                                  },
-                                ),
-                              ),
-              )
+                                      if (index != _loadedUsers.length - 1)
+                                        Padding(
+                                          padding: const EdgeInsets.symmetric(
+                                              horizontal: 16),
+                                          child: Divider(
+                                            color: Colors.grey[800],
+                                            thickness: 1,
+                                            height: 1,
+                                          ),
+                                        ),
+                                    ],
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
+              ),
             ]))
       ]), //]),
       floatingActionButton: kDebugMode

@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart'; // Add this import
+import 'package:flutter/services.dart';
 
 class InputField extends StatelessWidget {
   final String labelText;
   final String hintText;
   final String? errorText;
   final ValueChanged<String> onChanged;
-  final List<TextInputFormatter>? inputFormatters; // Add this
-  final FormFieldValidator<String>? validator; // Add this
+  final List<TextInputFormatter>? inputFormatters;
+  final FormFieldValidator<String>? validator;
+  final TextStyle? textStyle; // 🟢 New: Style for input text
+  final TextStyle? hintTextStyle; // 🟢 New: Style for hint text
+  final TextStyle? labelTextStyle; // 🟢 New: Style for label text
 
   const InputField({
     super.key,
@@ -15,23 +18,33 @@ class InputField extends StatelessWidget {
     required this.hintText,
     this.errorText,
     required this.onChanged,
-    this.inputFormatters, // Add this
-    this.validator, // Add this
+    this.inputFormatters,
+    this.validator,
+    this.textStyle, // 🟢 Allow custom text style
+    this.hintTextStyle, // 🟢 Allow custom hint text style
+    this.labelTextStyle, // 🟢 Allow custom label text style
   });
 
   @override
   Widget build(BuildContext context) {
     return TextFormField(
-      // Changed from TextField to TextFormField
       decoration: InputDecoration(
-        border: const OutlineInputBorder(),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
         labelText: labelText,
+        labelStyle: labelTextStyle ??
+            const TextStyle(color: Colors.white), // 🟢 Default label color
         hintText: hintText,
+        hintStyle: hintTextStyle ??
+            const TextStyle(color: Colors.red), // 🟢 Default hint color
         errorText: errorText,
       ),
+      style: textStyle ??
+          const TextStyle(color: Colors.white), // 🟢 Default input text color
       onChanged: onChanged,
-      inputFormatters: inputFormatters, // Add input formatters
-      validator: validator, // Add validator
+      inputFormatters: inputFormatters,
+      validator: validator,
     );
   }
 }
