@@ -277,7 +277,8 @@ class DodgeListState extends State<DodgeList> {
   Widget build(BuildContext context) {
     final bool isPremium = userController.isPremium.value;
     return Scaffold(
-      backgroundColor: const Color(0xFF141429),
+      extendBodyBehindAppBar: true,
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -322,6 +323,41 @@ class DodgeListState extends State<DodgeList> {
       body: Stack(
         children: [
           Container(color: const Color(0xFF141429)),
+          Positioned(
+            top: -22, // Matches Figma position
+            left: 312, // Matches Figma position
+            child: Container(
+              width: 110,
+              height: 110,
+              decoration: BoxDecoration(
+                boxShadow: [
+                  BoxShadow(
+                    color: Color(0xFFA54CFF).withOpacity(0.6),
+                    blurRadius: 197, // Softer glow effect
+                    spreadRadius: 40,
+                  ),
+                ],
+              ),
+            ),
+          ),
+          Positioned(
+            top: -22, // Matches Figma position
+            left: -13, // Matches Figma position
+            child: Container(
+              width: 110, // Slightly smaller than the right glow
+              height: 110,
+              decoration: BoxDecoration(
+                boxShadow: [
+                  BoxShadow(
+                    color:
+                        Color(0xFF37D5F8).withOpacity(0.6), // Light Blue Glow
+                    blurRadius: 193, // Matches requested blur
+                    spreadRadius: 40, // Similar spread for balanced effect
+                  ),
+                ],
+              ),
+            ),
+          ),
           SafeArea(
             child: Column(
               children: [
@@ -342,6 +378,7 @@ class DodgeListState extends State<DodgeList> {
                   },
                   onAddUser: _addUserToDodgeList,
                 ),
+                SizedBox(height: 16),
                 Expanded(
                   child: DodgeListView(
                     dodgeList: isSearching ? filteredDodgeList : dodgeList,

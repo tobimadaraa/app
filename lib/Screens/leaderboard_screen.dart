@@ -1,7 +1,7 @@
 // ignore_for_file: avoid_print
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_application_2/pages/user_detail_page.dart';
+import 'package:flutter_application_2/Screens/user_detail_page.dart';
 import 'package:flutter_application_2/shared/classes/notifiers.dart';
 import 'package:flutter_application_2/shared/classes/shared_components.dart';
 import 'package:flutter_application_2/utils/report_level_helper.dart';
@@ -718,7 +718,7 @@ class _LeaderBoardState extends State<LeaderBoard> {
                                                           LeaderboardType
                                                               .toxicity
                                                       ? "Toxicity Reports: ${user.toxicityReports}"
-                                                      : "Honour Reports: ${user.honourReports}",
+                                                      : "Honours: ${user.honourReports}",
                                           style: const TextStyle(
                                             color: Color(0xff37d5f8),
                                             fontSize: 12,

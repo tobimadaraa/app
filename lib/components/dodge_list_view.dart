@@ -1,18 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_application_2/models/leaderboard_model.dart';
+import 'package:flutter_application_2/utils/icons_manager.dart';
 
 class DodgeListView extends StatelessWidget {
   final List<LeaderboardModel> dodgeList;
   final Function(LeaderboardModel) onRemoveUser;
   final bool isPremium;
-  final bool showPaywall; // NEW parameter
+  final bool showPaywall;
 
   const DodgeListView({
     super.key,
     required this.dodgeList,
     required this.onRemoveUser,
     required this.isPremium,
-    this.showPaywall = true, // default true
+    required this.showPaywall,
   });
 
   @override
@@ -27,46 +28,88 @@ class DodgeListView extends StatelessWidget {
           : (dodgeList.length > 5 ? 5 : dodgeList.length);
     }
 
-    return ListView.separated(
-      itemCount: itemCount,
-      separatorBuilder: (context, index) => const Divider(
-        color: Colors.grey,
-        thickness: 0.5,
-        indent: 10,
-        endIndent: 10,
-      ),
-      itemBuilder: (context, index) {
-        if (!isPremium && showPaywall && index == 5) {
-          return _buildPaywallWidget();
-        }
+    return dodgeList.isEmpty
+        ? const Center(
+            child: Text(
+              "No players in Dodge List",
+              style: TextStyle(color: Colors.white, fontSize: 16),
+            ),
+          )
+        : ListView.builder(
+            itemCount: itemCount,
+            itemBuilder: (context, index) {
+              if (!isPremium && showPaywall && index == 5) {
+                return _buildPaywallWidget();
+              }
 
-        final user = dodgeList[index];
-        return ListTile(
-          title: Text(
-            '${user.gameName}#${user.tagLine}',
-            style: TextStyle(color: Colors.white),
-          ),
-          subtitle: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Cheater Reports: ${user.cheaterReports}',
-                style: TextStyle(color: Colors.grey.shade400),
-              ),
-              Text(
-                'Toxicity Reports: ${user.toxicityReports}',
-                style: TextStyle(color: Colors.grey.shade400),
-              ),
-            ],
-          ),
-          trailing: IconButton(
-            icon: const Icon(Icons.person_remove, color: Colors.red),
-            iconSize: 20,
-            onPressed: () => onRemoveUser(user),
-          ),
-        );
-      },
-    );
+              final user = dodgeList[index];
+
+              return Container(
+                decoration: BoxDecoration(
+                  color: const Color(0xff2c3154),
+                  borderRadius: index == 0
+                      ? const BorderRadius.vertical(top: Radius.circular(16))
+                      : BorderRadius.zero,
+                ),
+                child: Column(
+                  children: [
+                    ListTile(
+                      contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 8),
+                      leading: CircleAvatar(
+                        radius: 30,
+                        backgroundColor: Colors.transparent,
+                        backgroundImage: AssetImage(
+                            IconManager.getIconByIndex(user.iconIndex)),
+                      ),
+                      title: Text(
+                        '${user.gameName}#${user.tagLine}',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 17,
+                          height: 1.0,
+                        ),
+                      ),
+                      subtitle: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Cheater Reports: ${user.cheaterReports}',
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: Colors.grey[400],
+                            ),
+                          ),
+                          Text(
+                            'Toxicity Reports: ${user.toxicityReports}',
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: Colors.grey[400],
+                            ),
+                          ),
+                        ],
+                      ),
+                      trailing: IconButton(
+                        icon:
+                            const Icon(Icons.person_remove, color: Colors.red),
+                        iconSize: 20,
+                        onPressed: () => onRemoveUser(user),
+                      ),
+                    ),
+                    if (index != dodgeList.length - 1)
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        child: Divider(
+                          color: Colors.grey[800],
+                          thickness: 1,
+                          height: 1,
+                        ),
+                      ),
+                  ],
+                ),
+              );
+            },
+          );
   }
 
   Widget _buildPaywallWidget() {
@@ -91,7 +134,6 @@ class DodgeListView extends StatelessWidget {
           ElevatedButton(
             onPressed: () {
               // Navigate to the Premium Upgrade Page
-              // ignore: avoid_print
               print("Navigate to premium purchase");
             },
             style: ElevatedButton.styleFrom(

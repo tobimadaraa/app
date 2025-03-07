@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_application_2/models/leaderboard_model.dart';
-import 'package:flutter_application_2/pages/user_detail_page.dart';
+import 'package:flutter_application_2/Screens/user_detail_page.dart';
 import 'package:flutter_application_2/shared/classes/shared_components.dart';
 import 'package:get/get.dart';
 import 'package:flutter_application_2/repository/user_repository.dart';
@@ -19,36 +19,65 @@ class FirestoreSearchDelegate extends SearchDelegate {
 
   @override
   TextStyle? get searchFieldStyle => const TextStyle(color: Colors.white);
-  @override // ✅ Fix: Add this to avoid the error
-  ThemeData appBarTheme(BuildContext context) {
-    return ThemeData(
-      appBarTheme: const AppBarTheme(
-        backgroundColor: Color(0xFF141429), // ✅ Matches Leaderboard background
-        elevation: 0,
-        iconTheme: IconThemeData(color: Colors.white),
-      ),
-      inputDecorationTheme: InputDecorationTheme(
+
+  Widget buildSearchField(BuildContext context) {
+    return TextField(
+      controller: TextEditingController(text: query),
+      autofocus: true,
+      style: searchFieldStyle,
+      decoration: InputDecoration(
+        prefixIcon: Icon(Icons.search, color: Colors.grey),
+        hintText: 'Search',
+        hintStyle: const TextStyle(color: Colors.white),
         filled: true,
-        fillColor: const Color(0xff1d223c)
-            .withOpacity(0.4), // ✅ Background with border effect
+        fillColor: const Color(0xff1d223c).withOpacity(0.4),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16), // ✅ Rounded search bar
-          borderSide: const BorderSide(
-              color: Colors.grey, width: 1.0), // ✅ Border color
+          borderRadius: BorderRadius.circular(16),
+          borderSide: const BorderSide(color: Colors.grey, width: 1.0),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
-          borderSide: const BorderSide(
-              color: Colors.grey, width: 1.0), // ✅ Border color
+          borderSide: const BorderSide(color: Colors.grey, width: 1.0),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
-          borderSide: const BorderSide(
-              color: Colors.white, width: 1.5), // ✅ White border when active
+          borderSide: const BorderSide(color: Colors.white, width: 1.5),
         ),
-        hintStyle: const TextStyle(color: Colors.white), // ✅ White hint text
       ),
-      scaffoldBackgroundColor: const Color(0xFF141429), // ✅ Match background
+      onChanged: (value) {
+        query = value;
+        showSuggestions(context);
+      },
+    );
+  }
+
+  @override
+  ThemeData appBarTheme(BuildContext context) {
+    return ThemeData(
+      appBarTheme: const AppBarTheme(
+        backgroundColor: Color(0xFF141429), // Matches Leaderboard background
+        elevation: 0,
+        iconTheme: IconThemeData(color: Colors.white),
+      ),
+      // The inputDecorationTheme is kept as-is (though it won't affect our custom search field)
+      inputDecorationTheme: InputDecorationTheme(
+        filled: true,
+        fillColor: const Color(0xff1d223c).withOpacity(0.4),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: Colors.grey, width: 1.0),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: Colors.grey, width: 1.0),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: Colors.grey, width: 1.5),
+        ),
+        hintStyle: const TextStyle(color: Colors.white),
+      ),
+      scaffoldBackgroundColor: const Color(0xFF141429), // Match background
     );
   }
 
@@ -59,19 +88,10 @@ class FirestoreSearchDelegate extends SearchDelegate {
       );
 
   @override
-  List<Widget>? buildActions(BuildContext context) => [
-        IconButton(
-          icon: const Icon(Icons.clear, color: Colors.white),
-          onPressed: () {
-            if (query.isEmpty) {
-              close(context, null);
-            } else {
-              query = '';
-              showSuggestions(context);
-            }
-          },
-        ),
-      ];
+  List<Widget>? buildActions(BuildContext context) {
+    // No trailing actions
+    return [];
+  }
 
   @override
   Widget buildResults(BuildContext context) {
@@ -96,8 +116,7 @@ class FirestoreSearchDelegate extends SearchDelegate {
               final suggestion = results[index];
               return ListTile(
                 title: Text('${suggestion.gameName}#${suggestion.tagLine}',
-                    style: const TextStyle(
-                        color: Colors.white)), // ✅ White text inside results
+                    style: const TextStyle(color: Colors.white)),
                 onTap: () {
                   close(context, suggestion);
                   Navigator.push(
@@ -131,25 +150,30 @@ class FirestoreSearchDelegate extends SearchDelegate {
           if (!snapshot.hasData || snapshot.data!.isEmpty) {
             return const Center(
                 child: Text('No suggestions',
-                    style: TextStyle(color: Colors.white)));
+                    style: TextStyle(
+                      color: Colors.white,
+                    )));
           }
           final suggestions = snapshot.data!;
           return ListView.separated(
             itemCount: suggestions.length,
             separatorBuilder: (context, index) => const Divider(
-              color: Colors.grey, // ✅ Divider between users
+              color: Colors.grey,
               thickness: 0.5,
               height: 1,
-              indent: 10, // ✅ Shortens divider from the left
-              endIndent: 10, // ✅ Shortens divider from the right
+              indent: 14,
+              endIndent: 14,
             ),
             itemBuilder: (context, index) {
               final suggestion = suggestions[index];
               return ListTile(
+                contentPadding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 title: Text('${suggestion.gameName}#${suggestion.tagLine}',
                     style: const TextStyle(
-                        color:
-                            Colors.white)), // ✅ White text inside suggestions
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16)),
                 onTap: () {
                   close(context, suggestion);
                   Navigator.push(
@@ -173,9 +197,7 @@ class FirestoreSearchDelegate extends SearchDelegate {
   Widget _buildSearchContainer(BuildContext context, Widget child) {
     return Stack(
       children: [
-        // ✅ Fix Background Issue
-        Container(color: const Color(0xFF141429)),
-
+        Container(color: const Color(0xFF141429)), // Fix Background Issue
         SafeArea(child: child),
       ],
     );
