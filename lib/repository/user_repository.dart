@@ -9,19 +9,58 @@ import 'package:get/get.dart';
 class UserRepository extends GetxController {
   final _db = FirebaseFirestore.instance;
   final RiotApiService riotApiService = RiotApiService();
-  List<LeaderboardModel> _fullLeaderboard = [];
-
-  Future<List<LeaderboardModel>> loadFullLeaderboard() async {
+  List<LeaderboardModel>? _cachedLeaderboard;
+  DateTime? _cachedLeaderboardTime;
+  final Duration _cacheDuration = const Duration(minutes: 5);
+  Future<List<LeaderboardModel>> loadFullLeaderboard(
+      {bool loadAll = false}) async {
+    // Check cache first
+    if (_cachedLeaderboard != null &&
+        _cachedLeaderboardTime != null &&
+        DateTime.now().difference(_cachedLeaderboardTime!) < _cacheDuration) {
+      if (!loadAll && _cachedLeaderboard!.length >= 500) {
+        return _cachedLeaderboard!.take(500).toList();
+      } else if (loadAll) {
+        return _cachedLeaderboard!;
+      }
+    }
     try {
-      print("DEBUG: Sending request to Riot API...");
-      List<LeaderboardModel> riotLeaderboard =
-          await riotApiService.getLeaderboard(startIndex: 0, size: 200);
-      _fullLeaderboard = riotLeaderboard;
-      print(
-          "DEBUG: Loaded full leaderboard with ${_fullLeaderboard.length} players.");
-      return _fullLeaderboard;
+      List<Future<DocumentSnapshot>> futures = [];
+      for (int i = 0; i < 8; i++) {
+        futures.add(_db.collection("LeaderboardDoc").doc("batch_$i").get());
+      }
+      List<DocumentSnapshot> docs = await Future.wait(futures);
+      List<LeaderboardModel> leaderboard = [];
+      for (DocumentSnapshot docSnapshot in docs) {
+        if (docSnapshot.exists) {
+          final data = docSnapshot.data();
+          if (data is Map<String, dynamic> && data.containsKey("players")) {
+            List<dynamic> players = data["players"];
+            for (var playerData in players) {
+              if (playerData is Map<String, dynamic>) {
+                leaderboard.add(LeaderboardModel.fromJson(playerData));
+              }
+            }
+          }
+        }
+      }
+
+      // Sort by rank (lower is better)
+      leaderboard
+          .sort((a, b) => a.leaderboardRank.compareTo(b.leaderboardRank));
+
+      // Update the cache with full data
+      _cachedLeaderboard = leaderboard;
+      _cachedLeaderboardTime = DateTime.now();
+
+      if (!loadAll) {
+        // Quick mode: only return the top 500
+        List<LeaderboardModel> top500 = leaderboard.take(500).toList();
+        return top500;
+      } else {
+        return leaderboard;
+      }
     } catch (error) {
-      print("ERROR: Failed to fetch full leaderboard - $error");
       return [];
     }
   }
@@ -31,9 +70,6 @@ class UserRepository extends GetxController {
     return input.trim().toLowerCase();
   }
 
-  /// Helper: Check the stored leaderboard in Firebase (only batches 0–7).
-  /// This scans through the stored leaderboard docs to see if the user exists.
-  /// Returns a LeaderboardModel if found, otherwise null.
   Future<LeaderboardModel?> checkFirebaseStoredLeaderboard(
       String gameName, String tagLine) async {
     final FirebaseFirestore firestore = FirebaseFirestore.instance;
@@ -57,35 +93,40 @@ class UserRepository extends GetxController {
                   print(
                       "DEBUG: Found user in stored leaderboard in batch_$batchIndex");
 
-                  // Convert the batch data to a LeaderboardModel
+                  // Extract leaderboardRank as before.
                   int leaderboardRank = 0;
                   if (playerMap["leaderboardRank"] is int) {
                     leaderboardRank = playerMap["leaderboardRank"];
                   }
-                  // Or parse if it's stored as a string:
-                  // int leaderboardRank = int.tryParse(playerMap["leaderboardRank"]?.toString() ?? "0") ?? 0;
 
+                  // Now, also extract rankedRating and numberOfWins if they exist.
+                  int rankedRating = playerMap["rankedRating"] ?? 0;
+                  int numberOfWins = playerMap["numberOfWins"] ?? 0;
+                  print(
+                      "DEBUG: Returning user with rankedRating=$rankedRating, numberOfWins=$numberOfWins");
                   return LeaderboardModel(
-                      leaderboardRank: leaderboardRank,
-                      gameName: playerMap["gameName"] ?? "",
-                      tagLine: playerMap["tagLine"] ?? "",
-                      cheaterReports: playerMap["cheater_reported"] ?? 0,
-                      toxicityReports: playerMap["toxicity_reported"] ?? 0,
-                      honourReports: data['times_honoured'] ?? 0,
-                      pageViews: playerMap["page_views"] ?? 0,
-                      lastCheaterReported:
-                          playerMap["last_cheater_reported"] is List
-                              ? List<String>.from(
-                                  playerMap["last_cheater_reported"])
-                              : [],
-                      lastToxicityReported:
-                          playerMap["last_toxicity_reported"] is List
-                              ? List<String>.from(
-                                  playerMap["last_toxicity_reported"])
-                              : [],
-                      lastHonourReported: data['last_time_honoured'] is List
-                          ? List<String>.from(data['last_time_honoured'])
-                          : []);
+                    leaderboardRank: leaderboardRank,
+                    gameName: playerMap["gameName"] ?? "",
+                    tagLine: playerMap["tagLine"] ?? "",
+                    rankedRating: rankedRating,
+                    numberOfWins: numberOfWins,
+                    cheaterReports: playerMap["cheater_reported"] ?? 0,
+                    toxicityReports: playerMap["toxicity_reported"] ?? 0,
+                    honourReports: data['times_honoured'] ?? 0,
+                    pageViews: playerMap["page_views"] ?? 0,
+                    lastCheaterReported: playerMap["last_cheater_reported"]
+                            is List
+                        ? List<String>.from(playerMap["last_cheater_reported"])
+                        : [],
+                    lastToxicityReported: playerMap["last_toxicity_reported"]
+                            is List
+                        ? List<String>.from(playerMap["last_toxicity_reported"])
+                        : [],
+                    lastHonourReported: data['last_time_honoured'] is List
+                        ? List<String>.from(data['last_time_honoured'])
+                        : [],
+                    iconIndex: playerMap['iconIndex'] ?? 0,
+                  );
                 }
               }
             }
@@ -193,13 +234,116 @@ class UserRepository extends GetxController {
         'last_time_honoured': isHonourReport
             ? [newReportTime]
             : storedPlayerModel.lastHonourReported,
-        'page_views': 0,
+        'iconIndex': storedPlayerModel.iconIndex,
       });
       print("DEBUG: Successfully added new player.");
       return true;
     } catch (error) {
       print("ERROR: Failed to report player - $error");
       return false;
+    }
+  }
+
+  Future<LeaderboardModel?> _findInLeaderboardDoc(
+      String gameName, String tagLine) {
+    return checkFirebaseStoredLeaderboard(
+        normalize(gameName), normalize(tagLine));
+  }
+
+  /// Private helper to find a user in the Users collection (report info)
+  Future<LeaderboardModel?> _findInUsersDoc(
+      String gameName, String tagLine) async {
+    final query = await _db
+        .collection("Users")
+        .where('gameName', isEqualTo: normalize(gameName))
+        .where('tagLine', isEqualTo: normalize(tagLine))
+        .get();
+
+    if (query.docs.isEmpty) {
+      return null;
+    }
+
+    // Convert the first matching doc to LeaderboardModel
+    final data = query.docs.first.data();
+    return LeaderboardModel.fromJson(data);
+  }
+
+  Future<LeaderboardModel?> getFullUserData(
+      String gameName, String tagLine) async {
+    try {
+      print("🔍 DEBUG: Fetching user data for $gameName#$tagLine");
+
+      // 1️⃣ Try to get the user from LeaderboardDoc using your helper.
+      LeaderboardModel? leaderboardUser =
+          await _findInLeaderboardDoc(gameName, tagLine);
+      print(
+          "📌 LeaderboardDoc Lookup: ${leaderboardUser != null ? 'Found' : 'Not Found'}");
+
+      // 2️⃣ Fallback: If not found, search the full leaderboard dataset.
+      if (leaderboardUser == null) {
+        List<LeaderboardModel> fullLeaderboard =
+            await loadFullLeaderboard(loadAll: true);
+        print(
+            "🔍 DEBUG: Searching full leaderboard (size: ${fullLeaderboard.length})");
+
+        leaderboardUser = fullLeaderboard.firstWhereOrNull((user) =>
+            normalize(user.gameName) == normalize(gameName) &&
+            normalize(user.tagLine) == normalize(tagLine));
+
+        print(
+            "📌 Full Leaderboard Search: ${leaderboardUser != null ? 'Found' : 'Not Found'}");
+      }
+
+      // 3️⃣ Get the user from the Users collection (report fields).
+      final LeaderboardModel? usersDocUser =
+          await _findInUsersDoc(gameName, tagLine);
+      print(
+          "📌 Users Collection Lookup: ${usersDocUser != null ? 'Found' : 'Not Found'}");
+
+      // 4️⃣ If neither exists, return null.
+      if (leaderboardUser == null && usersDocUser == null) {
+        print("❌ ERROR: User not found in any data sources!");
+        return null;
+      }
+
+      // 5️⃣ If only one exists, return that one.
+      if (leaderboardUser == null) {
+        print("✅ Returning Users Collection Data");
+        return usersDocUser;
+      }
+      if (usersDocUser == null) {
+        print("✅ Returning Leaderboard Data");
+        return leaderboardUser;
+      }
+
+      // 6️⃣ Merge both sources.
+      print("🔄 Merging Leaderboard & User Report Data");
+
+      return LeaderboardModel(
+        // Ranked fields from LeaderboardDoc (fallback now ensured)
+        rankedRating: leaderboardUser.rankedRating,
+        numberOfWins: leaderboardUser.numberOfWins,
+        leaderboardRank: leaderboardUser.leaderboardRank,
+
+        // Report fields from Users document
+        cheaterReports: usersDocUser.cheaterReports,
+        toxicityReports: usersDocUser.toxicityReports,
+        honourReports: usersDocUser.honourReports,
+        lastCheaterReported: usersDocUser.lastCheaterReported,
+        lastToxicityReported: usersDocUser.lastToxicityReported,
+        lastHonourReported: usersDocUser.lastHonourReported,
+
+        // Common fields (prefer LeaderboardDoc's values)
+        gameName: leaderboardUser.gameName,
+        tagLine: leaderboardUser.tagLine,
+        pageViews: leaderboardUser.pageViews + usersDocUser.pageViews,
+        iconIndex: (usersDocUser.iconIndex != 0)
+            ? usersDocUser.iconIndex
+            : leaderboardUser.iconIndex,
+      );
+    } catch (e) {
+      print("❌ ERROR: getFullUserData failed - $e");
+      return null;
     }
   }
 
@@ -211,22 +355,25 @@ class UserRepository extends GetxController {
       List<LeaderboardModel> reportedUsers = snapshot.docs.map((doc) {
         final data = doc.data() as Map<String, dynamic>;
         return LeaderboardModel(
-            leaderboardRank: data['leaderboardRank'] ?? 0,
-            gameName: data['gameName'] ?? "",
-            tagLine: data['tagLine'] ?? "",
-            cheaterReports: data['cheater_reported'] ?? 0,
-            toxicityReports: data['toxicity_reported'] ?? 0,
-            honourReports: data['times_honoured'] ?? 0,
-            pageViews: data['page_views'] ?? 0,
-            lastCheaterReported: data['last_cheater_reported'] is List
-                ? List<String>.from(data['last_cheater_reported'])
-                : [],
-            lastToxicityReported: data['last_toxicity_reported'] is List
-                ? List<String>.from(data['last_toxicity_reported'])
-                : [],
-            lastHonourReported: data['last_time_honoured'] is List
-                ? List<String>.from(data['last_time_honoured'])
-                : []);
+          leaderboardRank: data['leaderboardRank'] ?? 0,
+
+          gameName: data['gameName'] ?? "",
+          tagLine: data['tagLine'] ?? "",
+          cheaterReports: data['cheater_reported'] ?? 0,
+          toxicityReports: data['toxicity_reported'] ?? 0,
+          honourReports: data['times_honoured'] ?? 0,
+          pageViews: data['page_views'] ?? 0,
+          lastCheaterReported: data['last_cheater_reported'] is List
+              ? List<String>.from(data['last_cheater_reported'])
+              : [],
+          lastToxicityReported: data['last_toxicity_reported'] is List
+              ? List<String>.from(data['last_toxicity_reported'])
+              : [],
+          lastHonourReported: data['last_time_honoured'] is List
+              ? List<String>.from(data['last_time_honoured'])
+              : [],
+          iconIndex: data['iconIndex'] ?? 0, // ✅ Add this line
+        );
       }).toList();
 
       // **Filter based on the leaderboard type**
@@ -302,6 +449,45 @@ class UserRepository extends GetxController {
     }
   }
 
+  Future<List<LeaderboardModel>> getLeaderboardPage({
+    int startIndex = 0,
+    int pageSize = 50,
+  }) async {
+    try {
+      List<LeaderboardModel> allPlayers = [];
+
+      // Loop through each batch document (batch_0 to batch_7)
+      for (int i = 0; i < 8; i++) {
+        DocumentSnapshot docSnapshot =
+            await _db.collection("LeaderboardDoc").doc("batch_$i").get();
+
+        if (docSnapshot.exists) {
+          final data = docSnapshot.data();
+          if (data is Map<String, dynamic> && data.containsKey("players")) {
+            List<dynamic> players = data["players"];
+
+            // Convert each player in the batch to a LeaderboardModel
+            for (var playerData in players) {
+              if (playerData is Map<String, dynamic>) {
+                final player = LeaderboardModel.fromJson(playerData);
+                allPlayers.add(player);
+              }
+            }
+          }
+        }
+      }
+
+      // Sort players by leaderboardRank (assuming lower rank is better)
+      allPlayers.sort((a, b) => a.leaderboardRank.compareTo(b.leaderboardRank));
+
+      // Implement paging: skip startIndex and take pageSize items
+      return allPlayers.skip(startIndex).take(pageSize).toList();
+    } catch (error) {
+      print("ERROR: Failed to fetch leaderboard players: $error");
+      return [];
+    }
+  }
+
   /// **Get Leaderboard from Firestore**
   Future<List<LeaderboardModel>> firestoreGetLeaderboard() async {
     try {
@@ -315,7 +501,8 @@ class UserRepository extends GetxController {
         String tagLine = normalize(data['tagLine'] ?? '');
 
         // Create LeaderboardModel from Firestore data
-        firestoreLeaderboard.add(LeaderboardModel(
+        firestoreLeaderboard.add(
+          LeaderboardModel(
             leaderboardRank:
                 data['rank'] ?? 0, // Assuming 'rank' is in Firestore
             gameName: gameName,
@@ -332,7 +519,10 @@ class UserRepository extends GetxController {
                 : [],
             lastHonourReported: data['last_time_honoured'] is List
                 ? List<String>.from(data['last_time_honoured'])
-                : []));
+                : [],
+            iconIndex: data['iconIndex'] ?? 0,
+          ),
+        );
       }
 
       // Return the list of leaderboard data fetched from Firestore
@@ -370,35 +560,14 @@ class UserRepository extends GetxController {
                 : [],
             lastHonourReported: data['last_time_honoured'] is List
                 ? List<String>.from(data['last_time_honoured'])
-                : []);
+                : [],
+            iconIndex: data['iconIndex'] ?? 0);
       }).toList();
     } catch (error) {
       print("ERROR: Fetching Dodge List failed: $error");
       return [];
     }
   }
-
-  /// Add to Dodge List
-  // Future<void> addToDodgeList(LeaderboardModel user) async {
-  //   try {
-  //     await _db
-  //         .collection("DodgeList")
-  //         .doc("${user.gameName}#${user.tagLine}")
-  //         .set({
-  //       "gameName": user.gameName,
-  //       "tagLine": user.tagLine,
-  //       "cheater_reported": user.cheaterReports,
-  //       "toxicity_reported": user.toxicityReports,
-  //       "page_views": user.pageViews,
-  //       "last_cheater_reported": user.lastCheaterReported,
-  //       "last_toxicity_reported": user.lastToxicityReported,
-  //     });
-  //     print(
-  //         "DEBUG: User added to Dodge List -> ${user.gameName}#${user.tagLine}");
-  //   } catch (error) {
-  //     print("ERROR: Adding user to Dodge List failed: $error");
-  //   }
-  // }
 
   /// Remove from Dodge List
   Future<void> removeFromDodgeList(LeaderboardModel user) async {

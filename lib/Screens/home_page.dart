@@ -1,5 +1,7 @@
+// ignore_for_file: deprecated_member_use
+
 import 'package:flutter/material.dart';
-import 'package:flutter_application_2/Screens/user_page.dart';
+import 'package:flutter/services.dart'; // For optional SystemChrome tweak
 import 'package:flutter_application_2/Screens/dodge_list_screen.dart';
 import 'package:flutter_application_2/Screens/leaderboard_screen.dart';
 
@@ -12,8 +14,8 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   int _selectedIndex = 0;
+
   static final List<Widget> _widgetOptions = <Widget>[
-    UserPage(),
     LeaderBoard(),
     DodgeList(key: dodgeListKey),
   ];
@@ -25,34 +27,38 @@ class _HomePageState extends State<HomePage> {
   }
 
   @override
+  void initState() {
+    super.initState();
+    // Optional: color the system navigation bar (gesture area) to match
+    SystemChrome.setSystemUIOverlayStyle(
+      const SystemUiOverlayStyle(
+        systemNavigationBarColor: Color(0xFF101122),
+      ),
+    );
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xff2b3254),
       body: Center(child: _widgetOptions.elementAt(_selectedIndex)),
       bottomNavigationBar: BottomNavigationBar(
-        type: BottomNavigationBarType.fixed,
-        iconSize: 42,
-        backgroundColor: Colors.white,
-        items: [
+        backgroundColor: const Color(0xFF101122),
+        selectedItemColor: const Color(0xFF37D5F8),
+        unselectedItemColor: Colors.white.withOpacity(0.8),
+        items: const [
           BottomNavigationBarItem(
-            icon: SizedBox(
-              width: 42,
-              height: 42,
-              child: CircleAvatar(
-                backgroundImage: NetworkImage(
-                  'https://yt3.googleusercontent.com/Lep5zj2y6yjTwNn9HRP1rtC7_NoCBS6sO8BhwyHmQS59PjdUeMPKS0QZ8N_dj4T2sUXtkEIR=s160-c-k-c0x00ffffff-no-rj',
-                ),
-              ),
-            ),
-            label: 'You',
+            icon: Icon(Icons.leaderboard, size: 30),
+            label: "Leaderboard",
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.show_chart),
-            label: 'leaderboard',
+            icon: Icon(Icons.person_off, size: 30),
+            label: "Dodge List",
           ),
-          BottomNavigationBarItem(
-              icon: Icon(Icons.person_off), label: 'dodgelist'),
         ],
+        currentIndex: _selectedIndex,
         onTap: _onItemTapped,
+        elevation: 0,
       ),
     );
   }

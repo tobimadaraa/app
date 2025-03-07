@@ -56,6 +56,13 @@ async function storeLeaderboardInBatches() {
   const totalPlayers = 15000; // Maximum number of players you want to fetch.
   const totalBatches = Math.ceil(totalPlayers / batchSize);
 
+  function hashStringToInt(str) {
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+      hash = str.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    return Math.abs(hash);
+  }
   let actId;
   try {
     actId = await getCurrentActId();
@@ -96,10 +103,12 @@ async function storeLeaderboardInBatches() {
     allPlayers = allPlayers.map((player) => {
       const gameNameLower = (player.gameName || "").toLowerCase();
       const tagLineLower = (player.tagLine || "").toLowerCase();
+      const searchKey = `${gameNameLower}#${tagLineLower}`;
+      const iconIndex = hashStringToInt(searchKey) % 5; // Gives a number from 0 to 4
       return {
         ...player,
-        // e.g., "wylde frac#ssj"
-        searchKey: `${gameNameLower}#${tagLineLower}`,
+        searchKey: searchKey,
+        iconIndex: iconIndex,
       };
     });
     const docRef = leaderboardRef.doc(`batch_${batchIndex}`);
@@ -108,7 +117,7 @@ async function storeLeaderboardInBatches() {
 
     if (batchIndex < totalBatches - 1) {
       console.log(`⏳ Waiting 10 seconds before fetching batch ${batchIndex + 1}...`);
-      await delay(10000);
+      await delay(12000);
     }
   }
 
@@ -145,7 +154,7 @@ exports.updateLeaderboard = onRequest(
  */
 exports.ScheduledLeaderboardUpdate = onSchedule(
     {
-      schedule: "every 60 minutes", // Runs every hour
+      schedule: "every 20 minutes", // Runs every 20m
       timeZone: "Etc/UTC",
       region: "europe-west1",
       timeoutSeconds: 540,

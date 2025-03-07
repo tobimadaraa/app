@@ -37,6 +37,7 @@ migrate_working_dir/
 apikey.env
 # Ignore google-services.json 
 android/app/google-services.json
+library/services/firebase_options.dart
 # Symbolication related
 app.*.symbols
 
