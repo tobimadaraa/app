@@ -70,9 +70,6 @@ class UserRepository extends GetxController {
     return input.trim().toLowerCase();
   }
 
-  /// Helper: Check the stored leaderboard in Firebase (only batches 0–7).
-  /// This scans through the stored leaderboard docs to see if the user exists.
-  /// Returns a LeaderboardModel if found, otherwise null.
   Future<LeaderboardModel?> checkFirebaseStoredLeaderboard(
       String gameName, String tagLine) async {
     final FirebaseFirestore firestore = FirebaseFirestore.instance;
@@ -96,18 +93,23 @@ class UserRepository extends GetxController {
                   print(
                       "DEBUG: Found user in stored leaderboard in batch_$batchIndex");
 
-                  // Convert the batch data to a LeaderboardModel
+                  // Extract leaderboardRank as before.
                   int leaderboardRank = 0;
                   if (playerMap["leaderboardRank"] is int) {
                     leaderboardRank = playerMap["leaderboardRank"];
                   }
-                  // Or parse if it's stored as a string:
-                  // int leaderboardRank = int.tryParse(playerMap["leaderboardRank"]?.toString() ?? "0") ?? 0;
 
+                  // Now, also extract rankedRating and numberOfWins if they exist.
+                  int rankedRating = playerMap["rankedRating"] ?? 0;
+                  int numberOfWins = playerMap["numberOfWins"] ?? 0;
+                  print(
+                      "DEBUG: Returning user with rankedRating=$rankedRating, numberOfWins=$numberOfWins");
                   return LeaderboardModel(
                     leaderboardRank: leaderboardRank,
                     gameName: playerMap["gameName"] ?? "",
                     tagLine: playerMap["tagLine"] ?? "",
+                    rankedRating: rankedRating,
+                    numberOfWins: numberOfWins,
                     cheaterReports: playerMap["cheater_reported"] ?? 0,
                     toxicityReports: playerMap["toxicity_reported"] ?? 0,
                     honourReports: data['times_honoured'] ?? 0,
@@ -239,6 +241,109 @@ class UserRepository extends GetxController {
     } catch (error) {
       print("ERROR: Failed to report player - $error");
       return false;
+    }
+  }
+
+  Future<LeaderboardModel?> _findInLeaderboardDoc(
+      String gameName, String tagLine) {
+    return checkFirebaseStoredLeaderboard(
+        normalize(gameName), normalize(tagLine));
+  }
+
+  /// Private helper to find a user in the Users collection (report info)
+  Future<LeaderboardModel?> _findInUsersDoc(
+      String gameName, String tagLine) async {
+    final query = await _db
+        .collection("Users")
+        .where('gameName', isEqualTo: normalize(gameName))
+        .where('tagLine', isEqualTo: normalize(tagLine))
+        .get();
+
+    if (query.docs.isEmpty) {
+      return null;
+    }
+
+    // Convert the first matching doc to LeaderboardModel
+    final data = query.docs.first.data();
+    return LeaderboardModel.fromJson(data);
+  }
+
+  Future<LeaderboardModel?> getFullUserData(
+      String gameName, String tagLine) async {
+    try {
+      print("🔍 DEBUG: Fetching user data for $gameName#$tagLine");
+
+      // 1️⃣ Try to get the user from LeaderboardDoc using your helper.
+      LeaderboardModel? leaderboardUser =
+          await _findInLeaderboardDoc(gameName, tagLine);
+      print(
+          "📌 LeaderboardDoc Lookup: ${leaderboardUser != null ? 'Found' : 'Not Found'}");
+
+      // 2️⃣ Fallback: If not found, search the full leaderboard dataset.
+      if (leaderboardUser == null) {
+        List<LeaderboardModel> fullLeaderboard =
+            await loadFullLeaderboard(loadAll: true);
+        print(
+            "🔍 DEBUG: Searching full leaderboard (size: ${fullLeaderboard.length})");
+
+        leaderboardUser = fullLeaderboard.firstWhereOrNull((user) =>
+            normalize(user.gameName) == normalize(gameName) &&
+            normalize(user.tagLine) == normalize(tagLine));
+
+        print(
+            "📌 Full Leaderboard Search: ${leaderboardUser != null ? 'Found' : 'Not Found'}");
+      }
+
+      // 3️⃣ Get the user from the Users collection (report fields).
+      final LeaderboardModel? usersDocUser =
+          await _findInUsersDoc(gameName, tagLine);
+      print(
+          "📌 Users Collection Lookup: ${usersDocUser != null ? 'Found' : 'Not Found'}");
+
+      // 4️⃣ If neither exists, return null.
+      if (leaderboardUser == null && usersDocUser == null) {
+        print("❌ ERROR: User not found in any data sources!");
+        return null;
+      }
+
+      // 5️⃣ If only one exists, return that one.
+      if (leaderboardUser == null) {
+        print("✅ Returning Users Collection Data");
+        return usersDocUser;
+      }
+      if (usersDocUser == null) {
+        print("✅ Returning Leaderboard Data");
+        return leaderboardUser;
+      }
+
+      // 6️⃣ Merge both sources.
+      print("🔄 Merging Leaderboard & User Report Data");
+
+      return LeaderboardModel(
+        // Ranked fields from LeaderboardDoc (fallback now ensured)
+        rankedRating: leaderboardUser.rankedRating,
+        numberOfWins: leaderboardUser.numberOfWins,
+        leaderboardRank: leaderboardUser.leaderboardRank,
+
+        // Report fields from Users document
+        cheaterReports: usersDocUser.cheaterReports,
+        toxicityReports: usersDocUser.toxicityReports,
+        honourReports: usersDocUser.honourReports,
+        lastCheaterReported: usersDocUser.lastCheaterReported,
+        lastToxicityReported: usersDocUser.lastToxicityReported,
+        lastHonourReported: usersDocUser.lastHonourReported,
+
+        // Common fields (prefer LeaderboardDoc's values)
+        gameName: leaderboardUser.gameName,
+        tagLine: leaderboardUser.tagLine,
+        pageViews: leaderboardUser.pageViews + usersDocUser.pageViews,
+        iconIndex: (usersDocUser.iconIndex != 0)
+            ? usersDocUser.iconIndex
+            : leaderboardUser.iconIndex,
+      );
+    } catch (e) {
+      print("❌ ERROR: getFullUserData failed - $e");
+      return null;
     }
   }
 

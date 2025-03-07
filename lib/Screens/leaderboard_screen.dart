@@ -1,7 +1,7 @@
-// ignore_for_file: avoid_print
+// ignore_for_file: avoid_print, deprecated_member_use
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_application_2/Screens/user_detail_page.dart';
+import 'package:flutter_application_2/Screens/user_detail_screen.dart';
 import 'package:flutter_application_2/shared/classes/notifiers.dart';
 import 'package:flutter_application_2/shared/classes/shared_components.dart';
 import 'package:flutter_application_2/utils/report_level_helper.dart';
@@ -12,7 +12,7 @@ import 'package:flutter_application_2/pages/buttons/report_button.dart';
 import 'package:flutter_application_2/models/leaderboard_model.dart';
 import 'package:flutter_application_2/repository/user_repository.dart';
 import 'package:flutter_application_2/repository/valorant_api.dart';
-import 'package:flutter_application_2/utils/search_delegate.dart';
+import 'package:flutter_application_2/Screens/search_delegate_screen.dart';
 import 'package:flutter_application_2/utils/validators.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:shimmer/shimmer.dart';
@@ -726,13 +726,54 @@ class _LeaderBoardState extends State<LeaderBoard> {
                                           ),
                                         ),
                                         onTap: isClickable
-                                            ? () {
+                                            ? () async {
+                                                // Show a loading dialog while fetching data
+                                                showDialog(
+                                                  context: context,
+                                                  barrierDismissible: false,
+                                                  builder: (context) =>
+                                                      const Center(
+                                                          child:
+                                                              CircularProgressIndicator()),
+                                                );
+
+                                                // Fetch full user data from both sources
+                                                final UserRepository
+                                                    userRepository =
+                                                    Get.find<UserRepository>();
+                                                LeaderboardModel? fullUser =
+                                                    await userRepository
+                                                        .getFullUserData(
+                                                  user.gameName,
+                                                  user.tagLine,
+                                                );
+
+                                                // Close the loading dialog
+                                                Navigator.of(context,
+                                                        rootNavigator: true)
+                                                    .pop();
+
+                                                if (fullUser == null) {
+                                                  // Handle error case (optional)
+                                                  ScaffoldMessenger.of(context)
+                                                      .showSnackBar(
+                                                    const SnackBar(
+                                                      content: Text(
+                                                          "User data not found."),
+                                                      backgroundColor:
+                                                          Colors.red,
+                                                    ),
+                                                  );
+                                                  return;
+                                                }
+
+                                                // Navigate to UserDetailPage with the fetched fullUser
                                                 Navigator.push(
                                                   context,
                                                   MaterialPageRoute(
                                                     builder: (context) =>
                                                         UserDetailPage(
-                                                      user: user,
+                                                      user: fullUser,
                                                       leaderboardType:
                                                           selectedLeaderboard,
                                                     ),

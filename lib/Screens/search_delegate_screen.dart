@@ -1,6 +1,8 @@
+// ignore_for_file: deprecated_member_use
+
 import 'package:flutter/material.dart';
 import 'package:flutter_application_2/models/leaderboard_model.dart';
-import 'package:flutter_application_2/Screens/user_detail_page.dart';
+import 'package:flutter_application_2/Screens/user_detail_screen.dart';
 import 'package:flutter_application_2/shared/classes/shared_components.dart';
 import 'package:get/get.dart';
 import 'package:flutter_application_2/repository/user_repository.dart';
@@ -19,7 +21,6 @@ class FirestoreSearchDelegate extends SearchDelegate {
 
   @override
   TextStyle? get searchFieldStyle => const TextStyle(color: Colors.white);
-
   Widget buildSearchField(BuildContext context) {
     return TextField(
       controller: TextEditingController(text: query),
@@ -55,11 +56,10 @@ class FirestoreSearchDelegate extends SearchDelegate {
   ThemeData appBarTheme(BuildContext context) {
     return ThemeData(
       appBarTheme: const AppBarTheme(
-        backgroundColor: Color(0xFF141429), // Matches Leaderboard background
+        backgroundColor: Color(0xFF141429),
         elevation: 0,
         iconTheme: IconThemeData(color: Colors.white),
       ),
-      // The inputDecorationTheme is kept as-is (though it won't affect our custom search field)
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: const Color(0xff1d223c).withOpacity(0.4),
@@ -77,7 +77,7 @@ class FirestoreSearchDelegate extends SearchDelegate {
         ),
         hintStyle: const TextStyle(color: Colors.white),
       ),
-      scaffoldBackgroundColor: const Color(0xFF141429), // Match background
+      scaffoldBackgroundColor: const Color(0xFF141429),
     );
   }
 
@@ -89,8 +89,7 @@ class FirestoreSearchDelegate extends SearchDelegate {
 
   @override
   List<Widget>? buildActions(BuildContext context) {
-    // No trailing actions
-    return [];
+    return []; // No trailing actions
   }
 
   @override
@@ -111,23 +110,26 @@ class FirestoreSearchDelegate extends SearchDelegate {
           final results = snapshot.data!;
           return ListView.separated(
             itemCount: results.length,
-            separatorBuilder: (context, index) => Divider(),
+            separatorBuilder: (context, index) => const Divider(),
             itemBuilder: (context, index) {
               final suggestion = results[index];
               return ListTile(
                 title: Text('${suggestion.gameName}#${suggestion.tagLine}',
                     style: const TextStyle(color: Colors.white)),
-                onTap: () {
+                onTap: () async {
                   close(context, suggestion);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => UserDetailPage(
-                        user: suggestion,
-                        leaderboardType: leaderboardType,
+                  final fullUser = await Get.find<UserRepository>()
+                      .getFullUserData(suggestion.gameName, suggestion.tagLine);
+                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                    Navigator.of(context, rootNavigator: true).push(
+                      MaterialPageRoute(
+                        builder: (context) => UserDetailPage(
+                          user: fullUser ?? suggestion,
+                          leaderboardType: leaderboardType,
+                        ),
                       ),
-                    ),
-                  );
+                    );
+                  });
                 },
               );
             },
@@ -150,9 +152,7 @@ class FirestoreSearchDelegate extends SearchDelegate {
           if (!snapshot.hasData || snapshot.data!.isEmpty) {
             return const Center(
                 child: Text('No suggestions',
-                    style: TextStyle(
-                      color: Colors.white,
-                    )));
+                    style: TextStyle(color: Colors.white)));
           }
           final suggestions = snapshot.data!;
           return ListView.separated(
@@ -174,13 +174,17 @@ class FirestoreSearchDelegate extends SearchDelegate {
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
                         fontSize: 16)),
-                onTap: () {
+                onTap: () async {
+                  // First, fetch the full user data.
+                  final fullUser = await Get.find<UserRepository>()
+                      .getFullUserData(suggestion.gameName, suggestion.tagLine);
+                  // Then close the search delegate.
                   close(context, suggestion);
-                  Navigator.push(
-                    context,
+                  // Finally, navigate to UserDetailPage.
+                  Navigator.of(context, rootNavigator: true).push(
                     MaterialPageRoute(
                       builder: (context) => UserDetailPage(
-                        user: suggestion,
+                        user: fullUser ?? suggestion,
                         leaderboardType: leaderboardType,
                       ),
                     ),
@@ -197,7 +201,7 @@ class FirestoreSearchDelegate extends SearchDelegate {
   Widget _buildSearchContainer(BuildContext context, Widget child) {
     return Stack(
       children: [
-        Container(color: const Color(0xFF141429)), // Fix Background Issue
+        Container(color: const Color(0xFF141429)),
         SafeArea(child: child),
       ],
     );

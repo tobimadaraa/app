@@ -1,3 +1,5 @@
+// ignore_for_file: deprecated_member_use
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart'; // For optional SystemChrome tweak
 import 'package:flutter_application_2/Screens/dodge_list_screen.dart';

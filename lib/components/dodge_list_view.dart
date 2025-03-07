@@ -134,6 +134,7 @@ class DodgeListView extends StatelessWidget {
           ElevatedButton(
             onPressed: () {
               // Navigate to the Premium Upgrade Page
+              // ignore: avoid_print
               print("Navigate to premium purchase");
             },
             style: ElevatedButton.styleFrom(
