@@ -10,7 +10,7 @@ import 'package:flutter_application_2/repository/user_repository.dart';
 class FirestoreSearchDelegate extends SearchDelegate {
   final LeaderboardType leaderboardType;
   FirestoreSearchDelegate(this.leaderboardType);
-
+  bool _isNavigating = false; // Prevent multiple taps
   Future<List<LeaderboardModel>> _performSearch(String queryText) {
     if (leaderboardType == LeaderboardType.ranked) {
       return Get.find<UserRepository>().searchPlayersInBatches(queryText);
@@ -117,18 +117,28 @@ class FirestoreSearchDelegate extends SearchDelegate {
                 title: Text('${suggestion.gameName}#${suggestion.tagLine}',
                     style: const TextStyle(color: Colors.white)),
                 onTap: () async {
-                  close(context, suggestion);
+                  if (_isNavigating) return; // Prevent multiple taps
+                  _isNavigating = true; // Set flag to true
+
                   final fullUser = await Get.find<UserRepository>()
                       .getFullUserData(suggestion.gameName, suggestion.tagLine);
-                  WidgetsBinding.instance.addPostFrameCallback((_) {
-                    Navigator.of(context, rootNavigator: true).push(
+
+                  close(context, suggestion);
+
+                  Future.delayed(Duration(milliseconds: 0), () {
+                    Navigator.of(context, rootNavigator: true)
+                        .push(
                       MaterialPageRoute(
                         builder: (context) => UserDetailPage(
                           user: fullUser ?? suggestion,
                           leaderboardType: leaderboardType,
                         ),
                       ),
-                    );
+                    )
+                        .then((_) {
+                      _isNavigating =
+                          false; // Reset flag after navigation completes
+                    });
                   });
                 },
               );
@@ -175,20 +185,29 @@ class FirestoreSearchDelegate extends SearchDelegate {
                         fontWeight: FontWeight.bold,
                         fontSize: 16)),
                 onTap: () async {
-                  // First, fetch the full user data.
+                  if (_isNavigating) return; // Prevent multiple taps
+                  _isNavigating = true; // Set flag to true
+
                   final fullUser = await Get.find<UserRepository>()
                       .getFullUserData(suggestion.gameName, suggestion.tagLine);
-                  // Then close the search delegate.
+
                   close(context, suggestion);
-                  // Finally, navigate to UserDetailPage.
-                  Navigator.of(context, rootNavigator: true).push(
-                    MaterialPageRoute(
-                      builder: (context) => UserDetailPage(
-                        user: fullUser ?? suggestion,
-                        leaderboardType: leaderboardType,
+
+                  Future.delayed(Duration(milliseconds: 0), () {
+                    Navigator.of(context, rootNavigator: true)
+                        .push(
+                      MaterialPageRoute(
+                        builder: (context) => UserDetailPage(
+                          user: fullUser ?? suggestion,
+                          leaderboardType: leaderboardType,
+                        ),
                       ),
-                    ),
-                  );
+                    )
+                        .then((_) {
+                      _isNavigating =
+                          false; // Reset flag after navigation completes
+                    });
+                  });
                 },
               );
             },
