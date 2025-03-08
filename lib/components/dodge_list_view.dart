@@ -31,7 +31,7 @@ class DodgeListView extends StatelessWidget {
     return dodgeList.isEmpty
         ? const Center(
             child: Text(
-              "No players in Dodge List",
+              "Nobody in Dodgelist",
               style: TextStyle(color: Colors.white, fontSize: 16),
             ),
           )

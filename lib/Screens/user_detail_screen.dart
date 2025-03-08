@@ -344,7 +344,7 @@ class _UserDetailPageState extends State<UserDetailPage> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
-                      count.toString().padLeft(2, '0'),
+                      count.toString(),
                       style: TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
