@@ -68,8 +68,8 @@ class ReportLevelHelper {
     // Generate badge widgets
     List<Widget> badgeWidgets = selectedBadges.map((badge) {
       return Container(
-        padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 3),
-        margin: const EdgeInsets.only(right: 2),
+        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+        margin: const EdgeInsets.only(right: 4),
         decoration: BoxDecoration(
           color: badge['color']!.withOpacity(0.2),
           borderRadius: BorderRadius.circular(12),
@@ -88,8 +88,8 @@ class ReportLevelHelper {
 
     return [
       Wrap(
-        spacing: 4,
-        runSpacing: 0,
+        //spacing: 0,
+        //runSpacing: 0,
         children: badgeWidgets,
       )
     ];

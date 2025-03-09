@@ -264,9 +264,12 @@ class _LeaderBoardState extends State<LeaderBoard> {
             child: IconButton(
               icon: const Icon(Icons.search, color: Colors.white),
               onPressed: () async {
-                showSearch(
-                  context: context,
-                  delegate: FirestoreSearchDelegate(selectedLeaderboard),
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) =>
+                        CustomSearchPage(leaderboardType: selectedLeaderboard),
+                  ),
                 );
               },
             ),

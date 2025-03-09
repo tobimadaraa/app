@@ -10,7 +10,7 @@ class DodgeListInputFields extends StatefulWidget {
   final String? tagLineError;
   final Function(String) onUsernameChanged;
   final Function(String) onTaglineChanged;
-  final VoidCallback onAddUser;
+  final Future<void> Function() onAddUser;
 
   const DodgeListInputFields({
     super.key,
@@ -29,11 +29,22 @@ class DodgeListInputFields extends StatefulWidget {
 class _DodgeListInputFieldsState extends State<DodgeListInputFields> {
   final _formKey = GlobalKey<FormState>();
   bool _isFormValid = false;
+  bool _isLoading = false;
 
   void _validateForm() {
     final valid = _formKey.currentState?.validate() ?? false;
     setState(() {
       _isFormValid = valid;
+    });
+  }
+
+  Future<void> _handleAddUser() async {
+    setState(() {
+      _isLoading = true;
+    });
+    await widget.onAddUser();
+    setState(() {
+      _isLoading = false;
     });
   }
 
@@ -74,7 +85,6 @@ class _DodgeListInputFieldsState extends State<DodgeListInputFields> {
                   validator: (value) => Validator.validateUsername(value ?? ''),
                 ),
               ),
-              //  const SizedBox(height: 2),
               Padding(
                 padding: const EdgeInsets.all(4.0),
                 child: InputField(
@@ -98,10 +108,11 @@ class _DodgeListInputFieldsState extends State<DodgeListInputFields> {
                 child: SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
-                    onPressed: _isFormValid ? widget.onAddUser : null,
+                    onPressed:
+                        _isFormValid && !_isLoading ? _handleAddUser : null,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Color(0xff37D5F8),
-                      disabledBackgroundColor: Color(0xff525252),
+                      backgroundColor: const Color(0xff37D5F8),
+                      disabledBackgroundColor: const Color(0xff525252),
                       foregroundColor: _isFormValid
                           ? Colors.white
                           : Colors.grey.shade400, // ✅ Changes text color
@@ -110,10 +121,19 @@ class _DodgeListInputFieldsState extends State<DodgeListInputFields> {
                       ),
                       minimumSize: const Size(0, 43),
                     ),
-                    child: const Text(
-                      "Add to Dodgelist",
-                      style: TextStyle(fontSize: 18, fontFamily: 'Kanit'),
-                    ),
+                    child: _isLoading
+                        ? const SizedBox(
+                            width: 24,
+                            height: 24,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
+                          )
+                        : const Text(
+                            "Add to Dodgelist",
+                            style: TextStyle(fontSize: 18, fontFamily: 'Kanit'),
+                          ),
                   ),
                 ),
               ),
